@@ -1,6 +1,6 @@
 "use client";
 
-import { Order, OrderTotals, Coupon } from '@/app/types/pos';
+import { Order, OrderTotals, Coupon, PaymentDetails } from '@/app/types/pos';
 import OrderTabs from './OrderTabs';
 import OrderControls from './OrderControls';
 import CartItems from './CartItems';
@@ -61,7 +61,7 @@ export default function OrdersPanel({
 }: OrdersPanelProps) {
   return (
     <div className="flex-1 bg-white border-l border-gray-200 flex flex-col max-h-screen">
-      <OrderTabs 
+      <OrderTabs
         orders={orders}
         activeOrderId={activeOrderId}
         draggedOrderId={draggedOrderId}
@@ -73,36 +73,42 @@ export default function OrdersPanel({
         onDrop={onDrop}
       />
 
-      {activeOrder && (
-        <OrderControls 
-          activeOrder={activeOrder}
-          onUpdateActiveOrder={onUpdateActiveOrder}
-          onShowCustomerModal={onShowCustomerModal}
-        />
-      )}
+      <div className='overflow-y-scroll'>
+        {activeOrder && (
+          <OrderControls
+            activeOrder={activeOrder}
+            onUpdateActiveOrder={onUpdateActiveOrder}
+            onShowCustomerModal={onShowCustomerModal}
+          />
+        )}
 
-      <CartItems 
-        activeOrder={activeOrder}
-        onUpdateQuantity={onUpdateQuantity}
-        onRemoveFromCart={onRemoveFromCart}
-      />
+        {/* Cart Items */}
+        <div className="flex-1 min-h-0 flex flex-col">
+          <CartItems
+            activeOrder={activeOrder}
+            onUpdateQuantity={onUpdateQuantity}
+            onRemoveFromCart={onRemoveFromCart}
+          />
+        </div>
 
-      {activeOrder && activeOrder.cart.length > 0 && (
-        <CartSummary 
-          activeOrder={activeOrder}
-          totals={totals}
-          availableCoupons={availableCoupons}
-          couponCode={couponCode}
-          setCouponCode={setCouponCode}
-          showCheckout={showCheckout}
-          setShowCheckout={setShowCheckout}
-          paymentMethod={paymentMethod}
-          setPaymentMethod={setPaymentMethod}
-          onUpdateActiveOrder={onUpdateActiveOrder}
-          onApplyCoupon={onApplyCoupon}
-          onCompleteOrder={onCompleteOrder}
-        />
-      )}
+        {activeOrder && activeOrder.cart.length > 0 && (
+          <CartSummary
+            activeOrder={activeOrder}
+            totals={totals}
+            availableCoupons={availableCoupons}
+            couponCode={couponCode}
+            setCouponCode={setCouponCode}
+            showCheckout={showCheckout}
+            setShowCheckout={setShowCheckout}
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+            onUpdateActiveOrder={onUpdateActiveOrder}
+            onApplyCoupon={onApplyCoupon}
+            onCompleteOrder={onCompleteOrder}
+          />
+        )}
+      </div>
+
     </div>
   );
 }

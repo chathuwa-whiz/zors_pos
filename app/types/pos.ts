@@ -37,6 +37,15 @@ export interface Coupon {
   description: string;
 }
 
+export interface PaymentDetails {
+  method: 'cash' | 'card';
+  cashGiven?: number;
+  change?: number;
+  invoiceId?: string;
+  bankServiceCharge?: number;
+  bankName?: string;
+}
+
 export interface Order {
   id: string;
   name: string;
@@ -49,6 +58,7 @@ export interface Order {
   createdAt: Date;
   status: 'active' | 'completed';
   isDefault?: boolean;
+  paymentDetails?: PaymentDetails;
 }
 
 export interface OrderTotals {
