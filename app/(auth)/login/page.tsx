@@ -40,7 +40,7 @@ export default function Login() {
 
       // redirect based on role
       if (data.user.role === 'admin') {
-        router.push('/admin');
+        router.push('/');
       } else {
         router.push('/');
       }
