@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         await user.save();
 
         // give response
-        return NextResponse.json({ message: 'User registered successfully' });
+        return NextResponse.json(user);
 
     } catch (error) {
         console.error(error);
