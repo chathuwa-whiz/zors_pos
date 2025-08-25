@@ -10,10 +10,10 @@ export async function POST(req: NextRequest) {
 
         await connectDB();
 
-        const { email, password, name, role }: RegisterRequest = await req.json();
+        const { email, password, username, role }: RegisterRequest = await req.json();
 
         // validations
-        if (!email || !password || !name || !role) {
+        if (!email || !password || !username || !role) {
             return NextResponse.json({ message: 'All fields are required' });
         }
 
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         const user = new User({
             email,
             password: hashedPassword,
-            name,
+            username,
             role
         });
         await user.save();

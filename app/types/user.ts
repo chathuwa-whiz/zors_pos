@@ -1,7 +1,7 @@
 export interface User {
     _id?: string;
     email: string;
-    name: string;
+    username: string;
     password: string;
     role: 'admin' | 'cashier';
     isActive: boolean;
@@ -12,6 +12,11 @@ export interface User {
 export interface RegisterRequest {
     email: string;
     password: string;
-    name: string;
+    username: string;
     role: 'admin' | 'cashier';
+}
+
+export interface LoginRequest {
+    username: string;
+    password: string;
 }
