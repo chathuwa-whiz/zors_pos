@@ -1,96 +1,17 @@
+// /pos/page.tsx
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
-  ShoppingCart, 
-  Plus, 
-  Minus, 
-  Trash2, 
-  CreditCard, 
-  DollarSign,
-  User,
-  ArrowLeft,
-  Search,
-  Grid,
-  List,
-  Receipt,
-  Clock,
-  Check,
-  X,
-  UserPlus,
-  Percent,
-  Tag,
-  ChefHat,
-  MapPin,
-  Car,
-  Home,
-  Edit3,
-  Copy,
-  Calendar,
-  GripVertical
-} from 'lucide-react';
-
-// Types
-interface User {
-  _id: string;
-  username: string;
-  name: string;
-  role: 'admin' | 'cashier';
-}
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-  image?: string;
-  stock: number;
-  description?: string;
-}
-
-interface CartItem {
-  product: Product;
-  quantity: number;
-  subtotal: number;
-  note?: string;
-}
-
-interface Customer {
-  name?: string;
-  phone?: string;
-  email?: string;
-  birthDate?: string;
-}
-
-interface Coupon {
-  code: string;
-  discount: number;
-  type: 'percentage' | 'fixed';
-  applicableItems?: string[];
-  description: string;
-}
-
-interface Order {
-  id: string;
-  name: string;
-  cart: CartItem[];
-  customer: Customer;
-  orderType: 'dine-in' | 'takeaway' | 'delivery';
-  customDiscount: number;
-  appliedCoupon?: Coupon;
-  kitchenNote: string;
-  createdAt: Date;
-  status: 'active' | 'completed';
-  isDefault?: boolean;
-}
+import { User, Product, Order, Coupon, OrderTotals, CartItem } from '@/app/types/pos';
+import ProductsPanel from './ProductsPanel';
+import OrdersPanel from './OrdersPanel';
+import CustomerModal from './CustomerModal';
+import OrderComplete from './OrderComplete';
 
 export default function POSSystem() {
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   // Multi-order management
   const [orders, setOrders] = useState<Order[]>([]);
@@ -253,13 +174,6 @@ export default function POSSystem() {
     ));
   };
 
-  // Filter products
-  const filteredProducts = products.filter(product => {
-    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
   // Add to cart
   const addToCart = (product: Product) => {
     if (!activeOrder) return;
@@ -313,7 +227,7 @@ export default function POSSystem() {
   };
 
   // Calculate totals
-  const calculateTotals = () => {
+  const calculateTotals = (): OrderTotals => {
     if (!activeOrder) return { subtotal: 0, couponDiscount: 0, customDiscount: 0, tax: 0, total: 0 };
     
     const subtotal = activeOrder.cart.reduce((sum, item) => sum + item.subtotal, 0);
@@ -343,7 +257,7 @@ export default function POSSystem() {
     return { subtotal, couponDiscount, customDiscount, tax, total };
   };
 
-  const { subtotal, couponDiscount, customDiscount, tax, total } = calculateTotals();
+  const totals = calculateTotals();
 
   // Complete order
   const completeOrder = () => {
@@ -352,7 +266,7 @@ export default function POSSystem() {
     console.log('Order completed:', {
       ...activeOrder,
       paymentMethod,
-      totals: { subtotal, couponDiscount, customDiscount, tax, total },
+      totals,
       timestamp: new Date()
     });
     
@@ -407,528 +321,56 @@ export default function POSSystem() {
     );
   }
 
-  if (orderComplete) {
+  if (orderComplete && activeOrder) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center">
-        <div className="text-center bg-white p-8 rounded-2xl shadow-lg">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-green-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Completed!</h2>
-          <p className="text-gray-600 mb-4">Total: ${total.toFixed(2)}</p>
-          <p className="text-sm text-gray-500">Returning to POS in 3 seconds...</p>
-        </div>
-      </div>
+      <OrderComplete 
+        total={totals.total}
+      />
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Left Panel - Products (50% width) */}
-      <div className="flex-1 flex flex-col max-h-screen">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 p-4 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => window.location.href = '/'}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">POS System</h1>
-                <p className="text-sm text-gray-600">Welcome, {user.name}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
-              >
-                {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
+      <ProductsPanel 
+        user={user}
+        products={products}
+        categories={categories}
+        onAddToCart={addToCart}
+      />
+      
+      <OrdersPanel 
+        orders={orders}
+        activeOrderId={activeOrderId}
+        activeOrder={activeOrder}
+        draggedOrderId={draggedOrderId}
+        totals={totals}
+        availableCoupons={availableCoupons}
+        couponCode={couponCode}
+        setCouponCode={setCouponCode}
+        showCheckout={showCheckout}
+        setShowCheckout={setShowCheckout}
+        paymentMethod={paymentMethod}
+        setPaymentMethod={setPaymentMethod}
+        onCreateNewOrder={createNewOrder}
+        onDeleteOrder={deleteOrder}
+        onSetActiveOrderId={setActiveOrderId}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onUpdateActiveOrder={updateActiveOrder}
+        onUpdateQuantity={updateQuantity}
+        onRemoveFromCart={removeFromCart}
+        onApplyCoupon={applyCoupon}
+        onCompleteOrder={completeOrder}
+        onShowCustomerModal={() => setShowCustomerModal(true)}
+      />
 
-          {/* Search and Categories */}
-          <div className="mt-4 flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              {categories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    selectedCategory === category
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
-        </header>
-
-        {/* Products Grid/List - Scrollable */}
-        <div className="flex-1 overflow-auto p-4">
-          <div className={`${
-            viewMode === 'grid' 
-              ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4'
-              : 'space-y-2'
-          }`}>
-            {filteredProducts.map(product => (
-              <div
-                key={product.id}
-                onClick={() => addToCart(product)}
-                className={`bg-white rounded-lg border border-gray-200 cursor-pointer hover:shadow-lg transition-all duration-200 hover:border-blue-300 ${
-                  viewMode === 'grid' ? 'p-4' : 'p-3 flex items-center space-x-4'
-                }`}
-              >
-                {viewMode === 'grid' ? (
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <span className="text-2xl">🍽️</span>
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-1">{product.name}</h3>
-                    <p className="text-sm text-gray-500 mb-2 h-8 overflow-hidden">{product.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-green-600">${product.price}</span>
-                      <span className="text-xs text-gray-400">Stock: {product.stock}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <span className="text-xl">🍽️</span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{product.name}</h3>
-                      <p className="text-sm text-gray-500">{product.description}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-green-600">${product.price}</div>
-                      <div className="text-xs text-gray-400">Stock: {product.stock}</div>
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Right Panel - Order Management (50% width) */}
-      <div className="flex-1 bg-white border-l border-gray-200 flex flex-col max-h-screen">
-        {/* Order Tabs */}
-        <div className="border-b border-gray-200 p-4 flex-shrink-0">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-gray-900">Active Orders</h2>
-            <button
-              onClick={createNewOrder}
-              className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700"
-            >
-              + New Order
-            </button>
-          </div>
-          
-          <div className="flex space-x-2 overflow-x-auto pb-2">
-            {orders.filter(order => order.status === 'active').map(order => (
-              <div
-                key={order.id}
-                draggable={!order.isDefault}
-                onDragStart={(e) => handleDragStart(e, order.id)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, order.id)}
-                className={`relative flex items-center px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 group ${
-                  activeOrderId === order.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                } ${!order.isDefault ? 'cursor-move' : ''}`}
-              >
-                {!order.isDefault && (
-                  <GripVertical className="w-3 h-3 mr-2 opacity-50" />
-                )}
-                
-                <button
-                  onClick={() => setActiveOrderId(order.id)}
-                  className="flex items-center space-x-2"
-                >
-                  <span>{order.name}</span>
-                  {order.cart.length > 0 && (
-                    <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                      {order.cart.length}
-                    </span>
-                  )}
-                </button>
-
-                {!order.isDefault && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteOrder(order.id);
-                    }}
-                    className={`ml-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded ${
-                      activeOrderId === order.id
-                        ? 'hover:bg-blue-700 text-white'
-                        : 'hover:bg-red-100 text-red-500'
-                    }`}
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Order Controls */}
-        {activeOrder && (
-          <div className="border-b border-gray-200 p-4 flex-shrink-0">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => setShowCustomerModal(true)}
-                  className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  <span>Customer</span>
-                </button>
-                
-                <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                  <button
-                    onClick={() => updateActiveOrder({ orderType: 'dine-in' })}
-                    className={`px-3 py-1 rounded text-sm ${
-                      activeOrder.orderType === 'dine-in' ? 'bg-white shadow' : ''
-                    }`}
-                  >
-                    <Home className="w-4 h-4 inline mr-1" />
-                    Dine-in
-                  </button>
-                  <button
-                    onClick={() => updateActiveOrder({ orderType: 'takeaway' })}
-                    className={`px-3 py-1 rounded text-sm ${
-                      activeOrder.orderType === 'takeaway' ? 'bg-white shadow' : ''
-                    }`}
-                  >
-                    <Car className="w-4 h-4 inline mr-1" />
-                    Takeaway
-                  </button>
-                  <button
-                    onClick={() => updateActiveOrder({ orderType: 'delivery' })}
-                    className={`px-3 py-1 rounded text-sm ${
-                      activeOrder.orderType === 'delivery' ? 'bg-white shadow' : ''
-                    }`}
-                  >
-                    <MapPin className="w-4 h-4 inline mr-1" />
-                    Delivery
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Kitchen Note */}
-            <div className="mb-3">
-              <div className="flex items-center space-x-2">
-                <ChefHat className="w-4 h-4 text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Kitchen note..."
-                  value={activeOrder.kitchenNote}
-                  onChange={(e) => updateActiveOrder({ kitchenNote: e.target.value })}
-                  className="flex-1 px-3 py-1 border border-gray-300 rounded text-sm"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Cart Items - Scrollable */}
-        <div className="flex-1 overflow-auto p-4">
-          {!activeOrder || activeOrder.cart.length === 0 ? (
-            <div className="text-center text-gray-500 mt-8">
-              <ShoppingCart className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Cart is empty</p>
-              <p className="text-sm">Add items from the menu</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {activeOrder.cart.map(item => (
-                <div key={item.product.id} className="bg-gray-50 rounded-lg p-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{item.product.name}</h4>
-                      <p className="text-sm text-gray-500">${item.product.price} each</p>
-                    </div>
-                    <button
-                      onClick={() => removeFromCart(item.product.id)}
-                      className="text-red-500 hover:text-red-700 p-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => updateQuantity(item.product.id, -1)}
-                        className="w-8 h-8 bg-white border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-100"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </button>
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
-                      <button
-                        onClick={() => updateQuantity(item.product.id, 1)}
-                        className="w-8 h-8 bg-white border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-100"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <span className="font-semibold text-green-600">
-                      ${item.subtotal.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Cart Summary and Checkout */}
-        {activeOrder && activeOrder.cart.length > 0 && (
-          <div className="border-t border-gray-200 p-4 flex-shrink-0">
-            {/* Coupon and Discount Section */}
-            <div className="space-y-3 mb-4">
-              {/* Coupon Code */}
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  placeholder="Coupon code"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                />
-                <button
-                  onClick={applyCoupon}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700"
-                >
-                  Apply
-                </button>
-              </div>
-
-              {/* Custom Discount */}
-              <div className="flex items-center space-x-2">
-                <Percent className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">Custom Discount:</span>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  value={activeOrder.customDiscount || ''}
-                  onChange={(e) => updateActiveOrder({ customDiscount: parseFloat(e.target.value) || 0 })}
-                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                />
-                <span className="text-sm text-gray-500">$</span>
-              </div>
-
-              {/* Applied Coupon Display */}
-              {activeOrder.appliedCoupon && (
-                <div className="flex items-center justify-between bg-green-50 p-2 rounded">
-                  <div className="flex items-center space-x-2">
-                    <Tag className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-800">{activeOrder.appliedCoupon.code}</span>
-                    <span className="text-xs text-green-600">{activeOrder.appliedCoupon.description}</span>
-                  </div>
-                  <button
-                    onClick={() => updateActiveOrder({ appliedCoupon: undefined })}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-gray-600">
-                <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
-              </div>
-              {couponDiscount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Coupon Discount</span>
-                  <span>-${couponDiscount.toFixed(2)}</span>
-                </div>
-              )}
-              {customDiscount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Custom Discount</span>
-                  <span>-${customDiscount.toFixed(2)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-gray-600">
-                <span>Tax (8%)</span>
-                <span>${tax.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-lg font-bold text-gray-900 border-t pt-2">
-                <span>Total</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
-            </div>
-
-            {!showCheckout ? (
-              <button
-                onClick={() => setShowCheckout(true)}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Proceed to Checkout
-              </button>
-            ) : (
-              <div className="space-y-4">
-                {/* Payment Method */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setPaymentMethod('cash')}
-                      className={`flex-1 flex items-center justify-center py-3 px-3 rounded-lg border ${
-                        paymentMethod === 'cash'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <DollarSign className="w-5 h-5 mr-2" />
-                      Cash
-                    </button>
-                    <button
-                      onClick={() => setPaymentMethod('card')}
-                      className={`flex-1 flex items-center justify-center py-3 px-3 rounded-lg border ${
-                        paymentMethod === 'card'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <CreditCard className="w-5 h-5 mr-2" />
-                      Card
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => setShowCheckout(false)}
-                    className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition-colors"
-                  >
-                    Back
-                  </button>
-                  <button
-                    onClick={completeOrder}
-                    className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-                  >
-                    Complete Order
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Customer Details Modal */}
       {showCustomerModal && activeOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-96 max-w-full mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Customer Details</h3>
-              <button
-                onClick={() => setShowCustomerModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input
-                  type="text"
-                  value={activeOrder.customer.name || ''}
-                  onChange={(e) => updateActiveOrder({ 
-                    customer: { ...activeOrder.customer, name: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Customer name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-                <input
-                  type="tel"
-                  value={activeOrder.customer.phone || ''}
-                  onChange={(e) => updateActiveOrder({ 
-                    customer: { ...activeOrder.customer, phone: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="+1 (555) 000-0000"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  value={activeOrder.customer.email || ''}
-                  onChange={(e) => updateActiveOrder({ 
-                    customer: { ...activeOrder.customer, email: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="customer@example.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Birth Date</label>
-                <input
-                  type="date"
-                  value={activeOrder.customer.birthDate || ''}
-                  onChange={(e) => updateActiveOrder({ 
-                    customer: { ...activeOrder.customer, birthDate: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="flex space-x-3 mt-6">
-              <button
-                onClick={() => setShowCustomerModal(false)}
-                className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setShowCustomerModal(false)}
-                className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
+        <CustomerModal 
+          activeOrder={activeOrder}
+          onClose={() => setShowCustomerModal(false)}
+          onUpdateActiveOrder={updateActiveOrder}
+        />
       )}
     </div>
   );
