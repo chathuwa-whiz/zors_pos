@@ -41,7 +41,7 @@ export default function CartSummary({
   onApplyCoupon,
   onCompleteOrder
 }: CartSummaryProps) {
-  const { subtotal, couponDiscount, customDiscount, tax, total } = totals;
+  const { subtotal, couponDiscount, customDiscount, discount, total } = totals;
   
   const [cashGiven, setCashGiven] = useState<number>(0);
   const [invoiceId, setInvoiceId] = useState<string>('');
@@ -113,7 +113,7 @@ export default function CartSummary({
             onChange={(e) => onUpdateActiveOrder({ customDiscount: parseFloat(e.target.value) || 0 })}
             className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
           />
-          <span className="text-sm text-gray-500">$</span>
+          <span className="text-sm text-gray-500">Rs</span>
         </div>
 
         {/* Applied Coupon Display */}
@@ -137,33 +137,33 @@ export default function CartSummary({
       <div className="space-y-2 mb-4">
         <div className="flex justify-between text-gray-600">
           <span>Subtotal</span>
-          <span>${subtotal.toFixed(2)}</span>
+          <span>Rs.{subtotal.toFixed(2)}</span>
         </div>
         {couponDiscount > 0 && (
           <div className="flex justify-between text-green-600">
             <span>Coupon Discount</span>
-            <span>-${couponDiscount.toFixed(2)}</span>
+            <span>-Rs.{couponDiscount.toFixed(2)}</span>
           </div>
         )}
         {customDiscount > 0 && (
           <div className="flex justify-between text-green-600">
             <span>Custom Discount</span>
-            <span>-${customDiscount.toFixed(2)}</span>
+            <span>-Rs.{customDiscount.toFixed(2)}</span>
           </div>
         )}
         <div className="flex justify-between text-gray-600">
-          <span>Tax (8%)</span>
-          <span>${tax.toFixed(2)}</span>
+          <span>Discount (8%)</span>
+          <span>Rs.{discount.toFixed(2)}</span>
         </div>
         {paymentMethod === 'card' && selectedBankCharge && (
           <div className="flex justify-between text-orange-600">
             <span>Bank Service Charge ({selectedBank})</span>
-            <span>+${selectedBankCharge.charge.toFixed(2)}</span>
+            <span>+Rs.{selectedBankCharge.charge.toFixed(2)}</span>
           </div>
         )}
         <div className="flex justify-between text-lg font-bold text-gray-900 border-t pt-2">
           <span>Total</span>
-          <span>${finalTotal.toFixed(2)}</span>
+          <span>Rs.{finalTotal.toFixed(2)}</span>
         </div>
       </div>
 
@@ -213,7 +213,7 @@ export default function CartSummary({
                   Cash Given by Customer
                 </label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <div className="absolute left-3 bottom-1/2 transform w-4 h-4 text-gray-500">Rs.</div>
                   <input
                     type="number"
                     step="0.01"
@@ -229,18 +229,18 @@ export default function CartSummary({
                 <div className="space-y-2 pt-2 border-t border-green-200">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Total Amount:</span>
-                    <span className="font-medium">${total.toFixed(2)}</span>
+                    <span className="font-medium">Rs.{total.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Cash Given:</span>
-                    <span className="font-medium">${cashGiven.toFixed(2)}</span>
+                    <span className="font-medium">Rs.{cashGiven.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold">
                     <span className={change >= 0 ? 'text-green-700' : 'text-red-600'}>
                       {change >= 0 ? 'Change:' : 'Still Owe:'}
                     </span>
                     <span className={change >= 0 ? 'text-green-700' : 'text-red-600'}>
-                      ${Math.abs(change).toFixed(2)}
+                      Rs.{Math.abs(change).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -279,7 +279,7 @@ export default function CartSummary({
                   <option value="">Select payment method</option>
                   {bankServiceCharges.map(bank => (
                     <option key={bank.name} value={bank.name}>
-                      {bank.name} (+${bank.charge.toFixed(2)} service charge)
+                      {bank.name} (+Rs.{bank.charge.toFixed(2)} service charge)
                     </option>
                   ))}
                 </select>
@@ -289,15 +289,15 @@ export default function CartSummary({
                 <div className="pt-2 border-t border-blue-200">
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Order Total:</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>Rs.{total.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-orange-600">
                     <span>Service Charge:</span>
-                    <span>+${selectedBankCharge.charge.toFixed(2)}</span>
+                    <span>+Rs.{selectedBankCharge.charge.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold text-blue-700 mt-1">
                     <span>Final Total:</span>
-                    <span>${finalTotal.toFixed(2)}</span>
+                    <span>Rs.{finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
               )}

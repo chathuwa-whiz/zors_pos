@@ -31,7 +31,7 @@ export default function CartItems({
                   <h4 className="font-semibold text-gray-900 text-lg">{item.product.name}</h4>
                   <p className="text-sm text-gray-500 mt-1">{item.product.description}</p>
                   <p className="text-sm text-green-600 font-medium mt-1">
-                    ${item.product.price.toFixed(2)} each
+                    Rs.{item.product.price.toFixed(2)} each
                   </p>
                 </div>
                 <button
@@ -61,7 +61,7 @@ export default function CartItems({
                 <div className="text-right">
                   <div className="text-sm text-gray-500">Subtotal</div>
                   <span className="font-bold text-green-600 text-xl">
-                    ${item.subtotal.toFixed(2)}
+                    Rs.{item.subtotal.toFixed(2)}
                   </span>
                 </div>
               </div>
