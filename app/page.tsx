@@ -181,7 +181,29 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if no user
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <strong>Authentication Error:</strong> No user found. Please login.
+          </div>
+          <button
+            onClick={() => window.location.href = '/login'}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Go to Login
+          </button>
+        </div>
       </div>
     );
   }
@@ -214,7 +236,7 @@ export default function HomePage() {
               <div className="flex items-center space-x-2">
                 <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
                   <span className="text-white font-bold text-sm">
-                    {user?.username.charAt(0).toUpperCase()}
+                    {user?.username?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
                 
@@ -256,7 +278,7 @@ export default function HomePage() {
         {/* Welcome Message */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.username}!
+            Welcome back, {user?.username || 'User'}!
           </h1>
           <p className="text-gray-600">
             {user?.role === 'admin' 
@@ -276,10 +298,10 @@ export default function HomePage() {
             <div
               key={module.id}
               onClick={() => window.location.href = module.href}
-              className={`${module.color} ${module.textColor} rounded-2xl p-6 cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-2xl group`}
+              className={`relative ${module.color} ${module.textColor} rounded-2xl p-6 cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-2xl group overflow-hidden`}
             >
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="bg-white bg-opacity-20 rounded-full p-4 group-hover:bg-opacity-30 transition-all duration-300">
+              <div className="flex flex-col items-center text-center space-y-4 relative z-10">
+                <div className=" bg-opacity-20 rounded-full p-4 group-hover:bg-opacity-30 transition-all duration-300">
                   {module.icon}
                 </div>
                 
@@ -292,9 +314,6 @@ export default function HomePage() {
                   </p>
                 </div>
               </div>
-
-              {/* Hover Effect Overlay */}
-              <div className="absolute inset-0 bg-white bg-opacity-0 group-hover:bg-opacity-10 rounded-2xl transition-all duration-300"></div>
             </div>
           ))}
         </div>
