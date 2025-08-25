@@ -1,8 +1,9 @@
 import bcrypt from "bcryptjs";
 import connectDB from "@/app/lib/mongodb";
 import User from "@/app/models/User";
-import { RegisterRequest } from "@/app/types/user";
+import { LoginRequest } from "@/app/types/user";
 import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 export async function POST(req: NextRequest) {
 
@@ -10,7 +11,7 @@ export async function POST(req: NextRequest) {
 
         await connectDB();
 
-        const { username, password }: RegisterRequest = await req.json();
+        const { username, password }: LoginRequest = await req.json();
 
         // validations
         if (!username || !password) {
@@ -29,8 +30,19 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: 'Invalid credentials' });
         }
 
+        // generate JWT token
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error("JWT_SECRET environment variable is not defined");
+        }
+        const token = jwt.sign(
+            { id: user._id, username: user.username, role: user.role }, 
+            secret, 
+            { expiresIn: '24h' }
+        );
+
         // give response
-        return NextResponse.json(user);
+        return NextResponse.json({ user, token });
 
     } catch (error) {
         console.error(error);
