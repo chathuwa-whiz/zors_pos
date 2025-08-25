@@ -20,6 +20,4 @@ const UserSchema = new Schema<User>({
     updatedAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-const UserModel = mongoose.model<User>('User', UserSchema);
-
-export default UserModel;
+export default mongoose.models.User || mongoose.model<User>('User', UserSchema);
