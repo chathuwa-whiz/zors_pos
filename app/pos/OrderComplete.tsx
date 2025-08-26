@@ -28,6 +28,7 @@ export default function OrderComplete({
 
   const handlePrint = () => {
     window.print();
+    onBackToPOS && onBackToPOS();
   };
 
   const handleDownload = () => {
@@ -147,7 +148,7 @@ export default function OrderComplete({
 
         {/* Action Buttons */}
         <div className="space-y-3 print:hidden">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <button
               onClick={handlePrint}
               className="flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -155,22 +156,22 @@ export default function OrderComplete({
               <Printer className="w-4 h-4 mr-2" />
               Print
             </button>
-            <button
+            {/* <button
               onClick={handleDownload}
               className="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               <Download className="w-4 h-4 mr-2" />
               Download
-            </button>
+            </button> */}
           </div>
 
-          <button
+          {/* <button
             onClick={onBackToPOS}
             className="w-full flex items-center justify-center px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to POS
-          </button>
+          </button> */}
         </div>
       </div>
     </div>
