@@ -25,31 +25,28 @@ export default function OrderControls({
             <UserPlus className="w-4 h-4" />
             <span>Customer</span>
           </button>
-          
+
           <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
             <button
-              onClick={() => onUpdateActiveOrder({ orderType: 'dine-in' })}
-              className={`px-3 py-1 rounded text-sm ${
-                activeOrder.orderType === 'dine-in' ? 'bg-white shadow' : ''
-              }`}
+              onClick={() => onUpdateActiveOrder({ orderType: 'dine-in', tableCharge: activeOrder.tableCharge || 50 })}
+              className={`px-3 py-1 rounded text-sm ${activeOrder.orderType === 'dine-in' ? 'bg-white shadow' : ''
+                }`}
             >
               <Home className="w-4 h-4 inline mr-1" />
               Dine-in
             </button>
             <button
-              onClick={() => onUpdateActiveOrder({ orderType: 'takeaway' })}
-              className={`px-3 py-1 rounded text-sm ${
-                activeOrder.orderType === 'takeaway' ? 'bg-white shadow' : ''
-              }`}
+              onClick={() => onUpdateActiveOrder({ orderType: 'takeaway', tableCharge: 0 })}
+              className={`px-3 py-1 rounded text-sm ${activeOrder.orderType === 'takeaway' ? 'bg-white shadow' : ''
+                }`}
             >
               <Car className="w-4 h-4 inline mr-1" />
               Takeaway
             </button>
             <button
-              onClick={() => onUpdateActiveOrder({ orderType: 'delivery' })}
-              className={`px-3 py-1 rounded text-sm ${
-                activeOrder.orderType === 'delivery' ? 'bg-white shadow' : ''
-              }`}
+              onClick={() => onUpdateActiveOrder({ orderType: 'delivery', tableCharge: 0 })}
+              className={`px-3 py-1 rounded text-sm ${activeOrder.orderType === 'delivery' ? 'bg-white shadow' : ''
+                }`}
             >
               <MapPin className="w-4 h-4 inline mr-1" />
               Delivery
@@ -57,6 +54,24 @@ export default function OrderControls({
           </div>
         </div>
       </div>
+
+      {/* Table Charge Input for Dine-in */}
+      {activeOrder.orderType === 'dine-in' && (
+        <div className="mb-3">
+          <div className="flex items-center space-x-2">
+            <Home className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-600">Table Charge:</span>
+            <input
+              type="number"
+              placeholder="50"
+              value={activeOrder.tableCharge || ''}
+              onChange={(e) => onUpdateActiveOrder({ tableCharge: parseFloat(e.target.value) || 0 })}
+              className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+            />
+            <span className="text-sm text-gray-500">Rs</span>
+          </div>
+        </div>
+      )}
 
       {/* Kitchen Note */}
       <div className="mb-3">

@@ -41,16 +41,16 @@ export default function CartSummary({
   onApplyCoupon,
   onCompleteOrder
 }: CartSummaryProps) {
-  const { subtotal, couponDiscount, customDiscount, discount, total } = totals;
-  
+  const { subtotal, couponDiscount, customDiscount, tableCharge, total } = totals;
+
   const [cashGiven, setCashGiven] = useState<number>(0);
   const [invoiceId, setInvoiceId] = useState<string>('');
   const [selectedBank, setSelectedBank] = useState<string>('');
-  
+
   const change = Math.max(0, cashGiven - total);
   const selectedBankCharge = bankServiceCharges.find(bank => bank.name === selectedBank);
-  const finalTotal = paymentMethod === 'card' && selectedBankCharge 
-    ? total + selectedBankCharge.charge 
+  const finalTotal = paymentMethod === 'card' && selectedBankCharge
+    ? total + selectedBankCharge.charge
     : total;
 
   const handleCompleteOrder = () => {
@@ -87,7 +87,7 @@ export default function CartSummary({
       <div className="space-y-3 mb-4">
         {/* Coupon Code */}
         <div className="flex space-x-2">
-          <select
+          {/* <select
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value)}
             className="border border-gray-300 rounded-lg text-sm flex-1 py-2"
@@ -98,7 +98,7 @@ export default function CartSummary({
                 {coupon.description}
               </option>
             ))}
-          </select>
+          </select> */}
           <input
             type="text"
             placeholder="Coupon code"
@@ -163,10 +163,12 @@ export default function CartSummary({
             <span>-Rs.{customDiscount.toFixed(2)}</span>
           </div>
         )}
-        <div className="flex justify-between text-gray-600">
-          <span>Discount (8%)</span>
-          <span>Rs.{discount.toFixed(2)}</span>
-        </div>
+        {tableCharge > 0 && (
+          <div className="flex justify-between text-blue-600">
+            <span>Table Charge</span>
+            <span>+Rs.{tableCharge.toFixed(2)}</span>
+          </div>
+        )}
         {paymentMethod === 'card' && selectedBankCharge && (
           <div className="flex justify-between text-orange-600">
             <span>Bank Service Charge ({selectedBank})</span>
@@ -194,22 +196,20 @@ export default function CartSummary({
             <div className="flex space-x-2">
               <button
                 onClick={() => setPaymentMethod('cash')}
-                className={`flex-1 flex items-center justify-center py-3 px-3 rounded-lg border ${
-                  paymentMethod === 'cash'
+                className={`flex-1 flex items-center justify-center py-3 px-3 rounded-lg border ${paymentMethod === 'cash'
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 <DollarSign className="w-5 h-5 mr-2" />
                 Cash
               </button>
               <button
                 onClick={() => setPaymentMethod('card')}
-                className={`flex-1 flex items-center justify-center py-3 px-3 rounded-lg border ${
-                  paymentMethod === 'card'
+                className={`flex-1 flex items-center justify-center py-3 px-3 rounded-lg border ${paymentMethod === 'card'
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 <CreditCard className="w-5 h-5 mr-2" />
                 Card
@@ -236,7 +236,7 @@ export default function CartSummary({
                   />
                 </div>
               </div>
-              
+
               {cashGiven > 0 && (
                 <div className="space-y-2 pt-2 border-t border-green-200">
                   <div className="flex justify-between text-sm">
@@ -296,7 +296,7 @@ export default function CartSummary({
                   ))}
                 </select>
               </div>
-              
+
               {selectedBankCharge && (
                 <div className="pt-2 border-t border-blue-200">
                   <div className="flex justify-between text-sm text-gray-600">
@@ -326,11 +326,10 @@ export default function CartSummary({
             <button
               onClick={handleCompleteOrder}
               disabled={!isPaymentValid()}
-              className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
-                isPaymentValid()
+              className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${isPaymentValid()
                   ? 'bg-green-600 text-white hover:bg-green-700'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
+                }`}
             >
               Complete Order
             </button>

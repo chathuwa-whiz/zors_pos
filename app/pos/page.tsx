@@ -69,6 +69,7 @@ export default function POSSystem() {
       orderType: 'dine-in',
       customDiscount: 0,
       kitchenNote: '',
+      tableCharge: 0,
       createdAt: new Date(),
       status: 'active',
       isDefault: true
@@ -102,6 +103,7 @@ export default function POSSystem() {
       orderType: 'dine-in',
       customDiscount: 0,
       kitchenNote: '',
+      tableCharge: 0,
       createdAt: new Date(),
       status: 'active'
     };
@@ -232,7 +234,7 @@ export default function POSSystem() {
 
   // Calculate totals
   const calculateTotals = (): OrderTotals => {
-    if (!activeOrder) return { subtotal: 0, couponDiscount: 0, customDiscount: 0, discount: 0, total: 0 };
+    if (!activeOrder) return { subtotal: 0, couponDiscount: 0, customDiscount: 0, tableCharge: 0, total: 0 };
 
     const subtotal = activeOrder.cart.reduce((sum, item) => sum + item.subtotal, 0);
 
@@ -255,10 +257,11 @@ export default function POSSystem() {
 
     const customDiscount = activeOrder.customDiscount || 0;
     const discountedAmount = subtotal - couponDiscount - customDiscount;
-    const discount = Math.max(0, discountedAmount) * 0.08;
-    const total = Math.max(0, discountedAmount) - discount;
+    // const discount = Math.max(0, discountedAmount) * 0.08;
+    const total = Math.max(0, discountedAmount);
+    const tableCharge = activeOrder.tableCharge || 0;
 
-    return { subtotal, couponDiscount, customDiscount, discount, total };
+    return { subtotal, couponDiscount, customDiscount, tableCharge, total };
   };
 
   const totals = calculateTotals();
@@ -297,6 +300,7 @@ export default function POSSystem() {
         orderType: 'dine-in',
         customDiscount: 0,
         kitchenNote: '',
+        tableCharge: 0,
         createdAt: new Date(),
         status: 'active',
         isDefault: true
