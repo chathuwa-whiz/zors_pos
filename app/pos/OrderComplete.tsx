@@ -1,21 +1,23 @@
 "use client";
-import { Customer, CartItem } from '../types/pos';
+import { Customer, CartItem, OrderTotals } from '../types/pos';
 import { Check, Printer, Download, ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface OrderCompleteProps {
-  total: number;
+  totals: OrderTotals;
   items?: CartItem[];
   customer?: Customer;
   orderId?: string;
+  orderType?: 'dine-in' | 'takeaway' | 'delivery';
   onBackToPOS?: () => void;
 }
 
 export default function OrderComplete({
-  total,
+  totals,
   items = [],
   customer,
   orderId,
+  orderType,
   onBackToPOS
 }: OrderCompleteProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -29,13 +31,12 @@ export default function OrderComplete({
   };
 
   const handleDownload = () => {
-    // Generate and download PDF logic here
-    console.log('Download bill as PDF');
+    window.alert('Download functionality is not implemented yet.');
   };
 
-  const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
-  // const tax = subtotal * 0.1; // 10% tax
-  // const finalTotal = subtotal + tax;
+  const { subtotal, couponDiscount, customDiscount, tableCharge, total } = totals;
+
+  console.log({ subtotal, couponDiscount, customDiscount, tableCharge, total });
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -64,6 +65,10 @@ export default function OrderComplete({
             <div className="flex justify-between text-sm mb-2">
               <span className="font-medium">Order ID:</span>
               <span>{orderId || `ORD-${Date.now().toString().slice(-6)}`}</span>
+            </div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="font-medium">Order Type:</span>
+              <span className="capitalize">{orderType || 'dine-in'}</span>
             </div>
             {customer && (
               <div className="text-sm">
@@ -109,13 +114,27 @@ export default function OrderComplete({
               <span>Subtotal:</span>
               <span>Rs.{subtotal.toFixed(2)}</span>
             </div>
-            {/* <div className="flex justify-between text-sm">
-              <span>Tax (10%):</span>
-              <span>Rs.{tax.toFixed(2)}</span>
-            </div> */}
+            {couponDiscount > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span>Coupon Discount:</span>
+                <span>-Rs.{couponDiscount.toFixed(2)}</span>
+              </div>
+            )}
+            {customDiscount > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span>Custom Discount:</span>
+                <span>-Rs.{customDiscount.toFixed(2)}</span>
+              </div>
+            )}
+            {tableCharge > 0 && (
+              <div className="flex justify-between text-sm text-blue-600">
+                <span>Table Charge:</span>
+                <span>+Rs.{tableCharge.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-lg border-t pt-2">
               <span>Total:</span>
-              <span>Rs.{subtotal.toFixed(2)}</span>
+              <span>Rs.{total.toFixed(2)}</span>
             </div>
           </div>
 

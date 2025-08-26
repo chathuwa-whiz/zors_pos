@@ -35,6 +35,65 @@ export default function POSSystem() {
 
   const [couponCode, setCouponCode] = useState('');
 
+  // Persist orders to localStorage
+  const saveOrdersToStorage = (ordersToSave: Order[]) => {
+    try {
+      const serializedOrders = ordersToSave.map(order => ({
+        ...order,
+        createdAt: order.createdAt.toISOString() // Convert Date to string
+      }));
+      localStorage.setItem('posOrders', JSON.stringify(serializedOrders));
+    } catch (error) {
+      console.error('Failed to save orders to localStorage:', error);
+    }
+  };
+
+  // Load orders from localStorage
+  const loadOrdersFromStorage = (): Order[] => {
+    try {
+      const storedOrders = localStorage.getItem('posOrders');
+      if (storedOrders) {
+        const parsedOrders = JSON.parse(storedOrders);
+        return parsedOrders.map((order: any) => ({
+          ...order,
+          createdAt: new Date(order.createdAt) // Convert string back to Date
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load orders from localStorage:', error);
+    }
+    return [];
+  };
+
+  // Save active order ID to localStorage
+  const saveActiveOrderIdToStorage = (orderId: string) => {
+    try {
+      localStorage.setItem('activeOrderId', orderId);
+    } catch (error) {
+      console.error('Failed to save active order ID:', error);
+    }
+  };
+
+  // Load active order ID from localStorage
+  const loadActiveOrderIdFromStorage = (): string => {
+    try {
+      return localStorage.getItem('activeOrderId') || '';
+    } catch (error) {
+      console.error('Failed to load active order ID:', error);
+      return '';
+    }
+  };
+
+  // Clear POS data from localStorage
+  const clearPOSStorage = () => {
+    try {
+      localStorage.removeItem('posOrders');
+      localStorage.removeItem('activeOrderId');
+    } catch (error) {
+      console.error('Failed to clear POS storage:', error);
+    }
+  };
+
   useEffect(() => {
     // Get user from localStorage
     const storedUser = localStorage.getItem('user');
@@ -59,24 +118,63 @@ export default function POSSystem() {
     setProducts(mockProducts);
     setCategories(['All', ...Array.from(new Set(mockProducts.map(p => p.category)))]);
 
-    // Initialize with first order
-    const initialOrder: Order = {
-      id: '1',
-      name: 'Live Bill',
-      cart: [],
-      customer: {},
-      cashier: user!,
-      orderType: 'dine-in',
-      customDiscount: 0,
-      kitchenNote: '',
-      tableCharge: 0,
-      createdAt: new Date(),
-      status: 'active',
-      isDefault: true
-    };
-    setOrders([initialOrder]);
-    setActiveOrderId('1');
+    // Load existing orders from localStorage
+    const savedOrders = loadOrdersFromStorage();
+    const savedActiveOrderId = loadActiveOrderIdFromStorage();
+
+    if (savedOrders.length > 0) {
+      // Restore saved orders
+      setOrders(savedOrders);
+
+      // Validate saved active order ID
+      const validActiveOrder = savedOrders.find(order => order.id === savedActiveOrderId && order.status === 'active');
+      if (validActiveOrder) {
+        setActiveOrderId(savedActiveOrderId);
+      } else {
+        // If saved active order is invalid, use the first active order
+        const firstActiveOrder = savedOrders.find(order => order.status === 'active');
+        if (firstActiveOrder) {
+          setActiveOrderId(firstActiveOrder.id);
+          saveActiveOrderIdToStorage(firstActiveOrder.id);
+        }
+      }
+    } else {
+      // Initialize with default order if no saved orders
+      const initialOrder: Order = {
+        id: '1',
+        name: 'Live Bill',
+        cart: [],
+        customer: {},
+        cashier: user!,
+        orderType: 'dine-in',
+        customDiscount: 0,
+        kitchenNote: '',
+        tableCharge: 0,
+        createdAt: new Date(),
+        status: 'active',
+        isDefault: true
+      };
+      const initialOrders = [initialOrder];
+      setOrders(initialOrders);
+      setActiveOrderId('1');
+      saveOrdersToStorage(initialOrders);
+      saveActiveOrderIdToStorage('1');
+    }
   }, []);
+
+  // Update orders effect to save to localStorage
+  useEffect(() => {
+    if (orders.length > 0) {
+      saveOrdersToStorage(orders);
+    }
+  }, [orders]);
+
+  // Update active order ID effect to save to localStorage
+  useEffect(() => {
+    if (activeOrderId) {
+      saveActiveOrderIdToStorage(activeOrderId);
+    }
+  }, [activeOrderId]);
 
   const activeOrder = orders.find(order => order.id === activeOrderId);
 
@@ -107,7 +205,8 @@ export default function POSSystem() {
       createdAt: new Date(),
       status: 'active'
     };
-    setOrders([...orders, newOrder]);
+    const updatedOrders = [...orders, newOrder];
+    setOrders(updatedOrders);
     setActiveOrderId(newOrderId);
   };
 
@@ -173,11 +272,12 @@ export default function POSSystem() {
 
   // Update active order
   const updateActiveOrder = (updates: Partial<Order>) => {
-    setOrders(orders.map(order =>
+    const updatedOrders = orders.map(order =>
       order.id === activeOrderId
         ? { ...order, ...updates }
         : order
-    ));
+    );
+    setOrders(updatedOrders);
   };
 
   // Add to cart
@@ -256,43 +356,54 @@ export default function POSSystem() {
     }
 
     const customDiscount = activeOrder.customDiscount || 0;
+    const tableCharge = activeOrder.orderType === 'dine-in' ? (activeOrder.tableCharge || 50) : 0;
+
     const discountedAmount = subtotal - couponDiscount - customDiscount;
-    // const discount = Math.max(0, discountedAmount) * 0.08;
-    const total = Math.max(0, discountedAmount);
-    const tableCharge = activeOrder.tableCharge || 0;
+    const total = Math.max(0, discountedAmount) + tableCharge;
 
     return { subtotal, couponDiscount, customDiscount, tableCharge, total };
   };
 
   const totals = calculateTotals();
 
+  // Add state to store completed order data
+  const [completedOrderData, setCompletedOrderData] = useState<{
+    order: Order;
+    totals: OrderTotals;
+  } | null>(null);
+
   // Complete order
   const completeOrder = () => {
     if (!activeOrder) return;
 
+    const currentTotals = calculateTotals();
+
     console.log('Order completed:', {
       ...activeOrder,
       paymentMethod,
-      totals,
+      totals: currentTotals,
       timestamp: new Date()
+    });
+
+    // Store the completed order data BEFORE removing it
+    setCompletedOrderData({
+      order: { ...activeOrder, status: 'completed' },
+      totals: currentTotals
     });
 
     updateActiveOrder({ status: 'completed' });
     setOrderComplete(true);
 
-    // The bill will remain visible until user manually goes back to POS
+    // Remove the order from active orders
     const updatedOrders = orders.filter(order => order.id !== activeOrderId);
     setOrders(updatedOrders);
 
     if (updatedOrders.length > 0) {
-      const remainingActiveOrders = updatedOrders.filter(order => order.status === 'active');
-      if (remainingActiveOrders.length > 0) {
-        setActiveOrderId(remainingActiveOrders[0].id);
-      }
+      setActiveOrderId(updatedOrders[0].id);
     } else {
-      // Create new default order if no orders left
+      // Create new default order
       const newOrder: Order = {
-        id: (Date.now()).toString(),
+        id: Date.now().toString(),
         name: 'Live Bill',
         cart: [],
         customer: {},
@@ -309,8 +420,28 @@ export default function POSSystem() {
       setActiveOrderId(newOrder.id);
     }
 
-    // Keep setShowCheckout(false) here but don't reset orderComplete automatically
     setShowCheckout(false);
+  };
+
+  // Add a function to manually clear all data (useful for debugging or reset)
+  const resetPOSData = () => {
+    clearPOSStorage();
+    const initialOrder: Order = {
+      id: '1',
+      name: 'Live Bill',
+      cart: [],
+      customer: {},
+      cashier: user!,
+      orderType: 'dine-in',
+      customDiscount: 0,
+      kitchenNote: '',
+      tableCharge: 0,
+      createdAt: new Date(),
+      status: 'active',
+      isDefault: true
+    };
+    setOrders([initialOrder]);
+    setActiveOrderId('1');
   };
 
   if (!user) {
@@ -329,14 +460,19 @@ export default function POSSystem() {
     );
   }
 
-  if (orderComplete && activeOrder) {
+  if (orderComplete && completedOrderData) {
+    console.log('completed order data', completedOrderData);
     return (
       <OrderComplete
-        total={totals.total}
-        items={activeOrder.cart}
-        customer={activeOrder.customer}
-        orderId={activeOrder.id}
-        onBackToPOS={() => { setOrderComplete(false) }}
+        totals={completedOrderData.totals}
+        items={completedOrderData.order.cart}
+        customer={completedOrderData.order.customer}
+        orderId={completedOrderData.order.id}
+        orderType={completedOrderData.order.orderType}
+        onBackToPOS={() => {
+          setOrderComplete(false);
+          setCompletedOrderData(null);
+        }}
       />
     );
   }
@@ -384,6 +520,15 @@ export default function POSSystem() {
           onUpdateActiveOrder={updateActiveOrder}
         />
       )}
+
+      {/* Debug button - remove in production */}
+      <button
+        onClick={resetPOSData}
+        className="fixed top-14 right-4 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 opacity-20 hover:opacity-100 transition-opacity"
+        title="Reset POS Data (Debug)"
+      >
+        Reset
+      </button>
     </div>
   );
 }
