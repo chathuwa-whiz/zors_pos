@@ -1,12 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import Supplier from '@/models/Supplier';
 import dbConnect from '@/lib/mongodb';
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ id: String }> }) {
   await dbConnect();
   try {
     const body = await request.json();
-    const supplier = await Supplier.findByIdAndUpdate(params.id, body, { new: true });
+    const { id } = await context.params;
+    const supplier = await Supplier.findByIdAndUpdate(id, body, { new: true });
     if (!supplier) return NextResponse.json({ error: 'Supplier not found' }, { status: 404 });
     return NextResponse.json(supplier);
   } catch (error) {
@@ -14,10 +15,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: String }> }) {
   await dbConnect();
   try {
-    const supplier = await Supplier.findByIdAndDelete(params.id);
+    const { id } = await context.params;
+    const supplier = await Supplier.findByIdAndDelete(id);
     if (!supplier) return NextResponse.json({ error: 'Supplier not found' }, { status: 404 });
     return NextResponse.json({ success: true });
   } catch (error) {
