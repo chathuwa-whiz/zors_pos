@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import { Product, Order, Coupon, OrderTotals, CartItem } from '@/app/types/pos';
-import  { User } from '@/app/types/user';
+import { User } from '@/app/types/user';
 import { useRouter } from 'next/navigation';
 import ProductsPanel from './ProductsPanel';
 import OrdersPanel from './OrdersPanel';
@@ -14,12 +14,12 @@ export default function POSSystem() {
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  
+
   // Multi-order management
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeOrderId, setActiveOrderId] = useState<string>('');
   const [draggedOrderId, setDraggedOrderId] = useState<string | null>(null);
-  
+
   // UI States
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -112,7 +112,7 @@ export default function POSSystem() {
   // Delete order
   const deleteOrder = (orderId: string) => {
     const orderToDelete = orders.find(order => order.id === orderId);
-    
+
     // Don't allow deleting the default "Live Bill" order
     if (orderToDelete?.isDefault) {
       return;
@@ -143,7 +143,7 @@ export default function POSSystem() {
 
   const handleDrop = (e: React.DragEvent, targetOrderId: string) => {
     e.preventDefault();
-    
+
     if (!draggedOrderId || draggedOrderId === targetOrderId) {
       setDraggedOrderId(null);
       return;
@@ -151,7 +151,7 @@ export default function POSSystem() {
 
     const draggedOrder = orders.find(order => order.id === draggedOrderId);
     const targetOrder = orders.find(order => order.id === targetOrderId);
-    
+
     // Don't allow reordering with the default order
     if (draggedOrder?.isDefault || targetOrder?.isDefault) {
       setDraggedOrderId(null);
@@ -171,8 +171,8 @@ export default function POSSystem() {
 
   // Update active order
   const updateActiveOrder = (updates: Partial<Order>) => {
-    setOrders(orders.map(order => 
-      order.id === activeOrderId 
+    setOrders(orders.map(order =>
+      order.id === activeOrderId
         ? { ...order, ...updates }
         : order
     ));
@@ -181,12 +181,12 @@ export default function POSSystem() {
   // Add to cart
   const addToCart = (product: Product) => {
     if (!activeOrder) return;
-    
+
     const existingItem = activeOrder.cart.find(item => item.product.id === product.id);
-    
+
     if (existingItem) {
-      const updatedCart = activeOrder.cart.map(item => 
-        item.product.id === product.id 
+      const updatedCart = activeOrder.cart.map(item =>
+        item.product.id === product.id
           ? { ...item, quantity: item.quantity + 1, subtotal: (item.quantity + 1) * product.sellingPrice }
           : item
       );
@@ -200,17 +200,17 @@ export default function POSSystem() {
   // Update cart quantity
   const updateQuantity = (productId: string, change: number) => {
     if (!activeOrder) return;
-    
+
     const updatedCart = activeOrder.cart.map(item => {
       if (item.product.id === productId) {
         const newQuantity = Math.max(0, item.quantity + change);
-        return newQuantity === 0 
-          ? null 
+        return newQuantity === 0
+          ? null
           : { ...item, quantity: newQuantity, subtotal: newQuantity * item.product.sellingPrice };
       }
       return item;
     }).filter(Boolean) as CartItem[];
-    
+
     updateActiveOrder({ cart: updatedCart });
   };
 
@@ -233,9 +233,9 @@ export default function POSSystem() {
   // Calculate totals
   const calculateTotals = (): OrderTotals => {
     if (!activeOrder) return { subtotal: 0, couponDiscount: 0, customDiscount: 0, discount: 0, total: 0 };
-    
+
     const subtotal = activeOrder.cart.reduce((sum, item) => sum + item.subtotal, 0);
-    
+
     let couponDiscount = 0;
     if (activeOrder.appliedCoupon) {
       const coupon = activeOrder.appliedCoupon;
@@ -243,21 +243,21 @@ export default function POSSystem() {
         const applicableAmount = activeOrder.cart
           .filter(item => coupon.applicableItems!.includes(item.product.id))
           .reduce((sum, item) => sum + item.subtotal, 0);
-        couponDiscount = coupon.type === 'percentage' 
+        couponDiscount = coupon.type === 'percentage'
           ? (applicableAmount * coupon.discount / 100)
           : Math.min(coupon.discount, applicableAmount);
       } else {
-        couponDiscount = coupon.type === 'percentage' 
+        couponDiscount = coupon.type === 'percentage'
           ? (subtotal * coupon.discount / 100)
           : coupon.discount;
       }
     }
-    
+
     const customDiscount = activeOrder.customDiscount || 0;
     const discountedAmount = subtotal - couponDiscount - customDiscount;
     const discount = Math.max(0, discountedAmount) * 0.08;
     const total = Math.max(0, discountedAmount) - discount;
-    
+
     return { subtotal, couponDiscount, customDiscount, discount, total };
   };
 
@@ -266,48 +266,47 @@ export default function POSSystem() {
   // Complete order
   const completeOrder = () => {
     if (!activeOrder) return;
-    
+
     console.log('Order completed:', {
       ...activeOrder,
       paymentMethod,
       totals,
       timestamp: new Date()
     });
-    
+
     updateActiveOrder({ status: 'completed' });
     setOrderComplete(true);
-    
-    setTimeout(() => {
-      const updatedOrders = orders.filter(order => order.id !== activeOrderId);
-      setOrders(updatedOrders);
-      
-      if (updatedOrders.length > 0) {
-        const remainingActiveOrders = updatedOrders.filter(order => order.status === 'active');
-        if (remainingActiveOrders.length > 0) {
-          setActiveOrderId(remainingActiveOrders[0].id);
-        }
-      } else {
-        // Create new default order if no orders left
-        const newOrder: Order = {
-          id: (Date.now()).toString(),
-          name: 'Live Bill',
-          cart: [],
-          customer: {},
-          cashier: user!,
-          orderType: 'dine-in',
-          customDiscount: 0,
-          kitchenNote: '',
-          createdAt: new Date(),
-          status: 'active',
-          isDefault: true
-        };
-        setOrders([newOrder]);
-        setActiveOrderId(newOrder.id);
+
+    // The bill will remain visible until user manually goes back to POS
+    const updatedOrders = orders.filter(order => order.id !== activeOrderId);
+    setOrders(updatedOrders);
+
+    if (updatedOrders.length > 0) {
+      const remainingActiveOrders = updatedOrders.filter(order => order.status === 'active');
+      if (remainingActiveOrders.length > 0) {
+        setActiveOrderId(remainingActiveOrders[0].id);
       }
-      
-      setShowCheckout(false);
-      setOrderComplete(false);
-    }, 3000);
+    } else {
+      // Create new default order if no orders left
+      const newOrder: Order = {
+        id: (Date.now()).toString(),
+        name: 'Live Bill',
+        cart: [],
+        customer: {},
+        cashier: user!,
+        orderType: 'dine-in',
+        customDiscount: 0,
+        kitchenNote: '',
+        createdAt: new Date(),
+        status: 'active',
+        isDefault: true
+      };
+      setOrders([newOrder]);
+      setActiveOrderId(newOrder.id);
+    }
+
+    // Keep setShowCheckout(false) here but don't reset orderComplete automatically
+    setShowCheckout(false);
   };
 
   if (!user) {
@@ -328,22 +327,26 @@ export default function POSSystem() {
 
   if (orderComplete && activeOrder) {
     return (
-      <OrderComplete 
+      <OrderComplete
         total={totals.total}
+        items={activeOrder.cart}
+        customer={activeOrder.customer}
+        orderId={activeOrder.id}
+        onBackToPOS={() => { setOrderComplete(false) }}
       />
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <ProductsPanel 
+      <ProductsPanel
         user={user}
         products={products}
         categories={categories}
         onAddToCart={addToCart}
       />
-      
-      <OrdersPanel 
+
+      <OrdersPanel
         orders={orders}
         activeOrderId={activeOrderId}
         activeOrder={activeOrder}
@@ -371,7 +374,7 @@ export default function POSSystem() {
       />
 
       {showCustomerModal && activeOrder && (
-        <CustomerModal 
+        <CustomerModal
           activeOrder={activeOrder}
           onClose={() => setShowCustomerModal(false)}
           onUpdateActiveOrder={updateActiveOrder}

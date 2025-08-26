@@ -42,7 +42,7 @@ export default function Login() {
       if (data.user.role === 'admin') {
         router.push('/');
       } else {
-        router.push('/');
+        router.push('/pos');
       }
 
     } catch (error) {
