@@ -87,6 +87,18 @@ export default function CartSummary({
       <div className="space-y-3 mb-4">
         {/* Coupon Code */}
         <div className="flex space-x-2">
+          <select
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value)}
+            className="border border-gray-300 rounded-lg text-sm flex-1 py-2"
+          >
+            <option value="">Select a coupon</option>
+            {availableCoupons.map((coupon) => (
+              <option key={coupon.code} value={coupon.code}>
+                {coupon.description}
+              </option>
+            ))}
+          </select>
           <input
             type="text"
             placeholder="Coupon code"
