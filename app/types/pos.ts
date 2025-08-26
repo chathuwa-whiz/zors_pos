@@ -59,12 +59,13 @@ export interface Order {
   status: 'active' | 'completed';
   isDefault?: boolean;
   paymentDetails?: PaymentDetails;
+  tableCharge: number;
 }
 
 export interface OrderTotals {
   subtotal: number;
   couponDiscount: number;
   customDiscount: number;
-  discount: number;
   total: number;
+  tableCharge: number;
 }
