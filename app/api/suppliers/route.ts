@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import Supplier from '@/app/models/Supplier';
-import dbConnect from '@/lib/mongodb';
+import connectDB from '@/app/lib/mongodb';
 
 export async function GET() {
-  await dbConnect();
   try {
+    await connectDB();
     const suppliers = await Supplier.find();
     return NextResponse.json(suppliers);
   } catch (error) {
@@ -13,8 +13,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  await dbConnect();
   try {
+    await connectDB();
     const body = await request.json();
     const supplier = await Supplier.create(body);
     return NextResponse.json(supplier, { status: 201 });
