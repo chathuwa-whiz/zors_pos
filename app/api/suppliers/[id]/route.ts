@@ -2,9 +2,8 @@ import { NextResponse } from 'next/server';
 import Supplier from '@/models/Supplier';
 import dbConnect from '@/lib/mongodb';
 
-export async function PUT(request: Request, context: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   await dbConnect();
-  const { params } = await context;
   try {
     const body = await request.json();
     const supplier = await Supplier.findByIdAndUpdate(params.id, body, { new: true });
@@ -15,9 +14,8 @@ export async function PUT(request: Request, context: { params: { id: string } })
   }
 }
 
-export async function DELETE(request: Request, context: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   await dbConnect();
-  const { params } = await context;
   try {
     const supplier = await Supplier.findByIdAndDelete(params.id);
     if (!supplier) return NextResponse.json({ error: 'Supplier not found' }, { status: 404 });

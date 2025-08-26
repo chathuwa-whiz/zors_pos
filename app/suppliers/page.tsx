@@ -37,7 +37,7 @@ export default function Page() {
     setSubmitting(true);
     setError('');
     try {
-      let res, newSupplier;
+      let res: Response, newSupplier: Supplier;
       if (editId) {
         res = await fetch(`/api/suppliers/${editId}`, {
           method: 'PUT',
@@ -45,7 +45,7 @@ export default function Page() {
           body: JSON.stringify(form),
         });
         if (!res.ok) throw new Error('Failed to update supplier');
-        newSupplier = await res.json();
+        newSupplier = await res.json() as Supplier;
         setSuppliers(prev => prev.map(s => s._id === editId ? newSupplier : s));
       } else {
         res = await fetch('/api/suppliers', {
@@ -54,7 +54,7 @@ export default function Page() {
           body: JSON.stringify(form),
         });
         if (!res.ok) throw new Error('Failed to create supplier');
-        newSupplier = await res.json();
+        newSupplier = await res.json() as Supplier;
         setSuppliers(prev => [...prev, newSupplier]);
       }
       setForm({ name: '', contactNumber: '', address: '', email: '' });
