@@ -1,9 +1,4 @@
-export interface User {
-  _id: string;
-  username: string;
-  name: string;
-  role: 'admin' | 'cashier';
-}
+import { User } from "./user";
 
 export interface Product {
   id: string;
@@ -51,6 +46,7 @@ export interface Order {
   name: string;
   cart: CartItem[];
   customer: Customer;
+  cashier: User;
   orderType: 'dine-in' | 'takeaway' | 'delivery';
   customDiscount: number;
   appliedCoupon?: Coupon;

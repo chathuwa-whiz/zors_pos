@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { User, Product, Order, Coupon, OrderTotals, CartItem } from '@/app/types/pos';
+import { useState, useEffect, use } from 'react';
+import { Product, Order, Coupon, OrderTotals, CartItem } from '@/app/types/pos';
+import  { User } from '@/app/types/user';
+import { useRouter } from 'next/navigation';
 import ProductsPanel from './ProductsPanel';
 import OrdersPanel from './OrdersPanel';
 import CustomerModal from './CustomerModal';
 import OrderComplete from './OrderComplete';
 
 export default function POSSystem() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -62,6 +65,7 @@ export default function POSSystem() {
       name: 'Live Bill',
       cart: [],
       customer: {},
+      cashier: user!,
       orderType: 'dine-in',
       customDiscount: 0,
       kitchenNote: '',
@@ -94,6 +98,7 @@ export default function POSSystem() {
       name: `Table ${tableNumber}`,
       cart: [],
       customer: {},
+      cashier: user!,
       orderType: 'dine-in',
       customDiscount: 0,
       kitchenNote: '',
@@ -288,6 +293,7 @@ export default function POSSystem() {
           name: 'Live Bill',
           cart: [],
           customer: {},
+          cashier: user!,
           orderType: 'dine-in',
           customDiscount: 0,
           kitchenNote: '',
@@ -310,7 +316,7 @@ export default function POSSystem() {
         <div className="text-center">
           <p className="text-gray-600">Please login to access POS system</p>
           <button
-            onClick={() => window.location.href = '/login'}
+            onClick={() => router.push('/login')}
             className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
             Go to Login
