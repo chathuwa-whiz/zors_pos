@@ -28,7 +28,7 @@ export default function ProductCard({
           <h3 className="font-semibold text-gray-900 mb-1">{product.name}</h3>
           <p className="text-sm text-gray-500 mb-2 h-8 overflow-hidden">{product.description}</p>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-green-600">Rs.{product.price}</span>
+            <span className="text-lg font-bold text-green-600">Rs.{product.sellingPrice}</span>
             <span className="text-xs text-gray-400">Stock: {product.stock}</span>
           </div>
         </div>
@@ -42,7 +42,7 @@ export default function ProductCard({
             <p className="text-sm text-gray-500">{product.description}</p>
           </div>
           <div className="text-right">
-            <div className="text-lg font-bold text-green-600">Rs.{product.price}</div>
+            <div className="text-lg font-bold text-green-600">Rs.{product.sellingPrice}</div>
             <div className="text-xs text-gray-400">Stock: {product.stock}</div>
           </div>
         </>

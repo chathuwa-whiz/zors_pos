@@ -3,8 +3,12 @@ import { User } from "./user";
 export interface Product {
   id: string;
   name: string;
-  price: number;
+  costPrice: number;
+  sellingPrice: number;
+  discount?: number;
   category: string;
+  size?: string;
+  dryfood?: boolean;
   image?: string;
   stock: number;
   description?: string;

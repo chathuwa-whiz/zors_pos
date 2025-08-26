@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { ArrowLeft, Search, Grid, List } from 'lucide-react';
-import { User, Product } from '@/app/types/pos';
+import { Product } from '@/app/types/pos';
+import { User } from '../types/user';
 import ProductCard from './ProductCard';
 
 interface ProductsPanelProps {
@@ -43,7 +44,7 @@ export default function ProductsPanel({
             </button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">POS System</h1>
-              <p className="text-sm text-gray-600">Welcome, {user.name}</p>
+              <p className="text-sm text-gray-600">Welcome, {user.username}</p>
             </div>
           </div>
           

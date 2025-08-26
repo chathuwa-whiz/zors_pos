@@ -31,7 +31,7 @@ export default function CartItems({
                   <h4 className="font-semibold text-gray-900 text-lg">{item.product.name}</h4>
                   <p className="text-sm text-gray-500 mt-1">{item.product.description}</p>
                   <p className="text-sm text-green-600 font-medium mt-1">
-                    Rs.{item.product.price.toFixed(2)} each
+                    Rs.{item.product.sellingPrice.toFixed(2)} each
                   </p>
                 </div>
                 <button
