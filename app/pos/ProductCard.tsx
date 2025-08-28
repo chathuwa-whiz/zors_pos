@@ -26,8 +26,8 @@ export default function ProductCard({
           <Image
             src={product.image || 'https://res.cloudinary.com/dgwsugfov/image/upload/v1756363439/1440523_t2o2tk.png'}
             alt={product.name}
-            width={16}
-            height={16}
+            width={512}
+            height={512}
             className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3"
           />
           <h3 className="font-semibold text-gray-900 mb-1">{product.name}</h3>
@@ -41,8 +41,8 @@ export default function ProductCard({
           <Image
             src={product.image || 'https://res.cloudinary.com/dgwsugfov/image/upload/v1756363439/1440523_t2o2tk.png'}
             alt={product.name}
-            width={16}
-            height={16}
+            width={512}
+            height={512}
             className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3"
           />
           <div className="flex-1">
