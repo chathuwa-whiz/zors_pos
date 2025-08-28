@@ -68,24 +68,17 @@ export default function ProductFilters({
                 {/* Price Range */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Price Range
+                        Minimum Price
                     </label>
                     <div className="flex items-center space-x-2">
                         <input
                             type="number"
                             placeholder="Min"
                             value={priceRange.min}
-                            onChange={(e) => setPriceRange({ ...priceRange, min: Number(e.target.value) || 0 })}
+                            onChange={(e) => setPriceRange({ ...priceRange, min: Number(e.target.value) })}
                             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
-                        <span className="text-gray-500">-</span>
-                        <input
-                            type="number"
-                            placeholder="Max"
-                            value={priceRange.max}
-                            onChange={(e) => setPriceRange({ ...priceRange, max: Number(e.target.value) || 1000 })}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
+                        <span className="text-sm text-gray-500">Rs</span>
                     </div>
                 </div>
             </div>
@@ -96,7 +89,7 @@ export default function ProductFilters({
                     onClick={() => {
                         setSelectedCategory('All');
                         setStockFilter('all');
-                        setPriceRange({ min: 0, max: 1000 });
+                        setPriceRange({ min: 0, max: Infinity });
                     }}
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                 >

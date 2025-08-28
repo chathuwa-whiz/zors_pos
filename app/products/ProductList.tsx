@@ -27,8 +27,6 @@ export default function ProductList({
         return { status: 'good', color: 'text-green-600 bg-green-100', text: 'In Stock' };
     };
 
-    console.log(products);
-
     if (loading) {
         return (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12">

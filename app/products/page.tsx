@@ -24,7 +24,7 @@ export default function ProductsPage() {
   // Filter states
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [stockFilter, setStockFilter] = useState('all');
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
+  const [priceRange, setPriceRange] = useState({ min: 0, max: Infinity });
 
   // Fetch products
   const fetchProducts = async () => {
@@ -61,7 +61,8 @@ export default function ProductsPage() {
         (stockFilter === 'out' && product.stock === 0) ||
         (stockFilter === 'available' && product.stock > 0);
 
-      const matchesPrice = product.sellingPrice >= priceRange.min && product.sellingPrice <= priceRange.max;
+      // Remove max price constraint - only filter by minimum price
+      const matchesPrice = product.sellingPrice >= priceRange.min;
 
       return matchesSearch && matchesCategory && matchesStock && matchesPrice;
     });
@@ -73,10 +74,15 @@ export default function ProductsPage() {
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
 
   // Handle product operations
-  const handleProductSaved = () => {
-    fetchProducts();
-    setShowForm(false);
-    setEditingProduct(null);
+  const handleProductSaved = async () => {
+    try {
+      await fetchProducts();
+      setShowForm(false);
+      setEditingProduct(null);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setError('Failed to refresh product list');
+    }
   };
 
   const handleEdit = (product: Product) => {
@@ -156,8 +162,8 @@ export default function ProductsPage() {
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center space-x-2 px-4 py-2 border rounded-lg transition-colors ${showFilters
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
               >
                 <Filter className="w-4 h-4" />

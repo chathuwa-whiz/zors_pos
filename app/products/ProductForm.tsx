@@ -274,7 +274,6 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
                                 onChange={handleChange}
                                 required
                                 min="0"
-                                step="0.01"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="0.00"
                             />
@@ -291,7 +290,6 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
                                 onChange={handleChange}
                                 required
                                 min="0"
-                                step="0.01"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="0.00"
                             />
@@ -307,8 +305,6 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
                                 value={formData.discount}
                                 onChange={handleChange}
                                 min="0"
-                                max="100"
-                                step="0.01"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="0"
                             />

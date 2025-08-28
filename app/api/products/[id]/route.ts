@@ -31,7 +31,7 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
         const { id } = await context.params;
         const formData = await req.formData();
 
-        // get the current product to check if image is uploaded
+        // get the current product
         const currentProduct = await Product.findById(id);
 
         if (!currentProduct) {
