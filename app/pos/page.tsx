@@ -103,16 +103,16 @@ export default function POSSystem() {
 
     // Mock products data
     const mockProducts: Product[] = [
-      { id: '1', name: 'Espresso', costPrice: 2.00, sellingPrice: 2.50, category: 'Coffee', stock: 50, description: 'Rich and bold coffee shot' },
-      { id: '2', name: 'Cappuccino', costPrice: 3.00, sellingPrice: 4.50, category: 'Coffee', stock: 45, description: 'Coffee with steamed milk foam' },
-      { id: '3', name: 'Latte', costPrice: 3.50, sellingPrice: 5.00, category: 'Coffee', stock: 40, description: 'Coffee with steamed milk' },
-      { id: '4', name: 'Americano', costPrice: 2.50, sellingPrice: 3.50, category: 'Coffee', stock: 55, description: 'Espresso with hot water' },
-      { id: '5', name: 'Croissant', costPrice: 1.50, sellingPrice: 3.25, category: 'Bakery', stock: 20, description: 'Fresh buttery pastry' },
-      { id: '6', name: 'Muffin', costPrice: 1.00, sellingPrice: 2.75, category: 'Bakery', stock: 25, description: 'Blueberry muffin' },
-      { id: '7', name: 'Sandwich', costPrice: 5.00, sellingPrice: 8.50, category: 'Food', stock: 15, description: 'Club sandwich with fries' },
-      { id: '8', name: 'Salad', costPrice: 6.00, sellingPrice: 9.75, category: 'Food', stock: 12, description: 'Fresh garden salad' },
-      { id: '9', name: 'Orange Juice', costPrice: 2.50, sellingPrice: 3.75, category: 'Beverages', stock: 30, description: 'Fresh squeezed juice' },
-      { id: '10', name: 'Smoothie', costPrice: 4.00, sellingPrice: 6.25, category: 'Beverages', stock: 18, description: 'Mixed berry smoothie' },
+      { _id: '1', name: 'Espresso', costPrice: 2.00, sellingPrice: 2.50, category: 'Coffee', stock: 50, description: 'Rich and bold coffee shot' },
+      { _id: '2', name: 'Cappuccino', costPrice: 3.00, sellingPrice: 4.50, category: 'Coffee', stock: 45, description: 'Coffee with steamed milk foam' },
+      { _id: '3', name: 'Latte', costPrice: 3.50, sellingPrice: 5.00, category: 'Coffee', stock: 40, description: 'Coffee with steamed milk' },
+      { _id: '4', name: 'Americano', costPrice: 2.50, sellingPrice: 3.50, category: 'Coffee', stock: 55, description: 'Espresso with hot water' },
+      { _id: '5', name: 'Croissant', costPrice: 1.50, sellingPrice: 3.25, category: 'Bakery', stock: 20, description: 'Fresh buttery pastry' },
+      { _id: '6', name: 'Muffin', costPrice: 1.00, sellingPrice: 2.75, category: 'Bakery', stock: 25, description: 'Blueberry muffin' },
+      { _id: '7', name: 'Sandwich', costPrice: 5.00, sellingPrice: 8.50, category: 'Food', stock: 15, description: 'Club sandwich with fries' },
+      { _id: '8', name: 'Salad', costPrice: 6.00, sellingPrice: 9.75, category: 'Food', stock: 12, description: 'Fresh garden salad' },
+      { _id: '9', name: 'Orange Juice', costPrice: 2.50, sellingPrice: 3.75, category: 'Beverages', stock: 30, description: 'Fresh squeezed juice' },
+      { _id: '10', name: 'Smoothie', costPrice: 4.00, sellingPrice: 6.25, category: 'Beverages', stock: 18, description: 'Mixed berry smoothie' },
     ];
 
     setProducts(mockProducts);
@@ -284,11 +284,11 @@ export default function POSSystem() {
   const addToCart = (product: Product) => {
     if (!activeOrder) return;
 
-    const existingItem = activeOrder.cart.find(item => item.product.id === product.id);
+    const existingItem = activeOrder.cart.find(item => item.product._id === product._id);
 
     if (existingItem) {
       const updatedCart = activeOrder.cart.map(item =>
-        item.product.id === product.id
+        item.product._id === product._id
           ? { ...item, quantity: item.quantity + 1, subtotal: (item.quantity + 1) * product.sellingPrice }
           : item
       );
@@ -304,7 +304,7 @@ export default function POSSystem() {
     if (!activeOrder) return;
 
     const updatedCart = activeOrder.cart.map(item => {
-      if (item.product.id === productId) {
+      if (item.product._id === productId) {
         const newQuantity = Math.max(0, item.quantity + change);
         return newQuantity === 0
           ? null
@@ -319,7 +319,7 @@ export default function POSSystem() {
   // Remove from cart
   const removeFromCart = (productId: string) => {
     if (!activeOrder) return;
-    const updatedCart = activeOrder.cart.filter(item => item.product.id !== productId);
+    const updatedCart = activeOrder.cart.filter(item => item.product._id !== productId);
     updateActiveOrder({ cart: updatedCart });
   };
 
@@ -343,7 +343,7 @@ export default function POSSystem() {
       const coupon = activeOrder.appliedCoupon;
       if (coupon.applicableItems) {
         const applicableAmount = activeOrder.cart
-          .filter(item => coupon.applicableItems!.includes(item.product.id))
+          .filter(item => coupon.applicableItems!.includes(item.product._id))
           .reduce((sum, item) => sum + item.subtotal, 0);
         couponDiscount = coupon.type === 'percentage'
           ? (applicableAmount * coupon.discount / 100)

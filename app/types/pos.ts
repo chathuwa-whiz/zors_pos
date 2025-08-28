@@ -1,7 +1,8 @@
+import mongoose from "mongoose";
 import { User } from "./user";
 
 export interface Product {
-  id: string;
+  _id: string;
   name: string;
   costPrice: number;
   sellingPrice: number;
@@ -10,6 +11,7 @@ export interface Product {
   size?: string;
   dryfood?: boolean;
   image?: string;
+  imagePublicId?: string;
   stock: number;
   description?: string;
 }
