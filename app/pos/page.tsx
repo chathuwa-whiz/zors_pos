@@ -127,21 +127,21 @@ export default function POSSystem() {
       setOrders(savedOrders);
 
       // Validate saved active order ID
-      const validActiveOrder = savedOrders.find(order => order.id === savedActiveOrderId && order.status === 'active');
+      const validActiveOrder = savedOrders.find(order => order._id === savedActiveOrderId && order.status === 'active');
       if (validActiveOrder) {
         setActiveOrderId(savedActiveOrderId);
       } else {
         // If saved active order is invalid, use the first active order
         const firstActiveOrder = savedOrders.find(order => order.status === 'active');
         if (firstActiveOrder) {
-          setActiveOrderId(firstActiveOrder.id);
-          saveActiveOrderIdToStorage(firstActiveOrder.id);
+          setActiveOrderId(firstActiveOrder._id);
+          saveActiveOrderIdToStorage(firstActiveOrder._id);
         }
       }
     } else {
       // Initialize with default order if no saved orders
       const initialOrder: Order = {
-        id: '1',
+        _id: '1',
         name: 'Live Bill',
         cart: [],
         customer: {},
@@ -176,7 +176,7 @@ export default function POSSystem() {
     }
   }, [activeOrderId]);
 
-  const activeOrder = orders.find(order => order.id === activeOrderId);
+  const activeOrder = orders.find(order => order._id === activeOrderId);
 
   // Generate next table number
   const getNextTableNumber = () => {
@@ -193,7 +193,7 @@ export default function POSSystem() {
     const newOrderId = (Date.now()).toString();
     const tableNumber = getNextTableNumber();
     const newOrder: Order = {
-      id: newOrderId,
+      _id: newOrderId,
       name: `Table ${tableNumber}`,
       cart: [],
       customer: {},
@@ -212,21 +212,21 @@ export default function POSSystem() {
 
   // Delete order
   const deleteOrder = (orderId: string) => {
-    const orderToDelete = orders.find(order => order.id === orderId);
+    const orderToDelete = orders.find(order => order._id === orderId);
 
     // Don't allow deleting the default "Live Bill" order
     if (orderToDelete?.isDefault) {
       return;
     }
 
-    const updatedOrders = orders.filter(order => order.id !== orderId);
+    const updatedOrders = orders.filter(order => order._id !== orderId);
     setOrders(updatedOrders);
 
     // If we deleted the active order, switch to another one
     if (activeOrderId === orderId) {
       const remainingActiveOrders = updatedOrders.filter(order => order.status === 'active');
       if (remainingActiveOrders.length > 0) {
-        setActiveOrderId(remainingActiveOrders[0].id);
+        setActiveOrderId(remainingActiveOrders[0]._id);
       }
     }
   };
@@ -250,8 +250,8 @@ export default function POSSystem() {
       return;
     }
 
-    const draggedOrder = orders.find(order => order.id === draggedOrderId);
-    const targetOrder = orders.find(order => order.id === targetOrderId);
+    const draggedOrder = orders.find(order => order._id === draggedOrderId);
+    const targetOrder = orders.find(order => order._id === targetOrderId);
 
     // Don't allow reordering with the default order
     if (draggedOrder?.isDefault || targetOrder?.isDefault) {
@@ -259,8 +259,8 @@ export default function POSSystem() {
       return;
     }
 
-    const draggedIndex = orders.findIndex(order => order.id === draggedOrderId);
-    const targetIndex = orders.findIndex(order => order.id === targetOrderId);
+    const draggedIndex = orders.findIndex(order => order._id === draggedOrderId);
+    const targetIndex = orders.findIndex(order => order._id === targetOrderId);
 
     const newOrders = [...orders];
     const [removed] = newOrders.splice(draggedIndex, 1);
@@ -273,7 +273,7 @@ export default function POSSystem() {
   // Update active order
   const updateActiveOrder = (updates: Partial<Order>) => {
     const updatedOrders = orders.map(order =>
-      order.id === activeOrderId
+      order._id === activeOrderId
         ? { ...order, ...updates }
         : order
     );
@@ -395,15 +395,15 @@ export default function POSSystem() {
     setOrderComplete(true);
 
     // Remove the order from active orders
-    const updatedOrders = orders.filter(order => order.id !== activeOrderId);
+    const updatedOrders = orders.filter(order => order._id !== activeOrderId);
     setOrders(updatedOrders);
 
     if (updatedOrders.length > 0) {
-      setActiveOrderId(updatedOrders[0].id);
+      setActiveOrderId(updatedOrders[0]._id);
     } else {
       // Create new default order
       const newOrder: Order = {
-        id: Date.now().toString(),
+        _id: Date.now().toString(),
         name: 'Live Bill',
         cart: [],
         customer: {},
@@ -417,7 +417,7 @@ export default function POSSystem() {
         isDefault: true
       };
       setOrders([newOrder]);
-      setActiveOrderId(newOrder.id);
+      setActiveOrderId(newOrder._id);
     }
 
     setShowCheckout(false);
@@ -427,7 +427,7 @@ export default function POSSystem() {
   const resetPOSData = () => {
     clearPOSStorage();
     const initialOrder: Order = {
-      id: '1',
+      _id: '1',
       name: 'Live Bill',
       cart: [],
       customer: {},
@@ -467,7 +467,7 @@ export default function POSSystem() {
         totals={completedOrderData.totals}
         items={completedOrderData.order.cart}
         customer={completedOrderData.order.customer}
-        orderId={completedOrderData.order.id}
+        orderId={completedOrderData.order._id}
         orderType={completedOrderData.order.orderType}
         onBackToPOS={() => {
           setOrderComplete(false);
