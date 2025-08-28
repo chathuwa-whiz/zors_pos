@@ -1,6 +1,7 @@
 "use client";
 
 import { Product } from '@/app/types/pos';
+import Image from 'next/image';
 
 interface ProductCardProps {
   product: Product;
@@ -22,11 +23,14 @@ export default function ProductCard({
     >
       {viewMode === 'grid' ? (
         <div className="text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-            <span className="text-2xl">🍽️</span>
-          </div>
+          <Image
+            src={product.image || 'https://res.cloudinary.com/dgwsugfov/image/upload/v1756363439/1440523_t2o2tk.png'}
+            alt={product.name}
+            width={16}
+            height={16}
+            className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3"
+          />
           <h3 className="font-semibold text-gray-900 mb-1">{product.name}</h3>
-          <p className="text-sm text-gray-500 mb-2 h-8 overflow-hidden">{product.description}</p>
           <div className="flex items-center justify-between">
             <span className="text-lg font-bold text-green-600">Rs.{product.sellingPrice}</span>
             <span className="text-xs text-gray-400">Stock: {product.stock}</span>
@@ -34,12 +38,15 @@ export default function ProductCard({
         </div>
       ) : (
         <>
-          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-            <span className="text-xl">🍽️</span>
-          </div>
+          <Image
+            src={product.image || 'https://res.cloudinary.com/dgwsugfov/image/upload/v1756363439/1440523_t2o2tk.png'}
+            alt={product.name}
+            width={16}
+            height={16}
+            className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3"
+          />
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900">{product.name}</h3>
-            <p className="text-sm text-gray-500">{product.description}</p>
           </div>
           <div className="text-right">
             <div className="text-lg font-bold text-green-600">Rs.{product.sellingPrice}</div>

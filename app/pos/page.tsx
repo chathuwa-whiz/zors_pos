@@ -94,6 +94,21 @@ export default function POSSystem() {
     }
   };
 
+  // Fetch products
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('/api/products');
+      if (!response.ok) throw new Error('Failed to fetch products');
+
+      const data: Product[] = await response.json();
+      setCategories(['All', ...Array.from(new Set(data.map(p => p.category)))]);
+      setProducts(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+    }
+  };
+
   useEffect(() => {
     // Get user from localStorage
     const storedUser = localStorage.getItem('user');
@@ -101,22 +116,7 @@ export default function POSSystem() {
       setUser(JSON.parse(storedUser));
     }
 
-    // Mock products data
-    const mockProducts: Product[] = [
-      { _id: '1', name: 'Espresso', costPrice: 2.00, sellingPrice: 2.50, category: 'Coffee', stock: 50, description: 'Rich and bold coffee shot' },
-      { _id: '2', name: 'Cappuccino', costPrice: 3.00, sellingPrice: 4.50, category: 'Coffee', stock: 45, description: 'Coffee with steamed milk foam' },
-      { _id: '3', name: 'Latte', costPrice: 3.50, sellingPrice: 5.00, category: 'Coffee', stock: 40, description: 'Coffee with steamed milk' },
-      { _id: '4', name: 'Americano', costPrice: 2.50, sellingPrice: 3.50, category: 'Coffee', stock: 55, description: 'Espresso with hot water' },
-      { _id: '5', name: 'Croissant', costPrice: 1.50, sellingPrice: 3.25, category: 'Bakery', stock: 20, description: 'Fresh buttery pastry' },
-      { _id: '6', name: 'Muffin', costPrice: 1.00, sellingPrice: 2.75, category: 'Bakery', stock: 25, description: 'Blueberry muffin' },
-      { _id: '7', name: 'Sandwich', costPrice: 5.00, sellingPrice: 8.50, category: 'Food', stock: 15, description: 'Club sandwich with fries' },
-      { _id: '8', name: 'Salad', costPrice: 6.00, sellingPrice: 9.75, category: 'Food', stock: 12, description: 'Fresh garden salad' },
-      { _id: '9', name: 'Orange Juice', costPrice: 2.50, sellingPrice: 3.75, category: 'Beverages', stock: 30, description: 'Fresh squeezed juice' },
-      { _id: '10', name: 'Smoothie', costPrice: 4.00, sellingPrice: 6.25, category: 'Beverages', stock: 18, description: 'Mixed berry smoothie' },
-    ];
-
-    setProducts(mockProducts);
-    setCategories(['All', ...Array.from(new Set(mockProducts.map(p => p.category)))]);
+    fetchProducts();
 
     // Load existing orders from localStorage
     const savedOrders = loadOrdersFromStorage();
