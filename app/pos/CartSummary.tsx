@@ -228,7 +228,6 @@ export default function CartSummary({
                   <div className="absolute left-3 bottom-1/2 transform w-4 h-4 text-gray-500">Rs.</div>
                   <input
                     type="number"
-                    step="0.01"
                     placeholder="0.00"
                     value={cashGiven || ''}
                     onChange={(e) => setCashGiven(parseFloat(e.target.value) || 0)}

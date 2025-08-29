@@ -62,6 +62,8 @@ export interface Order {
   isDefault?: boolean;
   paymentDetails?: PaymentDetails;
   tableCharge: number;
+  discountPercentage: number;
+  totalAmount: number;
 }
 
 export interface OrderTotals {

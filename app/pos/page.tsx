@@ -152,7 +152,9 @@ export default function POSSystem() {
         tableCharge: 0,
         createdAt: new Date(),
         status: 'active',
-        isDefault: true
+        isDefault: true,
+        discountPercentage: 0,
+        totalAmount: 0
       };
       const initialOrders = [initialOrder];
       setOrders(initialOrders);
@@ -203,7 +205,9 @@ export default function POSSystem() {
       kitchenNote: '',
       tableCharge: 0,
       createdAt: new Date(),
-      status: 'active'
+      status: 'active',
+      discountPercentage: 0,
+      totalAmount: 0
     };
     const updatedOrders = [...orders, newOrder];
     setOrders(updatedOrders);
@@ -414,7 +418,9 @@ export default function POSSystem() {
         tableCharge: 0,
         createdAt: new Date(),
         status: 'active',
-        isDefault: true
+        isDefault: true,
+        discountPercentage: 0,
+        totalAmount: 0
       };
       setOrders([newOrder]);
       setActiveOrderId(newOrder._id);
@@ -438,7 +444,9 @@ export default function POSSystem() {
       tableCharge: 0,
       createdAt: new Date(),
       status: 'active',
-      isDefault: true
+      isDefault: true,
+      discountPercentage: 0,
+      totalAmount: 0
     };
     setOrders([initialOrder]);
     setActiveOrderId('1');
