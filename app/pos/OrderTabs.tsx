@@ -41,13 +41,13 @@ export default function OrderTabs({
       <div className="flex space-x-2 overflow-x-auto pb-2">
         {orders.filter(order => order.status === 'active').map(order => (
           <div
-            key={order.id}
+            key={order._id}
             draggable={!order.isDefault}
-            onDragStart={(e) => onDragStart(e, order.id)}
+            onDragStart={(e) => onDragStart(e, order._id)}
             onDragOver={onDragOver}
-            onDrop={(e) => onDrop(e, order.id)}
+            onDrop={(e) => onDrop(e, order._id)}
             className={`relative flex items-center px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 group ${
-              activeOrderId === order.id
+              activeOrderId === order._id
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             } ${!order.isDefault ? 'cursor-move' : ''}`}
@@ -57,7 +57,7 @@ export default function OrderTabs({
             )}
             
             <button
-              onClick={() => onSetActiveOrderId(order.id)}
+              onClick={() => onSetActiveOrderId(order._id)}
               className="flex items-center space-x-2"
             >
               <span>{order.name}</span>
@@ -72,10 +72,10 @@ export default function OrderTabs({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDeleteOrder(order.id);
+                  onDeleteOrder(order._id);
                 }}
                 className={`ml-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded ${
-                  activeOrderId === order.id
+                  activeOrderId === order._id
                     ? 'hover:bg-blue-700 text-white'
                     : 'hover:bg-red-100 text-red-500'
                 }`}

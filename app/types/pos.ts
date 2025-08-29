@@ -48,7 +48,7 @@ export interface PaymentDetails {
 }
 
 export interface Order {
-  id: string;
+  _id: string;
   name: string;
   cart: CartItem[];
   customer: Customer;

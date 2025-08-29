@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Upload, Image as ImageIcon } from 'lucide-react';
-import { Product } from '@/app/types/pos';
+import { Product, Category } from '@/app/types/pos';
 import Image from 'next/image';
 
 interface ProductFormProps {
@@ -24,10 +24,6 @@ interface FormData {
     description: string;
 }
 
-const categories = [
-    'Coffee', 'Tea', 'Beverages', 'Food', 'Bakery', 'Snacks', 'Desserts', 'Other'
-];
-
 export default function ProductForm({ product, onSave, onClose }: ProductFormProps) {
     const [formData, setFormData] = useState<FormData>({
         id: '',
@@ -46,6 +42,14 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
     const [imagePreview, setImagePreview] = useState<string>('');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [categories, setCategories] = useState<Category[]>([]);
+
+    // Fetch categories from your API
+    useEffect(() => {
+        fetch('/api/categories')
+            .then(res => res.json())
+            .then(data => setCategories(data.data || []));
+    }, []);
 
     // Initialize form data when editing
     useEffect(() => {
@@ -255,7 +259,7 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
                             >
                                 <option value="">Select category</option>
                                 {categories.map(cat => (
-                                    <option key={cat} value={cat}>{cat}</option>
+                                    <option key={cat._id} value={cat.name}>{cat.name}</option>
                                 ))}
                             </select>
                         </div>

@@ -98,7 +98,7 @@ export default function ProductsPanel({
         }`}>
           {filteredProducts.map(product => (
             <ProductCard 
-              key={product.id}
+              key={product._id}
               product={product}
               viewMode={viewMode}
               onAddToCart={onAddToCart}
