@@ -25,7 +25,7 @@ export default function CartItems({
       ) : (
         <div className="space-y-3">
           {activeOrder.cart.map(item => (
-            <div key={item.product.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div key={item.product._id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 pr-4">
                   <h4 className="font-semibold text-gray-900 text-lg">{item.product.name}</h4>
@@ -35,7 +35,7 @@ export default function CartItems({
                   </p>
                 </div>
                 <button
-                  onClick={() => onRemoveFromCart(item.product.id)}
+                  onClick={() => onRemoveFromCart(item.product._id)}
                   className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-5 h-5" />
@@ -45,14 +45,14 @@ export default function CartItems({
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <button
-                    onClick={() => onUpdateQuantity(item.product.id, -1)}
+                    onClick={() => onUpdateQuantity(item.product._id, -1)}
                     className="w-10 h-10 bg-white border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
                   >
                     <Minus className="w-5 h-5" />
                   </button>
                   <span className="w-12 text-center font-bold text-lg">{item.quantity}</span>
                   <button
-                    onClick={() => onUpdateQuantity(item.product.id, 1)}
+                    onClick={() => onUpdateQuantity(item.product._id, 1)}
                     className="w-10 h-10 bg-white border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
                   >
                     <Plus className="w-5 h-5" />
