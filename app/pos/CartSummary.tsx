@@ -40,7 +40,7 @@ export default function CartSummary({
   onApplyCoupon,
   onCompleteOrder
 }: CartSummaryProps) {
-  const { subtotal, couponDiscount, customDiscount, tableCharge, total } = totals;
+  const { subtotal, couponDiscount, customDiscount, discountPercentage, tableCharge, total } = totals;
 
   const [cashGiven, setCashGiven] = useState<number>(0);
   const [invoiceId, setInvoiceId] = useState<string>('');
@@ -160,6 +160,12 @@ export default function CartSummary({
           <div className="flex justify-between text-green-600">
             <span>Custom Discount</span>
             <span>-Rs.{customDiscount.toFixed(2)}</span>
+          </div>
+        )}
+        {discountPercentage > 0 && (
+          <div className="flex justify-between text-green-600">
+            <span>Discount ({activeOrder.discountPercentage}%)</span>
+            <span>-Rs.{discountPercentage.toFixed(2)}</span>
           </div>
         )}
         {tableCharge > 0 && (

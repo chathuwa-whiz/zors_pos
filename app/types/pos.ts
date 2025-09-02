@@ -75,6 +75,7 @@ export interface OrderTotals {
   subtotal: number;
   couponDiscount: number;
   customDiscount: number;
+  discountPercentage: number;
   total: number;
   tableCharge: number;
 }

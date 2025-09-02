@@ -360,7 +360,7 @@ export default function POSSystem() {
 
   // Calculate totals
   const calculateTotals = (): OrderTotals => {
-    if (!activeOrder) return { subtotal: 0, couponDiscount: 0, customDiscount: 0, tableCharge: 0, total: 0 };
+    if (!activeOrder) return { subtotal: 0, couponDiscount: 0, customDiscount: 0, discountPercentage: 0, tableCharge: 0, total: 0 };
 
     const subtotal = activeOrder.cart.reduce((sum, item) => sum + item.subtotal, 0);
 
@@ -381,13 +381,24 @@ export default function POSSystem() {
       }
     }
 
+    // Calculate discount percentage amount
+    const discountPercentage = activeOrder.discountPercentage || 0;
+    const discountPercentageAmount = subtotal * (discountPercentage / 100);
+    
     const customDiscount = activeOrder.customDiscount || 0;
-    const tableCharge = activeOrder.orderType === 'dine-in' ? (activeOrder.tableCharge || 0) : 0; // add table charge here after ||
+    const tableCharge = activeOrder.orderType === 'dine-in' ? (activeOrder.tableCharge || 0) : 0;
 
-    const discountedAmount = subtotal - couponDiscount - customDiscount;
+    const discountedAmount = subtotal - couponDiscount - customDiscount - discountPercentageAmount;
     const total = Math.max(0, discountedAmount) + tableCharge;
 
-    return { subtotal, couponDiscount, customDiscount, tableCharge, total };
+    return { 
+      subtotal, 
+      couponDiscount, 
+      customDiscount, 
+      discountPercentage: discountPercentageAmount,
+      tableCharge, 
+      total 
+    };
   };
 
   const totals = calculateTotals();

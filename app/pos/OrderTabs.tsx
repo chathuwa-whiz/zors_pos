@@ -31,23 +31,18 @@ export default function OrderTabs({
   const [barcodeInput, setBarcodeInput] = useState('');
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
-  const handleBarcodeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (barcodeInput.trim()) {
-      onBarcodeScanned(barcodeInput.trim());
-      setBarcodeInput('');
-      // Keep focus on the input for continuous scanning
-      setTimeout(() => {
-        barcodeInputRef.current?.focus();
-      }, 100);
-    }
-  };
-
   const handleBarcodeKeyPress = (e: React.KeyboardEvent) => {
     // Handle Enter key press for barcode scanners
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleBarcodeSubmit(e as unknown as React.FormEvent);
+      if (barcodeInput.trim()) {
+        onBarcodeScanned(barcodeInput.trim());
+        setBarcodeInput('');
+        // Keep focus on the input for continuous scanning
+        setTimeout(() => {
+          barcodeInputRef.current?.focus();
+        }, 100);
+      }
     }
   };
 
