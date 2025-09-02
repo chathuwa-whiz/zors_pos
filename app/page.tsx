@@ -20,6 +20,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { User } from '@/app/types/user';
+import LowStockWarning from './components/LowStockWarning';
 
 interface DashboardModule {
   id: string;
@@ -36,6 +37,7 @@ export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState([]);
 
   useEffect(() => {
     // getting user from localStorage or API
@@ -43,7 +45,22 @@ export default function HomePage() {
 
     setUser(user);
     setLoading(false);
+
+    // Fetch products for low stock warning
+    fetchProducts();
   }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('/api/products');
+      if (response.ok) {
+        const data = await response.json();
+        setProducts(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    }
+  };
 
   const modules: DashboardModule[] = [
     {
@@ -298,6 +315,11 @@ export default function HomePage() {
             }
           </p>
         </div>
+
+        {/* Low Stock Warning */}
+        {products.length > 0 && (
+          <LowStockWarning products={products} />
+        )}
 
         {/* Dashboard Grid */}
         <div className={`grid gap-6 ${
