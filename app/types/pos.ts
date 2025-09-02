@@ -13,6 +13,7 @@ export interface Product {
   imagePublicId?: string;
   stock: number;
   description?: string;
+  barcode?: string;
 }
 
 export interface Category {
