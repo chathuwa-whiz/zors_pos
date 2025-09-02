@@ -304,6 +304,27 @@ export default function POSSystem() {
     }
   };
 
+  // Handle barcode scanning
+  const handleBarcodeScanned = (barcode: string) => {
+    // Find product by barcode
+    const product = products.find(p => p.barcode === barcode);
+    
+    if (product) {
+      // Check if product is in stock
+      if (product.stock > 0) {
+        addToCart(product);
+        // You could add a success notification here
+        console.log(`Product ${product.name} added to cart via barcode scan`);
+      } else {
+        // Product out of stock
+        alert(`Product "${product.name}" is out of stock!`);
+      }
+    } else {
+      // Product not found
+      alert(`No product found with barcode: ${barcode}`);
+    }
+  };
+
   // Update cart quantity
   const updateQuantity = (productId: string, change: number) => {
     if (!activeOrder) return;
@@ -578,6 +599,7 @@ export default function POSSystem() {
         onApplyCoupon={applyCoupon}
         onCompleteOrder={completeOrder}
         onShowCustomerModal={() => setShowCustomerModal(true)}
+        onBarcodeScanned={handleBarcodeScanned}
       />
 
       {showCustomerModal && activeOrder && (
@@ -591,7 +613,7 @@ export default function POSSystem() {
       {/* Debug button - remove in production */}
       <button
         onClick={resetPOSData}
-        className="fixed top-14 right-4 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 opacity-20 hover:opacity-100 transition-opacity"
+        className="fixed top-30 right-4 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 opacity-20 hover:opacity-100 transition-opacity"
         title="Reset POS Data (Debug)"
       >
         Reset

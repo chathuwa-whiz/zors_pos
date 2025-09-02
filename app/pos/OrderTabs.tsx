@@ -1,7 +1,8 @@
 "use client";
 
-import { X, GripVertical } from 'lucide-react';
+import { X, GripVertical, Scan } from 'lucide-react';
 import { Order } from '@/app/types/pos';
+import { useState, useRef } from 'react';
 
 interface OrderTabsProps {
   orders: Order[];
@@ -13,6 +14,7 @@ interface OrderTabsProps {
   onDragStart: (e: React.DragEvent, orderId: string) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, targetOrderId: string) => void;
+  onBarcodeScanned: (barcode: string) => void;
 }
 
 export default function OrderTabs({
@@ -23,8 +25,52 @@ export default function OrderTabs({
   onSetActiveOrderId,
   onDragStart,
   onDragOver,
-  onDrop
+  onDrop,
+  onBarcodeScanned
 }: OrderTabsProps) {
+  const [barcodeInput, setBarcodeInput] = useState('');
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBarcodeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (barcodeInput.trim()) {
+      onBarcodeScanned(barcodeInput.trim());
+      setBarcodeInput('');
+      // Keep focus on the input for continuous scanning
+      setTimeout(() => {
+        barcodeInputRef.current?.focus();
+      }, 100);
+    }
+  };
+
+  const handleBarcodeKeyPress = (e: React.KeyboardEvent) => {
+    // Handle Enter key press for barcode scanners
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleBarcodeSubmit(e as unknown as React.FormEvent);
+    }
+  };
+
+  const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setBarcodeInput(value);
+    
+    // Auto-submit when barcode is scanned (typically ends with Enter)
+    // Some scanners might not trigger keyPress, so we also check for length
+    if (value.length >= 8) { // Assuming minimum barcode length
+      setTimeout(() => {
+        if (barcodeInputRef.current?.value === value) {
+          onBarcodeScanned(value.trim());
+          setBarcodeInput('');
+          // Keep focus on the input for continuous scanning
+          setTimeout(() => {
+            barcodeInputRef.current?.focus();
+          }, 100);
+        }
+      }, 100);
+    }
+  };
+
   return (
     <div className="border-b border-gray-200 p-4 flex-shrink-0">
       <div className="flex items-center justify-between mb-3">
@@ -35,6 +81,23 @@ export default function OrderTabs({
         >
           + New Order
         </button>
+      </div>
+
+      {/* Barcode Scanner Input */}
+      <div className="mb-4">
+        <div className="relative">
+          <Scan className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            ref={barcodeInputRef}
+            type="text"
+            placeholder="Scan barcode..."
+            value={barcodeInput}
+            onChange={handleBarcodeChange}
+            onKeyPress={handleBarcodeKeyPress}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            autoComplete="off"
+          />
+        </div>
       </div>
       
       <div className="flex space-x-2 overflow-x-auto pb-2">
