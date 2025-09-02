@@ -16,7 +16,8 @@ import {
   UserCheck,
   LogOut,
   Menu,
-  X
+  X,
+  RotateCcw
 } from 'lucide-react';
 import { User } from '@/app/types/user';
 
@@ -54,6 +55,16 @@ export default function HomePage() {
       textColor: 'text-white',
       href: '/pos',
       adminOnly: false
+    },
+    {
+      id: 'returns',
+      title: 'RETURNS',
+      description: 'Process customer returns and supplier returns with stock adjustments.',
+      icon: <RotateCcw className="w-12 h-12" />,
+      color: 'bg-gradient-to-br from-orange-500 to-orange-600',
+      textColor: 'text-white',
+      href: '/returns',
+      adminOnly: false // Available to both roles, but restricted in the returns page
     },
     {
       id: 'categories',
