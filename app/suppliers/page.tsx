@@ -1,5 +1,3 @@
-
-
 "use client";
 import React, { useEffect, useState } from 'react';
 
@@ -203,31 +201,42 @@ export default function Page() {
       ) : suppliers.length === 0 ? (
         <p style={{ textAlign: 'center', color: '#718096' }}>No suppliers found. Add a new supplier above.</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: 8, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-          <thead style={{ background: '#3182ce', color: '#fff' }}>
-            <tr>
-              <th style={{ padding: '12px 8px', fontWeight: 600 }}>Name</th>
-              <th style={{ padding: '12px 8px', fontWeight: 600 }}>Contact Number</th>
-              <th style={{ padding: '12px 8px', fontWeight: 600 }}>Address</th>
-              <th style={{ padding: '12px 8px', fontWeight: 600 }}>Email</th>
-              <th style={{ padding: '12px 8px', fontWeight: 600 }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {suppliers.map((supplier, idx) => (
-              <tr key={supplier._id} style={{ background: idx % 2 === 0 ? '#f7fafc' : '#fff' }}>
-                <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0' }}>{supplier.name}</td>
-                <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0' }}>{supplier.contactNumber}</td>
-                <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0' }}>{supplier.address}</td>
-                <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0' }}>{supplier.email}</td>
-                <td style={{ padding: '10px 8px', borderBottom: '1px solid #e2e8f0', textAlign: 'center' }}>
-                  <button onClick={() => handleEdit(supplier)} style={{ marginRight: 8, padding: '6px 16px', background: '#38a169', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 500, cursor: 'pointer' }}>Edit</button>
-                  <button onClick={() => setShowDeleteId(supplier._id)} style={{ padding: '6px 16px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 500, cursor: 'pointer' }}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <table style={{
+  width: '100%',
+  borderCollapse: 'collapse',
+  background: '#fff',
+  borderRadius: 8,
+  overflow: 'hidden',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+  border: '1px solid #e2e8f0'
+}}>
+  <thead style={{ background: '#3182ce', color: '#fff' }}>
+    <tr>
+      <th style={{ padding: '12px 8px', fontWeight: 600, borderRight: '1px solid #e2e8f0' }}>Name</th>
+      <th style={{ padding: '12px 8px', fontWeight: 600, borderRight: '1px solid #e2e8f0' }}>Contact Number</th>
+      <th style={{ padding: '12px 8px', fontWeight: 600, borderRight: '1px solid #e2e8f0' }}>Address</th>
+      <th style={{ padding: '12px 8px', fontWeight: 600, borderRight: '1px solid #e2e8f0' }}>Email</th>
+      <th style={{ padding: '12px 8px', fontWeight: 600 }}>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {suppliers.map((supplier, idx) => (
+      <tr key={supplier._id} style={{
+        background: idx % 2 === 0 ? '#f7fafc' : '#edf2f7',
+        borderBottom: '1px solid #e2e8f0'
+      }}>
+        <td style={{ padding: '10px 8px', borderRight: '1px solid #e2e8f0' }}>{supplier.name}</td>
+        <td style={{ padding: '10px 8px', borderRight: '1px solid #e2e8f0' }}>{supplier.contactNumber}</td>
+        <td style={{ padding: '10px 8px', borderRight: '1px solid #e2e8f0' }}>{supplier.address}</td>
+        <td style={{ padding: '10px 8px', borderRight: '1px solid #e2e8f0' }}>{supplier.email}</td>
+        <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+          <button onClick={() => handleEdit(supplier)} style={{ marginRight: 8, padding: '6px 16px', background: '#38a169', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 500, cursor: 'pointer' }}>Edit</button>
+          <button onClick={() => setShowDeleteId(supplier._id)} style={{ padding: '6px 16px', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 500, cursor: 'pointer' }}>Delete</button>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
       )}
     </div>
   );
