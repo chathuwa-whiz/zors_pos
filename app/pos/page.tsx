@@ -360,7 +360,7 @@ export default function POSSystem() {
     }
 
     const customDiscount = activeOrder.customDiscount || 0;
-    const tableCharge = activeOrder.orderType === 'dine-in' ? (activeOrder.tableCharge || 50) : 0;
+    const tableCharge = activeOrder.orderType === 'dine-in' ? (activeOrder.tableCharge || 0) : 0; // add table charge here after ||
 
     const discountedAmount = subtotal - couponDiscount - customDiscount;
     const total = Math.max(0, discountedAmount) + tableCharge;
@@ -377,56 +377,98 @@ export default function POSSystem() {
   } | null>(null);
 
   // Complete order
-  const completeOrder = () => {
+  const completeOrder = async () => {
     if (!activeOrder) return;
 
     const currentTotals = calculateTotals();
 
-    console.log('Order completed:', {
+    // Create final order data with all required fields
+    const finalOrderData = {
       ...activeOrder,
-      paymentMethod,
-      totals: currentTotals,
-      timestamp: new Date()
-    });
+      status: 'completed' as 'active' | 'completed',
+      totalAmount: currentTotals.total,
+      paymentDetails: activeOrder.paymentDetails || {
+        method: paymentMethod,
+        ...(paymentMethod === 'cash' ? {
+          cashGiven: 0,
+          change: 0
+        } : {
+          invoiceId: '',
+          bankServiceCharge: 0,
+          bankName: ''
+        })
+      }
+    };
 
-    // Store the completed order data BEFORE removing it
-    setCompletedOrderData({
-      order: { ...activeOrder, status: 'completed' },
-      totals: currentTotals
-    });
+    // Store a copy with the client-side ID for the receipt
+    const clientSideOrderData = { ...finalOrderData };
 
-    updateActiveOrder({ status: 'completed' });
-    setOrderComplete(true);
+    try {
+      // Create a version of the order data without the _id field
+      // MongoDB will generate a proper ObjectId automatically
+      const { _id, ...orderDataForDB } = finalOrderData;
 
-    // Remove the order from active orders
-    const updatedOrders = orders.filter(order => order._id !== activeOrderId);
-    setOrders(updatedOrders);
+      // Send the order to the API without the _id field
+      const response = await fetch('/api/order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderDataForDB),
+      });
 
-    if (updatedOrders.length > 0) {
-      setActiveOrderId(updatedOrders[0]._id);
-    } else {
-      // Create new default order
-      const newOrder: Order = {
-        _id: Date.now().toString(),
-        name: 'Live Bill',
-        cart: [],
-        customer: {},
-        cashier: user!,
-        orderType: 'dine-in',
-        customDiscount: 0,
-        kitchenNote: '',
-        tableCharge: 0,
-        createdAt: new Date(),
-        status: 'active',
-        isDefault: true,
-        discountPercentage: 0,
-        totalAmount: 0
-      };
-      setOrders([newOrder]);
-      setActiveOrderId(newOrder._id);
+      if (!response.ok) {
+        throw new Error('Failed to save order');
+      }
+
+      const savedOrder = await response.json();
+      console.log('Order saved to database:', savedOrder);
+
+      // Store the completed order data for receipt display
+      // Use the client-side order data for UI purposes
+      setCompletedOrderData({
+        order: clientSideOrderData,
+        totals: currentTotals
+      });
+
+      // Update UI state
+      updateActiveOrder({ status: 'completed' });
+      setOrderComplete(true);
+
+      // Remove the order from active orders
+      const updatedOrders = orders.filter(order => order._id !== activeOrderId);
+      setOrders(updatedOrders);
+
+      if (updatedOrders.length > 0) {
+        setActiveOrderId(updatedOrders[0]._id);
+      } else {
+        // Create new default order
+        const newOrder: Order = {
+          _id: Date.now().toString(),
+          name: 'Live Bill',
+          cart: [],
+          customer: {},
+          cashier: user!,
+          orderType: 'dine-in',
+          customDiscount: 0,
+          kitchenNote: '',
+          tableCharge: 0,
+          createdAt: new Date(),
+          status: 'active',
+          isDefault: true,
+          discountPercentage: 0,
+          totalAmount: 0
+        };
+        setOrders([newOrder]);
+        setActiveOrderId(newOrder._id);
+      }
+
+      setShowCheckout(false);
+    } catch (error) {
+      console.error('Error saving order:', error);
+      // You could add error handling UI here
+      alert('Failed to save order. Please try again.');
     }
-
-    setShowCheckout(false);
   };
 
   // Add a function to manually clear all data (useful for debugging or reset)
