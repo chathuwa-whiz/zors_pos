@@ -48,7 +48,7 @@ export interface PaymentDetails {
 }
 
 export interface Order {
-  id: string;
+  _id: string;
   name: string;
   cart: CartItem[];
   customer: Customer;
@@ -62,6 +62,8 @@ export interface Order {
   isDefault?: boolean;
   paymentDetails?: PaymentDetails;
   tableCharge: number;
+  discountPercentage: number;
+  totalAmount: number;
 }
 
 export interface OrderTotals {

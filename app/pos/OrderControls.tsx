@@ -28,7 +28,7 @@ export default function OrderControls({
 
           <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
             <button
-              onClick={() => onUpdateActiveOrder({ orderType: 'dine-in', tableCharge: activeOrder.tableCharge || 50 })}
+              onClick={() => onUpdateActiveOrder({ orderType: 'dine-in', tableCharge: activeOrder.tableCharge })}
               className={`px-3 py-1 rounded text-sm ${activeOrder.orderType === 'dine-in' ? 'bg-white shadow' : ''
                 }`}
             >
@@ -63,7 +63,7 @@ export default function OrderControls({
             <span className="text-sm text-gray-600">Table Charge:</span>
             <input
               type="number"
-              placeholder="50"
+              placeholder="0"
               value={activeOrder.tableCharge || ''}
               onChange={(e) => onUpdateActiveOrder({ tableCharge: parseFloat(e.target.value) || 0 })}
               className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
