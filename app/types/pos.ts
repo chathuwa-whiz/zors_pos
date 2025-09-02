@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { User } from "./user";
 
 export interface Product {
@@ -14,6 +13,11 @@ export interface Product {
   imagePublicId?: string;
   stock: number;
   description?: string;
+}
+
+export interface Category {
+  _id: string;
+  name: string;
 }
 
 export interface CartItem {

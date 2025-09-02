@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { CartItem, Coupon, Customer, PaymentDetails, Product } from '@/app/types/pos'
+import { CartItem, Coupon, Customer, PaymentDetails } from '@/app/types/pos'
 import { User } from "./User";
 
 export interface Order extends Document {

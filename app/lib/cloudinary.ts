@@ -10,8 +10,9 @@ export const cloudinaryConnection = async (): Promise<void> => {
     try {
         const result = await cloudinary.api.ping();
         console.log("Cloudinary connection successful: ", result.status);
-    } catch (error: any) {
-        console.error("Cloudinary connection failed:", error.message);
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        console.error("Cloudinary connection failed:", errorMessage);
     }
 };
 
@@ -37,8 +38,9 @@ export const uploadImageToCloudinary = async (
         });
 
         return result;
-    } catch (error: any) {
-        console.error("Failed to upload image to Cloudinary:", error.message);
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        console.error("Failed to upload image to Cloudinary:", errorMessage);
         throw new Error("Image upload failed");
     }
 };
@@ -47,8 +49,9 @@ export const uploadImageToCloudinary = async (
 export const deleteImageFromCloudinary = async (publicId: string): Promise<void> => {
     try {
         await cloudinary.uploader.destroy(publicId);
-    } catch (error: any) {
-        console.error("Failed to delete image from Cloudinary:", error.message);
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        console.error("Failed to delete image from Cloudinary:", errorMessage);
     }
 };
 

@@ -342,7 +342,7 @@ export default function HomePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">$12,345</div>
-                <div className="text-sm text-gray-600">Today's Sales</div>
+                <div className="text-sm text-gray-600">Today&apos;s Sales</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">1,234</div>

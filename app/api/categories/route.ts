@@ -7,8 +7,9 @@ export async function GET() {
     await dbConnect();
     const categories = await Category.find();
     return NextResponse.json({ success: true, data: categories });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -24,7 +25,8 @@ export async function POST(request: Request) {
     }
     const category = await Category.create({ name: body.name });
     return NextResponse.json({ success: true, data: category }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

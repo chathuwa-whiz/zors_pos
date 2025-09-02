@@ -1,6 +1,6 @@
 "use client";
 
-import { Order, OrderTotals, Coupon, PaymentDetails } from '@/app/types/pos';
+import { Order, OrderTotals, Coupon } from '@/app/types/pos';
 import OrderTabs from './OrderTabs';
 import OrderControls from './OrderControls';
 import CartItems from './CartItems';

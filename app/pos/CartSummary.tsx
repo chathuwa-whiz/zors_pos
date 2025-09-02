@@ -30,7 +30,6 @@ const bankServiceCharges = [
 export default function CartSummary({
   activeOrder,
   totals,
-  availableCoupons,
   couponCode,
   setCouponCode,
   showCheckout,

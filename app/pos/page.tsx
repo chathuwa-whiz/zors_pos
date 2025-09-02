@@ -54,7 +54,7 @@ export default function POSSystem() {
       const storedOrders = localStorage.getItem('posOrders');
       if (storedOrders) {
         const parsedOrders = JSON.parse(storedOrders);
-        return parsedOrders.map((order: any) => ({
+        return parsedOrders.map((order: Order) => ({
           ...order,
           createdAt: new Date(order.createdAt) // Convert string back to Date
         }));
@@ -140,12 +140,13 @@ export default function POSSystem() {
       }
     } else {
       // Initialize with default order if no saved orders
+      const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
       const initialOrder: Order = {
         _id: '1',
         name: 'Live Bill',
         cart: [],
         customer: {},
-        cashier: user!,
+        cashier: currentUser!,
         orderType: 'dine-in',
         customDiscount: 0,
         kitchenNote: '',
@@ -406,7 +407,23 @@ export default function POSSystem() {
     try {
       // Create a version of the order data without the _id field
       // MongoDB will generate a proper ObjectId automatically
-      const { _id, ...orderDataForDB } = finalOrderData;
+      const orderDataForDB = {
+        status: finalOrderData.status,
+        totalAmount: finalOrderData.totalAmount,
+        paymentDetails: finalOrderData.paymentDetails,
+        name: finalOrderData.name,
+        cart: finalOrderData.cart,
+        customer: finalOrderData.customer,
+        cashier: finalOrderData.cashier,
+        orderType: finalOrderData.orderType,
+        customDiscount: finalOrderData.customDiscount,
+        kitchenNote: finalOrderData.kitchenNote,
+        tableCharge: finalOrderData.tableCharge,
+        createdAt: finalOrderData.createdAt,
+        isDefault: finalOrderData.isDefault,
+        discountPercentage: finalOrderData.discountPercentage,
+        appliedCoupon: finalOrderData.appliedCoupon
+      };
 
       // Send the order to the API without the _id field
       const response = await fetch('/api/order', {

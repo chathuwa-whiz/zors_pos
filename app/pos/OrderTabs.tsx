@@ -18,7 +18,6 @@ interface OrderTabsProps {
 export default function OrderTabs({
   orders,
   activeOrderId,
-  draggedOrderId,
   onCreateNewOrder,
   onDeleteOrder,
   onSetActiveOrderId,

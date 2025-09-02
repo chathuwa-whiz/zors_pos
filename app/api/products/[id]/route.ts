@@ -3,7 +3,7 @@ import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
 
     try {
         await connectDB();
@@ -18,13 +18,13 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
 
         return NextResponse.json(product, { status: 200 });
 
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Error fetching product:', error);
         return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
     }
 }
 
-export async function PUT(req: NextRequest, context: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
         await connectDB();
 
@@ -39,26 +39,45 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
         }
 
         // Extract product data from FormData
-        const updateData: any = {};
+        const updateData: {
+            id?: string;
+            name?: string;
+            costPrice?: number;
+            sellingPrice?: number;
+            discount?: number;
+            category?: string;
+            size?: string;
+            stock?: number;
+            description?: string;
+            dryfood?: boolean;
+            image?: string;
+            imagePublicId?: string;
+        } = {};
         
         // Only update fields that are present in formData
-        const fields = ['id', 'name', 'costPrice', 'sellingPrice', 'discount', 'category', 'size', 'stock', 'description'];
+        const name = formData.get('name');
+        if (name !== null) updateData.name = name as string;
         
-        fields.forEach(field => {
-            const value = formData.get(field);
-            if (value !== null) {
-                switch (field) {
-                    case 'costPrice':
-                    case 'sellingPrice':
-                    case 'discount':
-                    case 'stock':
-                        updateData[field] = Number(value);
-                        break;
-                    default:
-                        updateData[field] = value;
-                }
-            }
-        });
+        const costPrice = formData.get('costPrice');
+        if (costPrice !== null) updateData.costPrice = Number(costPrice);
+        
+        const sellingPrice = formData.get('sellingPrice');
+        if (sellingPrice !== null) updateData.sellingPrice = Number(sellingPrice);
+        
+        const discount = formData.get('discount');
+        if (discount !== null) updateData.discount = Number(discount);
+        
+        const category = formData.get('category');
+        if (category !== null) updateData.category = category as string;
+        
+        const size = formData.get('size');
+        if (size !== null) updateData.size = size as string;
+        
+        const stock = formData.get('stock');
+        if (stock !== null) updateData.stock = Number(stock);
+        
+        const description = formData.get('description');
+        if (description !== null) updateData.description = description as string;
 
         // Handle dryfood boolean field
         if (formData.has('dryfood')) {
@@ -101,13 +120,13 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
 
         return NextResponse.json(product, { status: 200 });
 
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Error updating product:', error);
         return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
     }
 }
 
-export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
 
     try {
         await connectDB();
@@ -127,7 +146,7 @@ export async function DELETE(req: NextRequest, context: { params: { id: string }
 
         return NextResponse.json({ message: 'Product deleted successfully' }, { status: 200 });
 
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Error deleting product:', error);
         return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
     }

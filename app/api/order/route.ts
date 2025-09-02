@@ -2,15 +2,16 @@ import connectDB from "@/app/lib/mongodb";
 import OrderModel from "@/app/models/Order";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     try {
         await connectDB();
 
         const orders = await OrderModel.find();
 
         return NextResponse.json(orders);
-    } catch (error) {
-        return NextResponse.error();
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
 }
 

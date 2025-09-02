@@ -2,10 +2,10 @@ import connectDB from "@/app/lib/mongodb";
 import OrderModel from "@/app/models/Order";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
         await connectDB();
-        const { id } = context.params;
+        const { id } = await context.params;
 
         const order = await OrderModel.findById(id);
         if (!order) {

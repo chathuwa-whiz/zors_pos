@@ -149,7 +149,7 @@ export default function CustomersPage() {
       setCustomers(prev => prev.filter(customer => customer._id !== showDeleteId));
       setShowDeleteId(null);
     } catch (error) {
-      setError('Error deleting customer');
+      setError(error instanceof Error ? error.message :'An error occurred');
     } finally {
       setSubmitting(false);
     }
