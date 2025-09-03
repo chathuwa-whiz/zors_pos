@@ -22,6 +22,7 @@ interface FormData {
     dryfood: boolean;
     stock: string;
     description: string;
+    barcode: string;
 }
 
 export default function ProductForm({ product, onSave, onClose }: ProductFormProps) {
@@ -35,7 +36,8 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
         size: '',
         dryfood: false,
         stock: '',
-        description: ''
+        description: '',
+        barcode: ''
     });
 
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -64,7 +66,8 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
                 size: product.size || '',
                 dryfood: product.dryfood || false,
                 stock: product.stock?.toString() || '',
-                description: product.description || ''
+                description: product.description || '',
+                barcode: product.barcode || ''
             });
 
             if (product.image) {
@@ -346,6 +349,21 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
                                 placeholder="e.g., Small, Medium, Large"
                             />
                         </div>
+                    </div>
+
+                    {/* Barcode */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Barcode
+                        </label>
+                        <input
+                            type="text"
+                            name="barcode"
+                            value={formData.barcode}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Enter barcode number"
+                        />
                     </div>
 
                     {/* Description */}

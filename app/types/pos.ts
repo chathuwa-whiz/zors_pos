@@ -13,6 +13,7 @@ export interface Product {
   imagePublicId?: string;
   stock: number;
   description?: string;
+  barcode?: string;
 }
 
 export interface Category {
@@ -74,6 +75,7 @@ export interface OrderTotals {
   subtotal: number;
   couponDiscount: number;
   customDiscount: number;
+  discountPercentage: number;
   total: number;
   tableCharge: number;
 }

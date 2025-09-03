@@ -31,6 +31,7 @@ interface OrdersPanelProps {
   onApplyCoupon: () => void;
   onCompleteOrder: () => void;
   onShowCustomerModal: () => void;
+  onBarcodeScanned: (barcode: string) => void;
 }
 
 export default function OrdersPanel({
@@ -57,7 +58,8 @@ export default function OrdersPanel({
   onRemoveFromCart,
   onApplyCoupon,
   onCompleteOrder,
-  onShowCustomerModal
+  onShowCustomerModal,
+  onBarcodeScanned
 }: OrdersPanelProps) {
   return (
     <div className="flex-1 bg-white border-l border-gray-200 flex flex-col max-h-screen">
@@ -71,6 +73,7 @@ export default function OrdersPanel({
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDrop={onDrop}
+        onBarcodeScanned={onBarcodeScanned}
       />
 
       <div className='overflow-y-scroll'>
