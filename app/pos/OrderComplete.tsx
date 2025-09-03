@@ -115,12 +115,6 @@ export default function OrderComplete({
                 <span>-Rs.{couponDiscount.toFixed(2)}</span>
               </div>
             )}
-            {customDiscount > 0 && (
-              <div className="flex justify-between text-sm text-green-600">
-                <span>Custom Discount:</span>
-                <span>-Rs.{customDiscount.toFixed(2)}</span>
-              </div>
-            )}
             {tableCharge > 0 && (
               <div className="flex justify-between text-sm text-blue-600">
                 <span>Table Charge:</span>

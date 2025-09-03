@@ -86,18 +86,6 @@ export default function CartSummary({
       <div className="space-y-3 mb-4">
         {/* Coupon Code */}
         <div className="flex space-x-2">
-          {/* <select
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-            className="border border-gray-300 rounded-lg text-sm flex-1 py-2"
-          >
-            <option value="">Select a coupon</option>
-            {availableCoupons.map((coupon) => (
-              <option key={coupon.code} value={coupon.code}>
-                {coupon.description}
-              </option>
-            ))}
-          </select> */}
           <input
             type="text"
             placeholder="Coupon code"
@@ -111,20 +99,6 @@ export default function CartSummary({
           >
             Apply
           </button>
-        </div>
-
-        {/* Custom Discount */}
-        <div className="flex items-center space-x-2">
-          <Percent className="w-4 h-4 text-gray-500" />
-          <span className="text-sm text-gray-600">Custom Discount:</span>
-          <input
-            type="number"
-            placeholder="0.00"
-            value={activeOrder.customDiscount || ''}
-            onChange={(e) => onUpdateActiveOrder({ customDiscount: parseFloat(e.target.value) || 0 })}
-            className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-          />
-          <span className="text-sm text-gray-500">Rs</span>
         </div>
 
         {/* Applied Coupon Display */}
@@ -154,12 +128,6 @@ export default function CartSummary({
           <div className="flex justify-between text-green-600">
             <span>Coupon Discount</span>
             <span>-Rs.{couponDiscount.toFixed(2)}</span>
-          </div>
-        )}
-        {customDiscount > 0 && (
-          <div className="flex justify-between text-green-600">
-            <span>Custom Discount</span>
-            <span>-Rs.{customDiscount.toFixed(2)}</span>
           </div>
         )}
         {discountPercentage > 0 && (

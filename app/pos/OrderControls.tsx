@@ -24,7 +24,7 @@ export default function OrderControls({
 }: OrderControlsProps) {
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [globalDiscount, setGlobalDiscount] = useState<Discount | null>(null);
-  const [customDiscount, setCustomDiscount] = useState<number>(0);
+  const [selectedDiscountId, setSelectedDiscountId] = useState<string>('');
 
   useEffect(() => {
     fetchDiscounts();
@@ -58,13 +58,8 @@ export default function OrderControls({
     }
   };
 
-  const handleDiscountChange = (value: string) => {
-    const discountValue = parseFloat(value) || 0;
-    setCustomDiscount(discountValue);
-    onUpdateActiveOrder({ discountPercentage: discountValue });
-  };
-
   const handleDiscountSelect = (discountId: string) => {
+    setSelectedDiscountId(discountId);
     const selectedDiscount = discounts.find(d => d._id === discountId);
     if (selectedDiscount) {
       onUpdateActiveOrder({ discountPercentage: selectedDiscount.percentage });
@@ -114,27 +109,12 @@ export default function OrderControls({
 
       {/* Discount Selection */}
       <div className="mb-3 flex flex-wrap gap-3">
-        {/* Custom Discount Input */}
-        <div className="flex items-center space-x-2">
-          <Percent className="w-4 h-4 text-gray-500" />
-          <span className="text-sm text-gray-600">Custom Discount:</span>
-          <input
-            type="number"
-            placeholder="0"
-            value={customDiscount || activeOrder.discountPercentage || ''}
-            onChange={(e) => handleDiscountChange(e.target.value)}
-            className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-            min="0"
-            max="100"
-          />
-          <span className="text-sm text-gray-500">%</span>
-        </div>
 
         {/* Discount Dropdown */}
         {discounts.length > 0 && (
           <div className="flex items-center space-x-2">
             <select
-              value=""
+              value={selectedDiscountId}
               onChange={(e) => handleDiscountSelect(e.target.value)}
               className="px-2 py-1 border border-gray-300 rounded text-sm"
             >
