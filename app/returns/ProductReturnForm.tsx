@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { X, Package, RotateCcw } from 'lucide-react';
+import { X, Package, RotateCcw, Search } from 'lucide-react';
 import { Product } from '@/app/types/pos';
 import { User } from '@/app/types/user';
 
@@ -51,8 +51,21 @@ export default function ProductReturnForm({ products, user, onSubmit, onClose }:
   
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const selectedProduct = products.find(p => p._id === formData.productId);
+  
+  // Filter products based on search query (by name or barcode)
+  const filteredProducts = products.filter(product => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      product.name.toLowerCase().includes(query) || 
+      (product.barcode && product.barcode.includes(query))
+    );
+  });
+  
   const reasons = formData.returnType === 'customer' ? customerReasons : supplierReasons;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -63,6 +76,17 @@ export default function ProductReturnForm({ products, user, onSubmit, onClose }:
       // Reset reason when return type changes
       setFormData(prev => ({ ...prev, reason: '' }));
     }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setIsDropdownOpen(true);
+  };
+
+  const handleProductSelect = (product: Product) => {
+    setFormData(prev => ({ ...prev, productId: product._id }));
+    setSearchQuery(product.name);
+    setIsDropdownOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -202,24 +226,57 @@ export default function ProductReturnForm({ products, user, onSubmit, onClose }:
           </div>
 
           {/* Product Selection */}
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Select Product *
             </label>
-            <select
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => setIsDropdownOpen(true)}
+                placeholder="Search by product name or barcode..."
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              />
+            </div>
+            
+            {/* Dropdown with filtered products */}
+            {isDropdownOpen && (
+              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md max-h-60 overflow-auto">
+                {filteredProducts.length === 0 ? (
+                  <div className="px-4 py-2 text-gray-500">No products found</div>
+                ) : (
+                  filteredProducts.map(product => (
+                    <div
+                      key={product._id}
+                      onClick={() => handleProductSelect(product)}
+                      className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${
+                        formData.productId === product._id ? 'bg-orange-50' : ''
+                      }`}
+                    >
+                      <div className="font-medium">{product.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {product.barcode && `Barcode: ${product.barcode} | `}
+                        Rs.{product.sellingPrice.toFixed(2)} | Stock: {product.stock}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+            
+            {/* Hidden input to store the selected product ID */}
+            <input
+              type="hidden"
               name="productId"
               value={formData.productId}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            >
-              <option value="">Choose a product...</option>
-              {products.map(product => (
-                <option key={product._id} value={product._id}>
-                  {product.name} - Rs.{product.sellingPrice.toFixed(2)} (Stock: {product.stock})
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Quantity */}
