@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const discounts = await Discount.find().populate('createdBy', 'username');
+    const discounts = await Discount.find();
     return NextResponse.json(discounts);
   } catch (error: unknown) {
     console.error('Error fetching discounts:', error);
@@ -105,9 +105,6 @@ export async function POST(request: NextRequest) {
     });
 
     await newDiscount.save();
-
-    // Populate the createdBy field
-    await newDiscount.populate('createdBy', 'username');
 
     return NextResponse.json(newDiscount, { status: 201 });
   } catch (error: unknown) {

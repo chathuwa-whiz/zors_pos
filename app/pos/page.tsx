@@ -285,11 +285,18 @@ export default function POSSystem() {
     setOrders(updatedOrders);
   };
 
-  // Add to cart
+  // Add to cart with stock validation
   const addToCart = (product: Product) => {
     if (!activeOrder) return;
 
     const existingItem = activeOrder.cart.find(item => item.product._id === product._id);
+    const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
+
+    // Check if adding one more would exceed available stock
+    if (currentQuantityInCart >= product.stock) {
+      alert(`Cannot add more items. Only ${product.stock} in stock.`);
+      return;
+    }
 
     if (existingItem) {
       const updatedCart = activeOrder.cart.map(item =>
@@ -308,7 +315,7 @@ export default function POSSystem() {
   const handleBarcodeScanned = (barcode: string) => {
     // Find product by barcode
     const product = products.find(p => p.barcode === barcode);
-    
+
     if (product) {
       // Check if product is in stock
       if (product.stock > 0) {
@@ -325,13 +332,20 @@ export default function POSSystem() {
     }
   };
 
-  // Update cart quantity
+  // Update cart quantity with stock validation
   const updateQuantity = (productId: string, change: number) => {
     if (!activeOrder) return;
 
     const updatedCart = activeOrder.cart.map(item => {
       if (item.product._id === productId) {
         const newQuantity = Math.max(0, item.quantity + change);
+
+        // Check stock availability when increasing quantity
+        if (change > 0 && newQuantity > item.product.stock) {
+          alert(`Cannot add more items. Only ${item.product.stock} in stock.`);
+          return item; // Return unchanged item
+        }
+
         return newQuantity === 0
           ? null
           : { ...item, quantity: newQuantity, subtotal: newQuantity * item.product.sellingPrice };
@@ -384,20 +398,20 @@ export default function POSSystem() {
     // Calculate discount percentage amount
     const discountPercentage = activeOrder.discountPercentage || 0;
     const discountPercentageAmount = subtotal * (discountPercentage / 100);
-    
+
     const customDiscount = activeOrder.customDiscount || 0;
     const tableCharge = activeOrder.orderType === 'dine-in' ? (activeOrder.tableCharge || 0) : 0;
 
     const discountedAmount = subtotal - couponDiscount - customDiscount - discountPercentageAmount;
     const total = Math.max(0, discountedAmount) + tableCharge;
 
-    return { 
-      subtotal, 
-      couponDiscount, 
-      customDiscount, 
+    return {
+      subtotal,
+      couponDiscount,
+      customDiscount,
       discountPercentage: discountPercentageAmount,
-      tableCharge, 
-      total 
+      tableCharge,
+      total
     };
   };
 
@@ -409,11 +423,58 @@ export default function POSSystem() {
     totals: OrderTotals;
   } | null>(null);
 
-  // Complete order
+  // Update product stock after order completion
+  const updateProductStock = async (cartItems: CartItem[]) => {
+    try {
+      const response = await fetch('/api/order/update-stock', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cartItems }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update stock');
+      }
+
+      const result = await response.json();
+      console.log('Stock updated successfully:', result);
+
+      // Refresh products to get updated stock values
+      await fetchProducts();
+
+      return result;
+    } catch (error) {
+      console.error('Error updating stock:', error);
+      throw error;
+    }
+  };
+
+  // Complete order with stock management
   const completeOrder = async () => {
     if (!activeOrder) return;
 
     const currentTotals = calculateTotals();
+
+    // Validate stock availability before completing order
+    const stockValidationErrors = [];
+    for (const item of activeOrder.cart) {
+      const currentProduct = products.find(p => p._id === item.product._id);
+      if (!currentProduct) {
+        stockValidationErrors.push(`Product ${item.product.name} not found`);
+        continue;
+      }
+      if (currentProduct.stock < item.quantity) {
+        stockValidationErrors.push(`Insufficient stock for ${item.product.name}. Available: ${currentProduct.stock}, Required: ${item.quantity}`);
+      }
+    }
+
+    if (stockValidationErrors.length > 0) {
+      alert(`Cannot complete order:\n${stockValidationErrors.join('\n')}`);
+      return;
+    }
 
     // Create final order data with all required fields
     const finalOrderData = {
@@ -472,6 +533,16 @@ export default function POSSystem() {
 
       const savedOrder = await response.json();
       console.log('Order saved to database:', savedOrder);
+
+      // Update product stock
+      try {
+        await updateProductStock(activeOrder.cart);
+        console.log('Product stock updated successfully');
+      } catch (stockError) {
+        console.error('Failed to update product stock:', stockError);
+        // You might want to show a warning but still complete the order
+        alert('Order completed but failed to update stock. Please manually adjust inventory.');
+      }
 
       // Store the completed order data for receipt display
       // Use the client-side order data for UI purposes
