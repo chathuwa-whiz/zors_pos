@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { User } from "./user";
 
 export interface Product {
@@ -14,6 +13,12 @@ export interface Product {
   imagePublicId?: string;
   stock: number;
   description?: string;
+  barcode?: string;
+}
+
+export interface Category {
+  _id: string;
+  name: string;
 }
 
 export interface CartItem {
@@ -62,12 +67,15 @@ export interface Order {
   isDefault?: boolean;
   paymentDetails?: PaymentDetails;
   tableCharge: number;
+  discountPercentage: number;
+  totalAmount: number;
 }
 
 export interface OrderTotals {
   subtotal: number;
   couponDiscount: number;
   customDiscount: number;
+  discountPercentage: number;
   total: number;
   tableCharge: number;
 }

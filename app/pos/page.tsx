@@ -54,7 +54,7 @@ export default function POSSystem() {
       const storedOrders = localStorage.getItem('posOrders');
       if (storedOrders) {
         const parsedOrders = JSON.parse(storedOrders);
-        return parsedOrders.map((order: any) => ({
+        return parsedOrders.map((order: Order) => ({
           ...order,
           createdAt: new Date(order.createdAt) // Convert string back to Date
         }));
@@ -140,19 +140,22 @@ export default function POSSystem() {
       }
     } else {
       // Initialize with default order if no saved orders
+      const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
       const initialOrder: Order = {
         _id: '1',
         name: 'Live Bill',
         cart: [],
         customer: {},
-        cashier: user!,
+        cashier: currentUser!,
         orderType: 'dine-in',
         customDiscount: 0,
         kitchenNote: '',
         tableCharge: 0,
         createdAt: new Date(),
         status: 'active',
-        isDefault: true
+        isDefault: true,
+        discountPercentage: 0,
+        totalAmount: 0
       };
       const initialOrders = [initialOrder];
       setOrders(initialOrders);
@@ -203,7 +206,9 @@ export default function POSSystem() {
       kitchenNote: '',
       tableCharge: 0,
       createdAt: new Date(),
-      status: 'active'
+      status: 'active',
+      discountPercentage: 0,
+      totalAmount: 0
     };
     const updatedOrders = [...orders, newOrder];
     setOrders(updatedOrders);
@@ -299,6 +304,27 @@ export default function POSSystem() {
     }
   };
 
+  // Handle barcode scanning
+  const handleBarcodeScanned = (barcode: string) => {
+    // Find product by barcode
+    const product = products.find(p => p.barcode === barcode);
+    
+    if (product) {
+      // Check if product is in stock
+      if (product.stock > 0) {
+        addToCart(product);
+        // You could add a success notification here
+        console.log(`Product ${product.name} added to cart via barcode scan`);
+      } else {
+        // Product out of stock
+        alert(`Product "${product.name}" is out of stock!`);
+      }
+    } else {
+      // Product not found
+      alert(`No product found with barcode: ${barcode}`);
+    }
+  };
+
   // Update cart quantity
   const updateQuantity = (productId: string, change: number) => {
     if (!activeOrder) return;
@@ -334,7 +360,7 @@ export default function POSSystem() {
 
   // Calculate totals
   const calculateTotals = (): OrderTotals => {
-    if (!activeOrder) return { subtotal: 0, couponDiscount: 0, customDiscount: 0, tableCharge: 0, total: 0 };
+    if (!activeOrder) return { subtotal: 0, couponDiscount: 0, customDiscount: 0, discountPercentage: 0, tableCharge: 0, total: 0 };
 
     const subtotal = activeOrder.cart.reduce((sum, item) => sum + item.subtotal, 0);
 
@@ -355,13 +381,24 @@ export default function POSSystem() {
       }
     }
 
+    // Calculate discount percentage amount
+    const discountPercentage = activeOrder.discountPercentage || 0;
+    const discountPercentageAmount = subtotal * (discountPercentage / 100);
+    
     const customDiscount = activeOrder.customDiscount || 0;
-    const tableCharge = activeOrder.orderType === 'dine-in' ? (activeOrder.tableCharge || 50) : 0;
+    const tableCharge = activeOrder.orderType === 'dine-in' ? (activeOrder.tableCharge || 0) : 0;
 
-    const discountedAmount = subtotal - couponDiscount - customDiscount;
+    const discountedAmount = subtotal - couponDiscount - customDiscount - discountPercentageAmount;
     const total = Math.max(0, discountedAmount) + tableCharge;
 
-    return { subtotal, couponDiscount, customDiscount, tableCharge, total };
+    return { 
+      subtotal, 
+      couponDiscount, 
+      customDiscount, 
+      discountPercentage: discountPercentageAmount,
+      tableCharge, 
+      total 
+    };
   };
 
   const totals = calculateTotals();
@@ -373,54 +410,114 @@ export default function POSSystem() {
   } | null>(null);
 
   // Complete order
-  const completeOrder = () => {
+  const completeOrder = async () => {
     if (!activeOrder) return;
 
     const currentTotals = calculateTotals();
 
-    console.log('Order completed:', {
+    // Create final order data with all required fields
+    const finalOrderData = {
       ...activeOrder,
-      paymentMethod,
-      totals: currentTotals,
-      timestamp: new Date()
-    });
+      status: 'completed' as 'active' | 'completed',
+      totalAmount: currentTotals.total,
+      paymentDetails: activeOrder.paymentDetails || {
+        method: paymentMethod,
+        ...(paymentMethod === 'cash' ? {
+          cashGiven: 0,
+          change: 0
+        } : {
+          invoiceId: '',
+          bankServiceCharge: 0,
+          bankName: ''
+        })
+      }
+    };
 
-    // Store the completed order data BEFORE removing it
-    setCompletedOrderData({
-      order: { ...activeOrder, status: 'completed' },
-      totals: currentTotals
-    });
+    // Store a copy with the client-side ID for the receipt
+    const clientSideOrderData = { ...finalOrderData };
 
-    updateActiveOrder({ status: 'completed' });
-    setOrderComplete(true);
-
-    // Remove the order from active orders
-    const updatedOrders = orders.filter(order => order._id !== activeOrderId);
-    setOrders(updatedOrders);
-
-    if (updatedOrders.length > 0) {
-      setActiveOrderId(updatedOrders[0]._id);
-    } else {
-      // Create new default order
-      const newOrder: Order = {
-        _id: Date.now().toString(),
-        name: 'Live Bill',
-        cart: [],
-        customer: {},
-        cashier: user!,
-        orderType: 'dine-in',
-        customDiscount: 0,
-        kitchenNote: '',
-        tableCharge: 0,
-        createdAt: new Date(),
-        status: 'active',
-        isDefault: true
+    try {
+      // Create a version of the order data without the _id field
+      // MongoDB will generate a proper ObjectId automatically
+      const orderDataForDB = {
+        status: finalOrderData.status,
+        totalAmount: finalOrderData.totalAmount,
+        paymentDetails: finalOrderData.paymentDetails,
+        name: finalOrderData.name,
+        cart: finalOrderData.cart,
+        customer: finalOrderData.customer,
+        cashier: finalOrderData.cashier,
+        orderType: finalOrderData.orderType,
+        customDiscount: finalOrderData.customDiscount,
+        kitchenNote: finalOrderData.kitchenNote,
+        tableCharge: finalOrderData.tableCharge,
+        createdAt: finalOrderData.createdAt,
+        isDefault: finalOrderData.isDefault,
+        discountPercentage: finalOrderData.discountPercentage,
+        appliedCoupon: finalOrderData.appliedCoupon
       };
-      setOrders([newOrder]);
-      setActiveOrderId(newOrder._id);
-    }
 
-    setShowCheckout(false);
+      // Send the order to the API without the _id field
+      const response = await fetch('/api/order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderDataForDB),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save order');
+      }
+
+      const savedOrder = await response.json();
+      console.log('Order saved to database:', savedOrder);
+
+      // Store the completed order data for receipt display
+      // Use the client-side order data for UI purposes
+      setCompletedOrderData({
+        order: clientSideOrderData,
+        totals: currentTotals
+      });
+
+      // Update UI state
+      updateActiveOrder({ status: 'completed' });
+      setOrderComplete(true);
+
+      // Remove the order from active orders
+      const updatedOrders = orders.filter(order => order._id !== activeOrderId);
+      setOrders(updatedOrders);
+
+      if (updatedOrders.length > 0) {
+        setActiveOrderId(updatedOrders[0]._id);
+      } else {
+        // Create new default order
+        const newOrder: Order = {
+          _id: Date.now().toString(),
+          name: 'Live Bill',
+          cart: [],
+          customer: {},
+          cashier: user!,
+          orderType: 'dine-in',
+          customDiscount: 0,
+          kitchenNote: '',
+          tableCharge: 0,
+          createdAt: new Date(),
+          status: 'active',
+          isDefault: true,
+          discountPercentage: 0,
+          totalAmount: 0
+        };
+        setOrders([newOrder]);
+        setActiveOrderId(newOrder._id);
+      }
+
+      setShowCheckout(false);
+    } catch (error) {
+      console.error('Error saving order:', error);
+      // You could add error handling UI here
+      alert('Failed to save order. Please try again.');
+    }
   };
 
   // Add a function to manually clear all data (useful for debugging or reset)
@@ -438,7 +535,9 @@ export default function POSSystem() {
       tableCharge: 0,
       createdAt: new Date(),
       status: 'active',
-      isDefault: true
+      isDefault: true,
+      discountPercentage: 0,
+      totalAmount: 0
     };
     setOrders([initialOrder]);
     setActiveOrderId('1');
@@ -511,6 +610,7 @@ export default function POSSystem() {
         onApplyCoupon={applyCoupon}
         onCompleteOrder={completeOrder}
         onShowCustomerModal={() => setShowCustomerModal(true)}
+        onBarcodeScanned={handleBarcodeScanned}
       />
 
       {showCustomerModal && activeOrder && (
@@ -524,7 +624,7 @@ export default function POSSystem() {
       {/* Debug button - remove in production */}
       <button
         onClick={resetPOSData}
-        className="fixed top-14 right-4 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 opacity-20 hover:opacity-100 transition-opacity"
+        className="fixed top-30 right-4 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 opacity-20 hover:opacity-100 transition-opacity"
         title="Reset POS Data (Debug)"
       >
         Reset

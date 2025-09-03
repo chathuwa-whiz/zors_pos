@@ -3,7 +3,7 @@ import { Customer } from "@/app/types/pos";
 import CustomerModel from "@/app/models/Customer";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function PUT(req: NextRequest, context: { params: Promise<{ id: String }> }) {
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
 
         await connectDB();
@@ -33,7 +33,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: Str
     }
 }
 
-export async function DELETE(req: NextRequest, context: { params: Promise<{ id: String }> }) {
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
 
         await connectDB();

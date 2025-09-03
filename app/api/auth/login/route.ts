@@ -15,19 +15,19 @@ export async function POST(req: NextRequest) {
 
         // validations
         if (!username || !password) {
-            return NextResponse.json({ message: 'All fields are required' });
+            return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
         }
 
         // find user
         const user = await User.findOne({ username });
         if (!user) {
-            return NextResponse.json({ message: 'User not found' });
+            return NextResponse.json({ message: 'User not found' }, { status: 401 });
         }
 
         // check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return NextResponse.json({ message: 'Invalid credentials' });
+            return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
         }
 
         // generate JWT token
@@ -41,12 +41,21 @@ export async function POST(req: NextRequest) {
             { expiresIn: '24h' }
         );
 
-        // give response
-        return NextResponse.json({ user, token });
+        // Create user object without password
+        const userResponse = {
+            _id: user._id,
+            username: user.username,
+            role: user.role,
+            email: user.email
+        };
 
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json({ message: 'Internal server error' });
+        // give response
+        return NextResponse.json({ user: userResponse, token });
+
+    } catch (error: unknown) {
+        console.error('Login error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+        return NextResponse.json({ message: errorMessage }, { status: 500 });
     }
 
 }

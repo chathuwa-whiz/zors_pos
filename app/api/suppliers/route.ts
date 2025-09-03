@@ -7,8 +7,9 @@ export async function GET() {
     await connectDB();
     const suppliers = await Supplier.find();
     return NextResponse.json(suppliers);
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch suppliers' }, { status: 500 });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -18,7 +19,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const supplier = await Supplier.create(body);
     return NextResponse.json(supplier, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to create supplier' }, { status: 500 });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

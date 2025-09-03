@@ -58,7 +58,7 @@ export default function Page() {
       setForm({ name: '', contactNumber: '', address: '', email: '' });
       setShowModal(false);
       setEditId(null);
-    } catch (err) {
+    } catch {
       setError(editId ? 'Error updating supplier' : 'Error creating supplier');
     }
     setSubmitting(false);
@@ -85,7 +85,7 @@ export default function Page() {
       if (!res.ok) throw new Error('Failed to delete supplier');
       setSuppliers(prev => prev.filter(s => s._id !== showDeleteId));
       setShowDeleteId(null);
-    } catch (err) {
+    } catch {
       setError('Error deleting supplier');
     }
     setSubmitting(false);

@@ -3,7 +3,7 @@ import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
 
     try {
 
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json(products, { status: 200 });
 
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("Error fetching products:", error);
         return NextResponse.json(
             { message: "Internal Server Error" },
@@ -42,7 +42,19 @@ export async function POST(req: NextRequest) {
         }
 
         // Extract product data from FormData
-        const productData: any = {
+        const productData: {
+            name: string;
+            costPrice: number;
+            sellingPrice: number;
+            discount: number;
+            category: string;
+            size?: string;
+            dryfood: boolean;
+            stock: number;
+            description?: string;
+            image?: string;
+            imagePublicId?: string;
+        } = {
             name: formData.get("name") as string,
             costPrice: Number(formData.get("costPrice")),
             sellingPrice: Number(formData.get("sellingPrice")),
@@ -73,7 +85,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json(newProduct, { status: 201 });
 
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("Error creating product:", error);
         return NextResponse.json(
             { message: "Internal Server Error" },

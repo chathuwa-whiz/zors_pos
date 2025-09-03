@@ -1,6 +1,6 @@
 "use client";
 import { Customer, CartItem, OrderTotals } from '../types/pos';
-import { Check, Printer, Download, ArrowLeft } from 'lucide-react';
+import { Check, Printer } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface OrderCompleteProps {
@@ -31,13 +31,7 @@ export default function OrderComplete({
     onBackToPOS && onBackToPOS();
   };
 
-  const handleDownload = () => {
-    window.alert('Download functionality is not implemented yet.');
-  };
-
   const { subtotal, couponDiscount, customDiscount, tableCharge, total } = totals;
-
-  console.log({ subtotal, couponDiscount, customDiscount, tableCharge, total });
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">

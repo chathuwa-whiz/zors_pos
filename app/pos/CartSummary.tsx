@@ -30,7 +30,6 @@ const bankServiceCharges = [
 export default function CartSummary({
   activeOrder,
   totals,
-  availableCoupons,
   couponCode,
   setCouponCode,
   showCheckout,
@@ -41,7 +40,7 @@ export default function CartSummary({
   onApplyCoupon,
   onCompleteOrder
 }: CartSummaryProps) {
-  const { subtotal, couponDiscount, customDiscount, tableCharge, total } = totals;
+  const { subtotal, couponDiscount, customDiscount, discountPercentage, tableCharge, total } = totals;
 
   const [cashGiven, setCashGiven] = useState<number>(0);
   const [invoiceId, setInvoiceId] = useState<string>('');
@@ -163,6 +162,12 @@ export default function CartSummary({
             <span>-Rs.{customDiscount.toFixed(2)}</span>
           </div>
         )}
+        {discountPercentage > 0 && (
+          <div className="flex justify-between text-green-600">
+            <span>Discount ({activeOrder.discountPercentage}%)</span>
+            <span>-Rs.{discountPercentage.toFixed(2)}</span>
+          </div>
+        )}
         {tableCharge > 0 && (
           <div className="flex justify-between text-blue-600">
             <span>Table Charge</span>
@@ -228,7 +233,6 @@ export default function CartSummary({
                   <div className="absolute left-3 bottom-1/2 transform w-4 h-4 text-gray-500">Rs.</div>
                   <input
                     type="number"
-                    step="0.01"
                     placeholder="0.00"
                     value={cashGiven || ''}
                     onChange={(e) => setCashGiven(parseFloat(e.target.value) || 0)}

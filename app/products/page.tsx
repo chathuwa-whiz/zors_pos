@@ -7,6 +7,7 @@ import ProductList from './ProductList';
 import ProductForm from './ProductForm';
 import ProductFilters from './ProductFilters';
 import ProductStats from './ProductStats';
+import LowStockWarning from '../components/LowStockWarning';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -50,7 +51,7 @@ export default function ProductsPage() {
 
   // Filter products based on search and filters
   useEffect(() => {
-    let filtered = products.filter(product => {
+    const filtered = products.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -141,6 +142,9 @@ export default function ProductsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Stats */}
         <ProductStats products={products} />
+
+        {/* Low Stock Warning */}
+        <LowStockWarning products={products} />
 
         {/* Search and Controls */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
