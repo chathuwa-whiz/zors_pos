@@ -16,6 +16,7 @@ export interface Order extends Document {
     isDefault?: boolean;
     paymentDetails: PaymentDetails;
     tableCharge: number;
+    deliveryCharge?: number;
     discountPercentage: number;
     totalAmount: number;
 }
@@ -34,6 +35,7 @@ const orderSchema = new Schema<Order>({
     isDefault: { type: Boolean, default: false },
     paymentDetails: { type: Object, required: true },
     tableCharge: { type: Number, default: 0 },
+    deliveryCharge: { type: Number, default: 0 },
     discountPercentage: { type: Number, default: 0 },
     totalAmount: { type: Number, required: true }
 }, { timestamps: true })

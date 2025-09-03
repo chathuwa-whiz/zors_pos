@@ -40,7 +40,7 @@ export default function CartSummary({
   onApplyCoupon,
   onCompleteOrder
 }: CartSummaryProps) {
-  const { subtotal, couponDiscount, customDiscount, discountPercentage, tableCharge, total } = totals;
+  const { subtotal, couponDiscount, customDiscount, discountPercentage, tableCharge, deliveryCharge, total } = totals;
 
   const [cashGiven, setCashGiven] = useState<number>(0);
   const [invoiceId, setInvoiceId] = useState<string>('');
@@ -142,6 +142,12 @@ export default function CartSummary({
             <span>+Rs.{tableCharge.toFixed(2)}</span>
           </div>
         )}
+        {deliveryCharge && deliveryCharge > 0 && (
+          <div className="flex justify-between text-purple-600">
+            <span>Delivery Charge</span>
+            <span>+Rs.{deliveryCharge.toFixed(2)}</span>
+          </div>
+        )}
         {paymentMethod === 'card' && selectedBankCharge && (
           <div className="flex justify-between text-orange-600">
             <span>Bank Service Charge ({selectedBank})</span>
@@ -170,8 +176,8 @@ export default function CartSummary({
               <button
                 onClick={() => setPaymentMethod('cash')}
                 className={`flex-1 flex items-center justify-center py-3 px-3 rounded-lg border ${paymentMethod === 'cash'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
               >
                 <DollarSign className="w-5 h-5 mr-2" />
@@ -180,8 +186,8 @@ export default function CartSummary({
               <button
                 onClick={() => setPaymentMethod('card')}
                 className={`flex-1 flex items-center justify-center py-3 px-3 rounded-lg border ${paymentMethod === 'card'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
               >
                 <CreditCard className="w-5 h-5 mr-2" />
@@ -299,8 +305,8 @@ export default function CartSummary({
               onClick={handleCompleteOrder}
               disabled={!isPaymentValid()}
               className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${isPaymentValid()
-                  ? 'bg-green-600 text-white hover:bg-green-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-green-600 text-white hover:bg-green-700'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
             >
               Complete Order

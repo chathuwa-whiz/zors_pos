@@ -42,7 +42,7 @@ export default function OrderControls({
       if (response.ok) {
         const data = await response.json();
         setDiscounts(data);
-        
+
         // Find global discount
         const global = data.find((d: Discount) => d.isGlobal);
         if (global) {
@@ -66,6 +66,25 @@ export default function OrderControls({
     }
   };
 
+  // Handle order type change with appropriate charges
+  const handleOrderTypeChange = (orderType: 'dine-in' | 'takeaway' | 'delivery') => {
+    const updates: Partial<Order> = { orderType };
+
+    // Reset charges based on order type
+    if (orderType === 'dine-in') {
+      updates.tableCharge = activeOrder.tableCharge || 0;
+      updates.deliveryCharge = 0; // Reset delivery charge
+    } else if (orderType === 'takeaway') {
+      updates.tableCharge = 0;
+      updates.deliveryCharge = 0; // Reset delivery charge
+    } else if (orderType === 'delivery') {
+      updates.tableCharge = 0;
+      updates.deliveryCharge = activeOrder.deliveryCharge || 0; // Keep existing or set to 0
+    }
+
+    onUpdateActiveOrder(updates);
+  };
+
   return (
     <div className="border-b border-gray-200 p-4 flex-shrink-0">
       <div className="flex items-center justify-between mb-3">
@@ -80,7 +99,7 @@ export default function OrderControls({
 
           <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
             <button
-              onClick={() => onUpdateActiveOrder({ orderType: 'dine-in', tableCharge: activeOrder.tableCharge })}
+              onClick={() => handleOrderTypeChange('dine-in')}
               className={`px-3 py-1 rounded text-sm ${activeOrder.orderType === 'dine-in' ? 'bg-white shadow' : ''
                 }`}
             >
@@ -88,7 +107,7 @@ export default function OrderControls({
               Dine-in
             </button>
             <button
-              onClick={() => onUpdateActiveOrder({ orderType: 'takeaway', tableCharge: 0 })}
+              onClick={() => handleOrderTypeChange('takeaway')}
               className={`px-3 py-1 rounded text-sm ${activeOrder.orderType === 'takeaway' ? 'bg-white shadow' : ''
                 }`}
             >
@@ -96,7 +115,7 @@ export default function OrderControls({
               Takeaway
             </button>
             <button
-              onClick={() => onUpdateActiveOrder({ orderType: 'delivery', tableCharge: 0 })}
+              onClick={() => handleOrderTypeChange('delivery')}
               className={`px-3 py-1 rounded text-sm ${activeOrder.orderType === 'delivery' ? 'bg-white shadow' : ''
                 }`}
             >
@@ -151,6 +170,25 @@ export default function OrderControls({
               value={activeOrder.tableCharge || ''}
               onChange={(e) => onUpdateActiveOrder({ tableCharge: parseFloat(e.target.value) || 0 })}
               className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+            />
+            <span className="text-sm text-gray-500">Rs</span>
+          </div>
+        </div>
+      )}
+
+      {/* Delivery Charge Input for Delivery */}
+      {activeOrder.orderType === 'delivery' && (
+        <div className="mb-3">
+          <div className="flex items-center space-x-2">
+            <MapPin className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-600">Delivery Charge:</span>
+            <input
+              type="number"
+              placeholder="0"
+              value={activeOrder.deliveryCharge || ''}
+              onChange={(e) => onUpdateActiveOrder({ deliveryCharge: parseFloat(e.target.value) || 0 })}
+              className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+              min="0"
             />
             <span className="text-sm text-gray-500">Rs</span>
           </div>

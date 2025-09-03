@@ -31,7 +31,7 @@ export default function OrderComplete({
     onBackToPOS && onBackToPOS();
   };
 
-  const { subtotal, couponDiscount, customDiscount, tableCharge, total } = totals;
+  const { subtotal, couponDiscount, customDiscount, tableCharge, deliveryCharge, total } = totals;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -119,6 +119,12 @@ export default function OrderComplete({
               <div className="flex justify-between text-sm text-blue-600">
                 <span>Table Charge:</span>
                 <span>+Rs.{tableCharge.toFixed(2)}</span>
+              </div>
+            )}
+            {deliveryCharge && deliveryCharge > 0 && (
+              <div className="flex justify-between text-sm text-purple-600">
+                <span>Delivery Charge:</span>
+                <span>+Rs.{deliveryCharge.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between font-bold text-lg border-t pt-2">
