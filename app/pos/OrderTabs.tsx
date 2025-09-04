@@ -1,6 +1,6 @@
 "use client";
 
-import { X, GripVertical, Scan } from 'lucide-react';
+import { X, GripVertical, Scan, Plus } from 'lucide-react';
 import { Order } from '@/app/types/pos';
 import { useState, useRef } from 'react';
 
@@ -32,13 +32,11 @@ export default function OrderTabs({
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   const handleBarcodeKeyPress = (e: React.KeyboardEvent) => {
-    // Handle Enter key press for barcode scanners
     if (e.key === 'Enter') {
       e.preventDefault();
       if (barcodeInput.trim()) {
         onBarcodeScanned(barcodeInput.trim());
         setBarcodeInput('');
-        // Keep focus on the input for continuous scanning
         setTimeout(() => {
           barcodeInputRef.current?.focus();
         }, 100);
@@ -50,14 +48,11 @@ export default function OrderTabs({
     const value = e.target.value;
     setBarcodeInput(value);
     
-    // Auto-submit when barcode is scanned (typically ends with Enter)
-    // Some scanners might not trigger keyPress, so we also check for length
-    if (value.length >= 8) { // Assuming minimum barcode length
+    if (value.length >= 8) {
       setTimeout(() => {
         if (barcodeInputRef.current?.value === value) {
           onBarcodeScanned(value.trim());
           setBarcodeInput('');
-          // Keep focus on the input for continuous scanning
           setTimeout(() => {
             barcodeInputRef.current?.focus();
           }, 100);
@@ -67,34 +62,37 @@ export default function OrderTabs({
   };
 
   return (
-    <div className="border-b border-gray-200 p-4 flex-shrink-0">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-gray-900">Active Orders</h2>
+    <div className="border-b border-green-200 bg-gradient-to-r from-green-900 to-green-800 p-4 flex-shrink-0">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-white">Active Orders</h2>
         <button
           onClick={onCreateNewOrder}
-          className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700"
+          className="flex items-center space-x-2 bg-lime-400 hover:bg-lime-500 text-green-900 px-4 py-2 rounded-lg font-semibold transition-all duration-200 active:scale-95 shadow-md"
         >
-          + New Order
+          <Plus className="w-4 h-4" />
+          <span className="text-sm">New Order</span>
         </button>
       </div>
 
-      {/* Barcode Scanner Input */}
+      {/* Barcode Scanner */}
       <div className="mb-4">
         <div className="relative">
-          <Scan className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Scan className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-600" />
           <input
             ref={barcodeInputRef}
             type="text"
-            placeholder="Scan barcode..."
+            placeholder="Scan barcode or type product code..."
             value={barcodeInput}
             onChange={handleBarcodeChange}
             onKeyPress={handleBarcodeKeyPress}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            className="w-full pl-10 pr-4 py-3 text-base border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-lime-400 focus:border-lime-400 bg-white shadow-sm transition-all duration-200"
             autoComplete="off"
           />
         </div>
       </div>
       
+      {/* Order Tabs */}
       <div className="flex space-x-2 overflow-x-auto pb-2">
         {orders.filter(order => order.status === 'active').map(order => (
           <div
@@ -103,10 +101,10 @@ export default function OrderTabs({
             onDragStart={(e) => onDragStart(e, order._id)}
             onDragOver={onDragOver}
             onDrop={(e) => onDrop(e, order._id)}
-            className={`relative flex items-center px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0 group ${
+            className={`relative flex items-center px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap flex-shrink-0 group transition-all duration-200 min-w-[120px] ${
               activeOrderId === order._id
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-lime-400 text-green-900 shadow-md ring-1 ring-white'
+                : 'bg-white text-green-900 border border-green-300 hover:bg-lime-50 hover:border-lime-400 shadow-sm'
             } ${!order.isDefault ? 'cursor-move' : ''}`}
           >
             {!order.isDefault && (
@@ -117,10 +115,12 @@ export default function OrderTabs({
               onClick={() => onSetActiveOrderId(order._id)}
               className="flex items-center space-x-2"
             >
-              <span>{order.name}</span>
+              <span className="text-sm">{order.name}</span>
               {order.cart.length > 0 && (
-                <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                  {order.cart.length}
+                <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold min-w-[18px] h-5 flex items-center justify-center ${
+                  activeOrderId === order._id ? 'bg-green-900 text-lime-400' : 'bg-lime-400 text-green-900'
+                }`}>
+                  {order.cart.reduce((sum, item) => sum + item.quantity, 0)}
                 </span>
               )}
             </button>
@@ -131,10 +131,10 @@ export default function OrderTabs({
                   e.stopPropagation();
                   onDeleteOrder(order._id);
                 }}
-                className={`ml-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded ${
+                className={`ml-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded active:scale-95 ${
                   activeOrderId === order._id
-                    ? 'hover:bg-blue-700 text-white'
-                    : 'hover:bg-red-100 text-red-500'
+                    ? 'hover:bg-green-800 text-white'
+                    : 'hover:bg-red-100 text-red-600'
                 }`}
               >
                 <X className="w-3 h-3" />

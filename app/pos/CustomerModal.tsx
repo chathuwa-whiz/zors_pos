@@ -1,15 +1,15 @@
 "use client";
 
-import { X, Search, UserPlus, Users } from 'lucide-react';
+import { X, Search, UserPlus, Users, User, Phone, Mail, Calendar } from 'lucide-react';
 import { Order } from '@/app/types/pos';
 import { useState, useEffect } from 'react';
 
 interface Customer {
   _id: string;
   name: string;
-  email: string;
-  phone: string;
-  birthDate: string;
+  email?: string;
+  phone?: string;
+  birthDate?: string;
 }
 
 interface CustomerModalProps {
@@ -23,10 +23,10 @@ export default function CustomerModal({
   onClose,
   onUpdateActiveOrder
 }: CustomerModalProps) {
-  const [mode, setMode] = useState<'select' | 'add'>('select');
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
     name: '',
     email: '',
@@ -43,22 +43,16 @@ export default function CustomerModal({
     try {
       setLoading(true);
       const response = await fetch('/api/customers');
-      if (!response.ok) throw new Error('Failed to fetch customers');
-      const data = await response.json();
-      setCustomers(data);
+      if (response.ok) {
+        const data = await response.json();
+        setCustomers(data);
+      }
     } catch (error) {
       console.error('Error fetching customers:', error);
     } finally {
       setLoading(false);
     }
   };
-
-  // Filter customers based on search query
-  const filteredCustomers = customers.filter(customer =>
-    customer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.phone?.includes(searchQuery)
-  );
 
   // Handle customer selection
   const handleSelectCustomer = (customer: Customer) => {
@@ -83,214 +77,204 @@ export default function CustomerModal({
         body: JSON.stringify(newCustomer),
       });
 
-      if (!response.ok) throw new Error('Failed to create customer');
-
-      const createdCustomer = await response.json();
-
-      // Add to order
-      onUpdateActiveOrder({
-        customer: {
-          _id: createdCustomer._id,
-          name: createdCustomer.name,
-          email: createdCustomer.email,
-          phone: createdCustomer.phone,
-          birthDate: createdCustomer.birthDate
-        }
-      });
-
-      onClose();
+      if (response.ok) {
+        const customer = await response.json();
+        setCustomers([...customers, customer]);
+        setNewCustomer({ name: '', email: '', phone: '', birthDate: '' });
+        setShowCreateForm(false);
+        onUpdateActiveOrder({ customer });
+        onClose();
+      }
     } catch (error) {
       console.error('Error creating customer:', error);
-      alert('Failed to create customer. Please try again.');
     }
   };
 
-  // Handle manual customer input (without saving to database)
-  const handleManualCustomer = () => {
-    onUpdateActiveOrder({
-      customer: {
-        name: newCustomer.name,
-        email: newCustomer.email,
-        phone: newCustomer.phone,
-        birthDate: newCustomer.birthDate
-      }
-    });
-    onClose();
-  };
-
-  const handleNewCustomerChange = (field: string, value: string) => {
-    setNewCustomer(prev => ({ ...prev, [field]: value }));
-  };
+  const filteredCustomers = customers.filter(customer =>
+    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (customer.phone && customer.phone.includes(searchQuery)) ||
+    (customer.email && customer.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4 max-h-[80vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Customer Details</h3>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-green-900">Select Customer</h2>
+              <p className="text-green-600">Choose or create a customer for this order</p>
+            </div>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="w-10 h-10 bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-600 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Mode Toggle */}
-        <div className="flex bg-gray-100 rounded-lg p-1 mb-4">
+        {/* Search and Actions */}
+        <div className="flex space-x-3 mb-6">
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-green-600" />
+            <input
+              type="text"
+              placeholder="Search customers by name, phone, or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-4 border-2 border-green-300 rounded-xl text-lg focus:ring-4 focus:ring-lime-400 focus:border-lime-400 shadow-md"
+            />
+          </div>
           <button
-            onClick={() => setMode('select')}
-            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${mode === 'select'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-              }`}
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className={`px-6 py-4 rounded-xl font-bold transition-all duration-200 active:scale-95 flex items-center space-x-2 ${
+              showCreateForm 
+                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
+                : 'bg-lime-400 text-green-900 hover:bg-lime-500'
+            }`}
           >
-            <Users className="w-4 h-4" />
-            <span>Select Customer</span>
-          </button>
-          <button
-            onClick={() => setMode('add')}
-            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${mode === 'add'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-              }`}
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Add Customer</span>
+            <UserPlus className="w-5 h-5" />
+            <span>{showCreateForm ? 'Cancel' : 'New'}</span>
           </button>
         </div>
 
-        <div className="flex-1 overflow-hidden">
-          {mode === 'select' ? (
-            <div className="h-full flex flex-col">
-              {/* Search */}
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search customers..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Customer List */}
-              <div className="flex-1 overflow-y-auto">
-                {loading ? (
-                  <div className="text-center py-8">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <p className="mt-2 text-gray-600">Loading customers...</p>
-                  </div>
-                ) : filteredCustomers.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-600">
-                      {searchQuery ? 'No customers match your search' : 'No customers found'}
-                    </p>
-                    <button
-                      onClick={() => setMode('add')}
-                      className="mt-2 text-blue-600 hover:text-blue-700 text-sm"
-                    >
-                      Add a new customer
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {filteredCustomers.map((customer) => (
-                      <div
-                        key={customer._id}
-                        onClick={() => handleSelectCustomer(customer)}
-                        className="p-3 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-colors"
-                      >
-                        <div className="font-medium text-gray-900">{customer.name}</div>
-                        {customer.phone && (
-                          <div className="text-sm text-gray-600">{customer.phone}</div>
-                        )}
-                        {customer.email && (
-                          <div className="text-sm text-gray-500">{customer.email}</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
+        {/* Create Customer Form */}
+        {showCreateForm && (
+          <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6 mb-6">
+            <h3 className="text-xl font-bold text-green-900 mb-4">Create New Customer</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <label className="block text-lg font-medium text-green-900 mb-2">Name *</label>
                 <input
                   type="text"
                   value={newCustomer.name}
-                  onChange={(e) => handleNewCustomerChange('name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-green-300 rounded-xl text-lg focus:ring-4 focus:ring-lime-400 focus:border-lime-400"
                   placeholder="Customer name"
-                  required
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                <label className="block text-lg font-medium text-green-900 mb-2">Phone</label>
                 <input
                   type="tel"
                   value={newCustomer.phone}
-                  onChange={(e) => handleNewCustomerChange('phone', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="+94 (71) 1234567"
+                  onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-green-300 rounded-xl text-lg focus:ring-4 focus:ring-lime-400 focus:border-lime-400"
+                  placeholder="Phone number"
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-lg font-medium text-green-900 mb-2">Email</label>
                 <input
                   type="email"
                   value={newCustomer.email}
-                  onChange={(e) => handleNewCustomerChange('email', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="customer@example.com"
+                  onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-green-300 rounded-xl text-lg focus:ring-4 focus:ring-lime-400 focus:border-lime-400"
+                  placeholder="Email address"
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Birth Date</label>
+                <label className="block text-lg font-medium text-green-900 mb-2">Birth Date</label>
                 <input
                   type="date"
                   value={newCustomer.birthDate}
-                  onChange={(e) => handleNewCustomerChange('birthDate', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => setNewCustomer({ ...newCustomer, birthDate: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-green-300 rounded-xl text-lg focus:ring-4 focus:ring-lime-400 focus:border-lime-400"
                 />
               </div>
+            </div>
+            <button
+              onClick={handleCreateCustomer}
+              disabled={!newCustomer.name.trim()}
+              className={`mt-4 w-full py-3 rounded-xl font-bold text-lg transition-all duration-200 active:scale-95 ${
+                newCustomer.name.trim()
+                  ? 'bg-green-900 text-white hover:bg-green-800'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              Create Customer
+            </button>
+          </div>
+        )}
+
+        {/* Customer List */}
+        <div className="flex-1 overflow-auto">
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-green-600 text-lg">Loading customers...</p>
+            </div>
+          ) : filteredCustomers.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <User className="w-8 h-8 text-green-600" />
+              </div>
+              <p className="text-green-600 text-lg">No customers found</p>
+              <p className="text-green-500">Try adjusting your search or create a new customer</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredCustomers.map(customer => (
+                <div
+                  key={customer._id}
+                  onClick={() => handleSelectCustomer(customer)}
+                  className="bg-white border-2 border-green-200 rounded-xl p-4 hover:bg-green-50 hover:border-lime-400 cursor-pointer transition-all duration-200 active:scale-95"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <User className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-green-900 text-lg">{customer.name}</h4>
+                        <div className="flex items-center space-x-4 text-green-600">
+                          {customer.phone && (
+                            <div className="flex items-center space-x-1">
+                              <Phone className="w-4 h-4" />
+                              <span>{customer.phone}</span>
+                            </div>
+                          )}
+                          {customer.email && (
+                            <div className="flex items-center space-x-1">
+                              <Mail className="w-4 h-4" />
+                              <span>{customer.email}</span>
+                            </div>
+                          )}
+                          {customer.birthDate && (
+                            <div className="flex items-center space-x-1">
+                              <Calendar className="w-4 h-4" />
+                              <span>{new Date(customer.birthDate).toLocaleDateString()}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-green-600 hover:text-lime-600">
+                      <span className="text-lg font-semibold">Select</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex space-x-3 mt-6 pt-4 border-t">
+        {/* No Customer Option */}
+        <div className="mt-6 pt-6 border-t-2 border-green-200">
           <button
-            onClick={onClose}
-            className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+            onClick={() => {
+              onUpdateActiveOrder({ customer: {} });
+              onClose();
+            }}
+            className="w-full py-3 bg-gray-200 text-gray-700 rounded-xl font-bold text-lg hover:bg-gray-300 transition-all duration-200 active:scale-95"
           >
-            Cancel
+            Continue Without Customer
           </button>
-
-          {mode === 'add' && (
-            <>
-              <button
-                onClick={handleManualCustomer}
-                disabled={!newCustomer.name.trim()}
-                className="flex-1 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Use for Order
-              </button>
-              <button
-                onClick={handleCreateCustomer}
-                disabled={!newCustomer.name.trim()}
-                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Save & Select
-              </button>
-            </>
-          )}
         </div>
       </div>
     </div>
