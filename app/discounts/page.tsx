@@ -8,9 +8,6 @@ interface Discount {
   name: string;
   percentage: number;
   isGlobal: boolean;
-  createdBy: {
-    username: string;
-  };
   createdAt: string;
 }
 
@@ -305,9 +302,6 @@ export default function Discounts() {
                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                           Global
                         </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                          Created By
-                        </th>
                         <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                           <span className="sr-only">Actions</span>
                         </th>
@@ -344,9 +338,6 @@ export default function Discounts() {
                                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                 />
                               </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {discount.createdBy.username}
-                              </td>
                               <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <button
                                   onClick={() => handleUpdate(discount._id)}
@@ -377,9 +368,6 @@ export default function Discounts() {
                               </td>
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                 {discount.isGlobal ? 'Yes' : 'No'}
-                              </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {discount.createdBy.username}
                               </td>
                               <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <button

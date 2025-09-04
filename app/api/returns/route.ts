@@ -1,34 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/app/lib/mongodb';
 import Product from '@/app/models/Product';
-
-interface ProductReturn {
-  _id?: string;
-  productId: string;
-  product: {
-    _id: string;
-    name: string;
-    sellingPrice: number;
-  };
-  returnType: 'customer' | 'supplier';
-  quantity: number;
-  reason: string;
-  cashier: {
-    _id: string;
-    username: string;
-  };
-  createdAt: Date;
-  notes?: string;
-}
-
-// In-memory storage for returns (in production, use MongoDB)
-const returns: ProductReturn[] = [];
+import Return from '@/app/models/Return';
+import StockTransition from '@/app/models/StockTransition';
+import User from '@/app/models/User';
 
 export async function GET() {
   try {
-    // In production, fetch from database
-    return NextResponse.json(returns.reverse()); // Most recent first
+    await dbConnect();
+
+    // Fetch returns from database with product details
+    const returns = await Return.find();
+
+    // Transform the data to match the expected format
+    const transformedReturns = returns.map((returnItem: any) => ({
+      _id: returnItem._id.toString(),
+      product: {
+        _id: returnItem.productId._id.toString(),
+        name: returnItem.productName,
+        sellingPrice: returnItem.unitPrice
+      },
+      returnType: returnItem.returnType,
+      quantity: returnItem.quantity,
+      reason: returnItem.reason,
+      notes: returnItem.notes,
+      cashier: {
+        _id: returnItem.cashier._id.toString(),
+        username: returnItem.cashierName
+      },
+      createdAt: returnItem.createdAt.toISOString(),
+      totalValue: returnItem.totalValue
+    }));
+
+    return NextResponse.json(transformedReturns);
   } catch (error: unknown) {
+    console.error('Error fetching returns:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
@@ -37,7 +43,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
-    
+
     const body = await request.json();
     const { productId, returnType, quantity, reason, notes } = body;
 
@@ -75,23 +81,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update product stock based on return type
-    let newStock;
-    if (returnType === 'customer') {
-      // Customer return increases stock
-      newStock = product.stock + returnQuantity;
-    } else {
-      // Supplier return decreases stock
-      newStock = product.stock - returnQuantity;
-    }
-
-    // Update product stock in database
-    await Product.findByIdAndUpdate(productId, { stock: newStock });
-
-    // Get user info from request headers (passed from frontend)
+    // Get user info from request headers
     const userInfoHeader = request.headers.get('x-user-info');
     let user;
-    
+
     if (userInfoHeader) {
       try {
         user = JSON.parse(userInfoHeader);
@@ -108,38 +101,102 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create return record with actual user data
-    const productReturn: ProductReturn = {
-      _id: Date.now().toString(),
-      productId,
+    // Get the previous stock before any changes
+    const previousStock = product.stock;
+
+    // Calculate new stock based on return type
+    let newStock;
+    if (returnType === 'customer') {
+      // Customer return increases stock
+      newStock = product.stock + returnQuantity;
+    } else {
+      // Supplier return decreases stock
+      newStock = product.stock - returnQuantity;
+    }
+
+    // Create return record first
+    const returnRecord = new Return({
+      productId: product._id,
+      productName: product.name,
+      returnType,
+      quantity: returnQuantity,
+      reason,
+      notes: notes || '',
+      unitPrice: product.sellingPrice,
+      totalValue: returnQuantity * product.sellingPrice,
+      previousStock,
+      newStock,
+      cashier: user._id,
+      cashierName: user.username,
+      status: 'completed'
+    });
+
+    const savedReturn = await returnRecord.save();
+
+    // Update product stock in database
+    await Product.findByIdAndUpdate(productId, { stock: newStock });
+
+    // Create stock transition record
+    try {
+      const stockTransition = new StockTransition({
+        productId: product._id,
+        productName: product.name,
+        transactionType: returnType === 'customer' ? 'customer_return' : 'supplier_return',
+        quantity: returnQuantity,
+        previousStock,
+        newStock,
+        unitPrice: product.sellingPrice,
+        totalValue: returnQuantity * product.sellingPrice,
+        reference: savedReturn._id.toString(),
+        party: {
+          name: returnType === 'customer' ? 'Customer Return' : 'Supplier Return',
+          type: returnType === 'customer' ? 'customer' : 'supplier',
+          id: returnType === 'customer' ? 'customer_return' : 'supplier_return'
+        },
+        user: user._id,
+        userName: user.username,
+        notes: `${returnType === 'customer' ? 'Customer' : 'Supplier'} return - ${reason}${notes ? ` | ${notes}` : ''}`
+      });
+
+      await stockTransition.save();
+      console.log('Stock transition created for return:', stockTransition._id);
+    } catch (transitionError) {
+      console.error('Error creating stock transition for return:', transitionError);
+      // Log the error but don't fail the return process
+      // In production, you might want to implement a retry mechanism
+    }
+
+    // Return the created record with proper formatting
+    const responseData = {
+      _id: savedReturn._id.toString(),
       product: {
         _id: product._id.toString(),
         name: product.name,
         sellingPrice: product.sellingPrice
       },
-      returnType,
-      quantity: returnQuantity,
-      reason,
+      returnType: savedReturn.returnType,
+      quantity: savedReturn.quantity,
+      reason: savedReturn.reason,
+      notes: savedReturn.notes,
       cashier: {
         _id: user._id,
         username: user.username
       },
-      createdAt: new Date(),
-      notes
+      createdAt: savedReturn.createdAt.toISOString(),
+      totalValue: savedReturn.totalValue,
+      newStock
     };
 
-    // Store return record (in production, save to database)
-    returns.push(productReturn);
-
     return NextResponse.json(
-      { 
+      {
         message: 'Return processed successfully',
-        return: productReturn,
-        newStock 
-      }, 
+        return: responseData,
+        newStock
+      },
       { status: 201 }
     );
   } catch (error: unknown) {
+    console.error('Error processing return:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
