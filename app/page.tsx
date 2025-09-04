@@ -14,9 +14,6 @@ import {
   Percent, 
   Building, 
   UserCheck,
-  LogOut,
-  Menu,
-  X,
   RotateCcw
 } from 'lucide-react';
 import { User } from '@/app/types/user';
@@ -35,7 +32,6 @@ interface DashboardModule {
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
 
@@ -144,16 +140,6 @@ export default function HomePage() {
       adminOnly: true
     },
     {
-      id: 'sizes',
-      title: 'SIZES',
-      description: 'Organize and update product sizes to streamline inventory tracking and simplify the sales process.',
-      icon: <Ruler className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-cyan-400 to-cyan-500',
-      textColor: 'text-white',
-      href: '/sizes',
-      adminOnly: true
-    },
-    {
       id: 'stocktransitions',
       title: 'STOCK TRANSITIONS',
       description: 'Track stock levels, manage warehouse operations, and optimize inventory turnover.',
@@ -174,16 +160,6 @@ export default function HomePage() {
       adminOnly: true
     },
     {
-      id: 'branches',
-      title: 'BRANCHES',
-      description: 'Manage multiple store locations, track performance, and coordinate operations across branches.',
-      icon: <Building className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-teal-600 to-teal-700',
-      textColor: 'text-white',
-      href: '/branches',
-      adminOnly: true
-    },
-    {
       id: 'staff',
       title: 'STAFF',
       description: 'Manage employee information, track working hours, and coordinate team schedules effectively.',
@@ -194,13 +170,6 @@ export default function HomePage() {
       adminOnly: true
     }
   ];
-
-  const handleLogout = () => {
-    // Implement logout logic
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  };
 
   const filteredModules = user?.role === 'admin' 
     ? modules 
@@ -238,68 +207,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-lg border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            {/* Logo */}
-            <div className="flex items-center">
-              <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-xl">
-                ZORS
-              </div>
-              <span className="ml-2 text-gray-600 font-medium">Network</span>
-            </div>
-
-            {/* User Info */}
-            <div className="flex items-center space-x-4">
-              <div className="hidden md:block text-right">
-                <p className="text-sm text-gray-600">
-                  Account Type: <span className="font-semibold text-gray-900 capitalize">{user?.role}</span>
-                </p>
-                <p className="text-sm text-gray-600">
-                  Logged As: <span className="font-semibold text-gray-900">{user?.username}</span>
-                </p>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">
-                    {user?.username?.charAt(0).toUpperCase() || 'U'}
-                  </span>
-                </div>
-                
-                <button
-                  onClick={handleLogout}
-                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                  title="Logout"
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Mobile menu button */}
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="md:hidden p-2 text-gray-500 hover:text-gray-700"
-              >
-                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile user info */}
-          {isMenuOpen && (
-            <div className="md:hidden py-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600">
-                Account Type: <span className="font-semibold text-gray-900 capitalize">{user?.role}</span>
-              </p>
-              <p className="text-sm text-gray-600">
-                Logged As: <span className="font-semibold text-gray-900">{user?.username}</span>
-              </p>
-            </div>
-          )}
-        </div>
-      </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -363,31 +270,6 @@ export default function HomePage() {
                   As a cashier, you have access to the Point of Sale system. 
                   Click on the POS module above to start processing transactions.
                 </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Quick Stats for Admin */}
-        {user?.role === 'admin' && (
-          <div className="mt-12 bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Overview</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">$12,345</div>
-                <div className="text-sm text-gray-600">Today&apos;s Sales</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">1,234</div>
-                <div className="text-sm text-gray-600">Total Products</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">567</div>
-                <div className="text-sm text-gray-600">Active Customers</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">89</div>
-                <div className="text-sm text-gray-600">Low Stock Items</div>
               </div>
             </div>
           </div>
