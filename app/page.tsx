@@ -1,26 +1,28 @@
 "use client"
 
 import { useState, useEffect } from 'react';
-import { 
-  ShoppingCart, 
-  Grid3X3, 
-  Package, 
-  Truck, 
-  Users, 
-  BarChart3, 
-  Settings, 
-  Ruler, 
-  FileText, 
-  Percent, 
-  Building, 
+import {
+  ShoppingCart,
+  Grid3X3,
+  Package,
+  Truck,
+  Users,
+  BarChart3,
+  Settings,
+  Ruler,
+  FileText,
+  Percent,
+  Building,
   UserCheck,
-  LogOut,
-  Menu,
-  X,
-  RotateCcw
+  RotateCcw,
+  TrendingUp,
+  Clock,
+  Star,
+  Activity
 } from 'lucide-react';
 import { User } from '@/app/types/user';
 import LowStockWarning from './components/LowStockWarning';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface DashboardModule {
   id: string;
@@ -31,13 +33,16 @@ interface DashboardModule {
   textColor: string;
   href: string;
   adminOnly: boolean;
+  priority?: 'high' | 'medium' | 'low';
+  badge?: string;
 }
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
     // getting user from localStorage or API
@@ -65,154 +70,184 @@ export default function HomePage() {
   const modules: DashboardModule[] = [
     {
       id: 'pos',
-      title: 'POS',
-      description: 'Simplify sales with an intuitive interface for quick billing and payment processing.',
-      icon: <ShoppingCart className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-green-500 to-green-600',
+      title: 'Point of Sale',
+      description: 'Streamlined checkout experience with real-time inventory tracking and payment processing.',
+      icon: <ShoppingCart className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-green-900 via-green-800 to-green-900',
       textColor: 'text-white',
       href: '/pos',
-      adminOnly: false
+      adminOnly: false,
+      priority: 'high',
+      badge: 'Essential'
     },
     {
       id: 'returns',
-      title: 'RETURNS',
-      description: 'Process customer returns and supplier returns with stock adjustments.',
-      icon: <RotateCcw className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-orange-500 to-orange-600',
+      title: 'Returns & Exchanges',
+      description: 'Handle customer returns and supplier exchanges with automated stock adjustments.',
+      icon: <RotateCcw className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-orange-600 via-orange-500 to-orange-600',
       textColor: 'text-white',
       href: '/returns',
-      adminOnly: false // Available to both roles, but restricted in the returns page
+      adminOnly: false,
+      priority: 'high'
     },
     {
       id: 'categories',
-      title: 'CATEGORIES',
-      description: 'Group products into categories for better organization and easy navigation.',
-      icon: <Grid3X3 className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-blue-700 to-blue-800',
+      title: 'Product Categories',
+      description: 'Organize inventory with smart categorization for enhanced product discovery.',
+      icon: <Grid3X3 className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-blue-700 via-blue-600 to-blue-700',
       textColor: 'text-white',
       href: '/categories',
-      adminOnly: true
+      adminOnly: true,
+      priority: 'medium'
     },
     {
       id: 'products',
-      title: 'PRODUCTS',
-      description: 'Add, update, and manage product details, including pricing and stock levels.',
-      icon: <Package className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-red-500 to-red-600',
+      title: 'Inventory Management',
+      description: 'Complete product lifecycle management with real-time stock monitoring.',
+      icon: <Package className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-red-600 via-red-500 to-red-600',
       textColor: 'text-white',
       href: '/products',
-      adminOnly: true
+      adminOnly: true,
+      priority: 'high',
+      badge: 'Core'
     },
     {
       id: 'suppliers',
-      title: 'SUPPLIERS',
-      description: 'Manage supplier information, purchase orders, and inventory updates seamlessly.',
-      icon: <Truck className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-amber-600 to-amber-700',
+      title: 'Supplier Network',
+      description: 'Manage vendor relationships and streamline procurement processes.',
+      icon: <Truck className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-amber-600 via-amber-500 to-amber-600',
       textColor: 'text-white',
       href: '/suppliers',
-      adminOnly: true
+      adminOnly: true,
+      priority: 'medium'
     },
     {
       id: 'customers',
-      title: 'CUSTOMERS',
-      description: 'Maintain customer profiles, track purchases, and enhance loyalty programs effectively.',
-      icon: <Users className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-purple-500 to-purple-600',
+      title: 'Customer Relations',
+      description: 'Build lasting relationships with comprehensive customer profile management.',
+      icon: <Users className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-purple-600 via-purple-500 to-purple-600',
       textColor: 'text-white',
       href: '/customers',
-      adminOnly: true
+      adminOnly: true,
+      priority: 'medium'
     },
     {
       id: 'reports',
-      title: 'REPORTS',
-      description: 'Generate insights on sales, inventory, and performance to aid decision-making.',
-      icon: <BarChart3 className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-orange-500 to-orange-600',
+      title: 'Business Analytics',
+      description: 'Data-driven insights to optimize operations and boost profitability.',
+      icon: <BarChart3 className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-indigo-600 via-indigo-500 to-indigo-600',
       textColor: 'text-white',
       href: '/reports',
-      adminOnly: true
+      adminOnly: true,
+      priority: 'high',
+      badge: 'Insights'
     },
     {
       id: 'settings',
-      title: 'SETTINGS',
-      description: 'Designed to offer convenience, quality, and a taste of local culture for every user.',
-      icon: <Settings className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-gray-600 to-gray-700',
+      title: 'System Settings',
+      description: 'Configure system preferences and maintain operational parameters.',
+      icon: <Settings className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-gray-700 via-gray-600 to-gray-700',
       textColor: 'text-white',
       href: '/settings',
-      adminOnly: true
-    },
-    {
-      id: 'sizes',
-      title: 'SIZES',
-      description: 'Organize and update product sizes to streamline inventory tracking and simplify the sales process.',
-      icon: <Ruler className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-cyan-400 to-cyan-500',
-      textColor: 'text-white',
-      href: '/sizes',
-      adminOnly: true
+      adminOnly: true,
+      priority: 'low'
     },
     {
       id: 'stocktransitions',
-      title: 'STOCK TRANSITIONS',
-      description: 'Track stock levels, manage warehouse operations, and optimize inventory turnover.',
-      icon: <FileText className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-indigo-600 to-indigo-700',
+      title: 'Stock Analytics',
+      description: 'Monitor inventory movements and optimize stock level strategies.',
+      icon: <Activity className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-teal-600 via-teal-500 to-teal-600',
       textColor: 'text-white',
       href: '/stock-transitions',
-      adminOnly: true
+      adminOnly: true,
+      priority: 'medium'
     },
     {
       id: 'discounts',
-      title: 'DISCOUNTS',
-      description: 'Create and manage promotional offers, seasonal sales, and customer-specific discounts.',
-      icon: <Percent className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-pink-500 to-pink-600',
+      title: 'Promotions Hub',
+      description: 'Create compelling offers and manage promotional campaigns effectively.',
+      icon: <Percent className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-pink-600 via-pink-500 to-pink-600',
       textColor: 'text-white',
       href: '/discounts',
-      adminOnly: true
-    },
-    {
-      id: 'branches',
-      title: 'BRANCHES',
-      description: 'Manage multiple store locations, track performance, and coordinate operations across branches.',
-      icon: <Building className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-teal-600 to-teal-700',
-      textColor: 'text-white',
-      href: '/branches',
-      adminOnly: true
+      adminOnly: true,
+      priority: 'medium'
     },
     {
       id: 'staff',
-      title: 'STAFF',
-      description: 'Manage employee information, track working hours, and coordinate team schedules effectively.',
-      icon: <UserCheck className="w-12 h-12" />,
-      color: 'bg-gradient-to-br from-rose-500 to-rose-600',
+      title: 'Team Management',
+      description: 'Coordinate staff schedules and track team performance metrics.',
+      icon: <UserCheck className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-rose-600 via-rose-500 to-rose-600',
       textColor: 'text-white',
       href: '/staff',
-      adminOnly: true
+      adminOnly: true,
+      priority: 'low'
     }
   ];
 
-  const handleLogout = () => {
-    // Implement logout logic
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
+  const filteredModules = user?.role === 'admin'
+    ? modules
+    : modules.filter(module => !module.adminOnly);
+
+  const categories = ['all', 'high', 'medium', 'low'];
+
+  const getFilteredModules = () => {
+    return filteredModules.filter(module => {
+      const matchesSearch = module.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        module.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || module.priority === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
   };
 
-  const filteredModules = user?.role === 'admin' 
-    ? modules 
-    : modules.filter(module => !module.adminOnly);
+  const getPriorityColor = (priority?: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-lime-50 to-green-100 flex items-center justify-center">
+        <motion.div
+          className="text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-green-900/20 border-t-green-900 rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-lime-400/30 border-b-lime-400 rounded-full animate-spin mx-auto mt-2 ml-2" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          </div>
+          <motion.p
+            className="text-green-900 font-semibold text-lg"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            Loading Your Dashboard...
+          </motion.p>
+          <motion.p
+            className="text-green-700 text-sm mt-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            Preparing your workspace
+          </motion.p>
+        </motion.div>
       </div>
     );
   }
@@ -220,179 +255,299 @@ export default function HomePage() {
   // Show error state if no user
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <strong>Authentication Error:</strong> No user found. Please login.
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4">
+        <motion.div
+          className="text-center max-w-md"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-red-200">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-red-900 mb-4">Authentication Required</h2>
+            <p className="text-red-700 mb-6">Please sign in to access your dashboard.</p>
+            <button
+              onClick={() => window.location.href = '/login'}
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105"
+            >
+              Go to Login
+            </button>
           </div>
-          <button
-            onClick={() => window.location.href = '/login'}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Go to Login
-          </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-lg border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            {/* Logo */}
-            <div className="flex items-center">
-              <div className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-xl">
-                ZORS
-              </div>
-              <span className="ml-2 text-gray-600 font-medium">Network</span>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-lime-50 to-green-100">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-green-900/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-lime-400/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-900/3 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Main Content */}
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="inline-flex items-center space-x-3 mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-green-900 to-green-800 rounded-2xl flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-2xl">
+                {user?.username?.charAt(0).toUpperCase() || 'U'}
+              </span>
             </div>
-
-            {/* User Info */}
-            <div className="flex items-center space-x-4">
-              <div className="hidden md:block text-right">
-                <p className="text-sm text-gray-600">
-                  Account Type: <span className="font-semibold text-gray-900 capitalize">{user?.role}</span>
-                </p>
-                <p className="text-sm text-gray-600">
-                  Logged As: <span className="font-semibold text-gray-900">{user?.username}</span>
-                </p>
-              </div>
-              
+            <div className="text-left">
+              <h1 className="text-4xl font-bold text-green-900 mb-2">
+                Welcome back, {user?.username || 'User'}!
+              </h1>
               <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">
-                    {user?.username?.charAt(0).toUpperCase() || 'U'}
-                  </span>
-                </div>
-                
-                <button
-                  onClick={handleLogout}
-                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                  title="Logout"
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${user?.role === 'admin'
+                    ? 'bg-green-900 text-white'
+                    : 'bg-lime-400 text-green-900'
+                  }`}>
+                  {user?.role?.toUpperCase()}
+                </span>
+                <span className="text-green-700 text-sm">•</span>
+                <span className="text-green-700 text-sm font-medium">
+                  {new Date().toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
               </div>
-
-              {/* Mobile menu button */}
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="md:hidden p-2 text-gray-500 hover:text-gray-700"
-              >
-                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
             </div>
           </div>
 
-          {/* Mobile user info */}
-          {isMenuOpen && (
-            <div className="md:hidden py-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600">
-                Account Type: <span className="font-semibold text-gray-900 capitalize">{user?.role}</span>
-              </p>
-              <p className="text-sm text-gray-600">
-                Logged As: <span className="font-semibold text-gray-900">{user?.username}</span>
-              </p>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Message */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.username || 'User'}!
-          </h1>
-          <p className="text-gray-600">
-            {user?.role === 'admin' 
-              ? 'Manage your business operations with full administrative access.'
-              : 'Access the Point of Sale system to process transactions efficiently.'
+          <motion.p
+            className="text-xl text-green-800 max-w-2xl mx-auto leading-relaxed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            {user?.role === 'admin'
+              ? 'Take control of your business operations with comprehensive management tools and real-time insights.'
+              : 'Process transactions efficiently with our streamlined Point of Sale system designed for speed and accuracy.'
             }
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Low Stock Warning */}
         {products.length > 0 && (
-          <LowStockWarning products={products} />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <LowStockWarning products={products} />
+          </motion.div>
         )}
 
+        {/* Search and Filter Section */}
+        <motion.div
+          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-6 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="flex flex-col lg:flex-row gap-4 items-center">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Search modules..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-4 pr-4 py-3 border-2 border-green-200 rounded-xl focus:outline-none focus:border-green-900 focus:ring-4 focus:ring-green-900/10 transition-all duration-200 bg-white/70"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-green-900 font-medium text-sm">Priority:</span>
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${selectedCategory === category
+                      ? 'bg-green-900 text-white shadow-lg'
+                      : 'bg-white/70 text-green-900 hover:bg-green-100'
+                    }`}
+                >
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Quick Stats */}
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <div className="bg-gradient-to-br from-green-900 to-green-800 rounded-2xl p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Available Modules</p>
+                <p className="text-3xl font-bold">{getFilteredModules().length}</p>
+              </div>
+              <Grid3X3 className="w-8 h-8 text-green-200" />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-lime-400 to-lime-500 rounded-2xl p-6 text-green-900">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-800 text-sm font-medium">Your Role</p>
+                <p className="text-3xl font-bold capitalize">{user?.role}</p>
+              </div>
+              <Star className="w-8 h-8 text-green-800" />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border-2 border-green-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-800 text-sm font-medium">Last Access</p>
+                <p className="text-2xl font-bold text-green-900">Today</p>
+              </div>
+              <Clock className="w-8 h-8 text-green-600" />
+            </div>
+          </div>
+        </motion.div>
+
         {/* Dashboard Grid */}
-        <div className={`grid gap-6 ${
-          filteredModules.length === 1 
-            ? 'grid-cols-1 max-w-md mx-auto'
-            : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-        }`}>
-          {filteredModules.map((module) => (
-            <div
-              key={module.id}
-              onClick={() => window.location.href = module.href}
-              className={`relative ${module.color} ${module.textColor} rounded-2xl p-6 cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-2xl group overflow-hidden`}
-            >
-              <div className="flex flex-col items-center text-center space-y-4 relative z-10">
-                <div className=" bg-opacity-20 rounded-full p-4 group-hover:bg-opacity-30 transition-all duration-300">
-                  {module.icon}
+        <AnimatePresence>
+          <motion.div
+            className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            layout
+          >
+            {getFilteredModules().map((module, index) => (
+              <motion.div
+                key={module.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                transition={{
+                  duration: 0.4,
+                  delay: index * 0.1,
+                  type: "spring",
+                  stiffness: 100
+                }}
+                whileHover={{
+                  scale: 1.05,
+                  y: -5,
+                  transition: { duration: 0.2 }
+                }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => window.location.href = module.href}
+                className={`relative ${module.color} ${module.textColor} rounded-2xl p-6 cursor-pointer group overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300`}
+              >
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-white/20"></div>
+                  <div className="absolute -bottom-10 -left-10 w-24 h-24 rounded-full bg-white/10"></div>
                 </div>
-                
-                <div>
-                  <h3 className="text-xl font-bold mb-2 group-hover:scale-105 transition-transform duration-300">
+
+                {/* Content */}
+                <div className="relative z-10">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="p-3 bg-white/20 rounded-xl group-hover:bg-white/30 transition-all duration-300 group-hover:scale-110">
+                      {module.icon}
+                    </div>
+                    {(module.badge || module.priority) && (
+                      <div className="flex flex-col space-y-1">
+                        {module.badge && (
+                          <span className="px-2 py-1 bg-lime-400 text-green-900 text-xs font-bold rounded-full">
+                            {module.badge}
+                          </span>
+                        )}
+                        {module.priority && (
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getPriorityColor(module.priority)}`}>
+                            {module.priority}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="text-xl font-bold mb-3 group-hover:scale-105 transition-transform duration-300">
                     {module.title}
                   </h3>
-                  <p className="text-sm opacity-90 leading-relaxed">
+
+                  {/* Description */}
+                  <p className="text-sm opacity-90 leading-relaxed line-clamp-3">
                     {module.description}
                   </p>
+
+                  {/* Arrow Indicator */}
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xs opacity-70 font-medium">Click to open</span>
+                    <motion.div
+                      className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center"
+                      whileHover={{ x: 4 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    >
+                      <TrendingUp className="w-3 h-3" />
+                    </motion.div>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* No Results */}
+        {getFilteredModules().length === 0 && (
+          <motion.div
+            className="text-center py-16"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="w-8 h-8 text-green-600" />
             </div>
-          ))}
-        </div>
+            <h3 className="text-xl font-semibold text-green-900 mb-2">No modules found</h3>
+            <p className="text-green-700">Try adjusting your search or filter criteria.</p>
+          </motion.div>
+        )}
 
         {/* Role-specific message for cashiers */}
         {user?.role === 'cashier' && (
-          <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <motion.div
+            className="mt-12 bg-gradient-to-r from-blue-50 to-green-50 border-2 border-green-200 rounded-2xl p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <ShoppingCart className="h-5 w-5 text-blue-600" />
+                <div className="w-12 h-12 bg-green-900 rounded-xl flex items-center justify-center">
+                  <ShoppingCart className="h-6 w-6 text-white" />
+                </div>
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-blue-700">
-                  As a cashier, you have access to the Point of Sale system. 
-                  Click on the POS module above to start processing transactions.
+              <div className="ml-4">
+                <h4 className="text-lg font-semibold text-green-900">Quick Start Guide</h4>
+                <p className="text-green-800 mt-1">
+                  As a cashier, you have access to the Point of Sale system and Returns module.
+                  Start processing transactions efficiently with our streamlined interface.
                 </p>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Quick Stats for Admin */}
-        {user?.role === 'admin' && (
-          <div className="mt-12 bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Overview</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">$12,345</div>
-                <div className="text-sm text-gray-600">Today&apos;s Sales</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">1,234</div>
-                <div className="text-sm text-gray-600">Total Products</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">567</div>
-                <div className="text-sm text-gray-600">Active Customers</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">89</div>
-                <div className="text-sm text-gray-600">Low Stock Items</div>
-              </div>
-            </div>
-          </div>
+          </motion.div>
         )}
       </main>
     </div>
   );
-};
+}
