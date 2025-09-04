@@ -94,7 +94,7 @@ export default function Header() {
                                     whileHover={{ rotate: 5 }}
                                     transition={{ type: "spring", stiffness: 300 }}
                                 >
-                                    <Image src="/logo.png" alt="ZORS Logo" width={32} height={32} />
+                                    <Image src="/logo_dark.png" alt="ZORS Logo" width={32} height={32} />
                                 </motion.div>
                             </div>
                             <div className="hidden sm:block">
