@@ -1,26 +1,48 @@
 "use client";
 
-import { Edit2, Trash2, Package, AlertTriangle } from 'lucide-react';
+import { Edit2, Trash2, Package, AlertTriangle, Building2 } from 'lucide-react';
 import { Product } from '@/app/types/pos';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 interface ProductListProps {
-    products: Product[];
-    loading: boolean;
-    viewMode: 'grid' | 'list';
-    onEdit: (product: Product) => void;
-    onDelete: (productId: string) => void;
-    searchQuery: string;
+  products: Product[];
+  loading: boolean;
+  viewMode: 'grid' | 'list';
+  onEdit: (product: Product) => void;
+  onDelete: (productId: string) => void;
+  searchQuery: string;
+}
+
+interface Supplier {
+  _id: string;
+  name: string;
 }
 
 export default function ProductList({
-    products,
-    loading,
-    viewMode,
-    onEdit,
-    onDelete,
-    searchQuery
+  products,
+  loading,
+  viewMode,
+  onEdit,
+  onDelete,
+  searchQuery
 }: ProductListProps) {
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+
+  // Fetch suppliers to display supplier names
+  useEffect(() => {
+    fetch('/api/suppliers')
+      .then(res => res.json())
+      .then(data => setSuppliers(data || []))
+      .catch(error => console.error('Error fetching suppliers:', error));
+  }, []);
+
+  const getSupplierName = (supplierId?: string) => {
+    if (!supplierId) return 'No supplier';
+    const supplier = suppliers.find(s => s._id === supplierId);
+    return supplier ? supplier.name : 'Unknown supplier';
+  };
+
   const getStockStatus = (stock: number) => {
     if (stock === 0) return { status: 'out', color: 'text-red-600 bg-red-100', text: 'Out of Stock' };
     if (stock < 10) return { status: 'low', color: 'text-yellow-600 bg-yellow-100', text: 'Low Stock' };
@@ -82,7 +104,7 @@ export default function ProductList({
                 <div className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium ${stockStatus.color}`}>
                   {stockStatus.text}
                 </div>
-                
+
                 {/* Low Stock Warning Icon */}
                 {isLowStock && (
                   <div className="absolute top-2 left-2 bg-yellow-500 text-white p-1 rounded-full">
@@ -102,6 +124,11 @@ export default function ProductList({
                   <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
                     {product.category}
                   </span>
+                  {/* Supplier Badge */}
+                  <div className="flex items-center mt-2 text-xs text-gray-500">
+                    <Building2 className="w-3 h-3 mr-1" />
+                    <span>{getSupplierName(product.supplier)}</span>
+                  </div>
                 </div>
 
                 <div className="flex justify-between items-center mb-3">
@@ -150,6 +177,7 @@ export default function ProductList({
             <tr>
               <th className="text-left px-6 py-4 font-semibold text-gray-900">Product</th>
               <th className="text-left px-6 py-4 font-semibold text-gray-900">Category</th>
+              <th className="text-left px-6 py-4 font-semibold text-gray-900">Supplier</th>
               <th className="text-left px-6 py-4 font-semibold text-gray-900">Price</th>
               <th className="text-left px-6 py-4 font-semibold text-gray-900">Stock</th>
               <th className="text-left px-6 py-4 font-semibold text-gray-900">Status</th>
@@ -191,6 +219,12 @@ export default function ProductList({
                     <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
                       {product.category}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center text-sm text-gray-900">
+                      <Building2 className="w-4 h-4 mr-2 text-gray-400" />
+                      {getSupplierName(product.supplier)}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900">Rs.{product.sellingPrice.toFixed(2)}</div>

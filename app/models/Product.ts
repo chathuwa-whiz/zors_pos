@@ -13,6 +13,7 @@ export interface Product extends Document {
   stock: number;
   description?: string;
   barcode?: string;
+  supplier?: mongoose.Types.ObjectId;
 }
 
 const ProductSchema = new Schema<Product>({
@@ -27,7 +28,8 @@ const ProductSchema = new Schema<Product>({
     imagePublicId: { type: String },
     stock: { type: Number, required: true, min: 0 },
     description: { type: String },
-    barcode: { type: String }
+    barcode: { type: String },
+    supplier: { type: Schema.Types.ObjectId, ref: 'Supplier' },
 }, { timestamps: true })
 
 export default mongoose.models.Product || mongoose.model<Product>('Product', ProductSchema);

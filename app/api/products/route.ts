@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
             description?: string;
             image?: string;
             imagePublicId?: string;
+            supplier?: string; // Add supplier field
         } = {
             name: formData.get("name") as string,
             costPrice: Number(formData.get("costPrice")),
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest) {
             dryfood: formData.get("dryfood") === 'true',
             stock: Number(formData.get("stock")),
             description: formData.get("description") as string || undefined,
+            supplier: formData.get("supplier") as string || undefined, // Handle supplier
         };
 
         // Upload image to Cloudinary if file is provided

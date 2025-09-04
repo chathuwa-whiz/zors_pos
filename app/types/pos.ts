@@ -14,6 +14,7 @@ export interface Product {
   stock: number;
   description?: string;
   barcode?: string;
+  supplier?: string;
 }
 
 export interface Category {
