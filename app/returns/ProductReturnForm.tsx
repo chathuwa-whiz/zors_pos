@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { X, Package, RotateCcw } from 'lucide-react';
+import { X, Package, RotateCcw, Search } from 'lucide-react';
 import { Product } from '@/app/types/pos';
 import { User } from '@/app/types/user';
 
@@ -48,21 +48,45 @@ export default function ProductReturnForm({ products, user, onSubmit, onClose }:
     reason: '',
     notes: ''
   });
-  
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const selectedProduct = products.find(p => p._id === formData.productId);
+
+  // Filter products based on search query (by name or barcode)
+  const filteredProducts = products.filter(product => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      product.name.toLowerCase().includes(query) ||
+      (product.barcode && product.barcode.includes(query))
+    );
+  });
+
   const reasons = formData.returnType === 'customer' ? customerReasons : supplierReasons;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     if (name === 'returnType') {
       // Reset reason when return type changes
       setFormData(prev => ({ ...prev, reason: '' }));
     }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setIsDropdownOpen(true);
+  };
+
+  const handleProductSelect = (product: Product) => {
+    setFormData(prev => ({ ...prev, productId: product._id }));
+    setSearchQuery(product.name);
+    setIsDropdownOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,17 +117,8 @@ export default function ProductReturnForm({ products, user, onSubmit, onClose }:
         notes: formData.notes || undefined
       };
 
-      // Get user from localStorage
-      const userString = localStorage.getItem('user');
-      let user;
-      
-      if (userString) {
-        try {
-          user = JSON.parse(userString);
-        } catch (err) {
-          throw new Error('Invalid user data');
-        }
-      } else {
+      // Validate user data
+      if (!user || !user._id || !user.username) {
         throw new Error('User not found. Please login again.');
       }
 
@@ -120,6 +135,9 @@ export default function ProductReturnForm({ products, user, onSubmit, onClose }:
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to process return');
       }
+
+      const result = await response.json();
+      console.log('Return processed successfully:', result);
 
       onSubmit();
     } catch (err) {
@@ -160,11 +178,10 @@ export default function ProductReturnForm({ products, user, onSubmit, onClose }:
                   onChange={handleChange}
                   className="sr-only"
                 />
-                <div className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                  formData.returnType === 'customer' 
-                    ? 'border-orange-500 bg-orange-50' 
+                <div className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${formData.returnType === 'customer'
+                    ? 'border-orange-500 bg-orange-50'
                     : 'border-gray-300 hover:border-gray-400'
-                }`}>
+                  }`}>
                   <div className="flex items-center space-x-3">
                     <Package className="w-5 h-5 text-orange-600" />
                     <div>
@@ -174,7 +191,7 @@ export default function ProductReturnForm({ products, user, onSubmit, onClose }:
                   </div>
                 </div>
               </label>
-              
+
               <label className="relative">
                 <input
                   type="radio"
@@ -184,11 +201,10 @@ export default function ProductReturnForm({ products, user, onSubmit, onClose }:
                   onChange={handleChange}
                   className="sr-only"
                 />
-                <div className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                  formData.returnType === 'supplier' 
-                    ? 'border-orange-500 bg-orange-50' 
+                <div className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${formData.returnType === 'supplier'
+                    ? 'border-orange-500 bg-orange-50'
                     : 'border-gray-300 hover:border-gray-400'
-                }`}>
+                  }`}>
                   <div className="flex items-center space-x-3">
                     <RotateCcw className="w-5 h-5 text-orange-600" />
                     <div>
@@ -202,24 +218,56 @@ export default function ProductReturnForm({ products, user, onSubmit, onClose }:
           </div>
 
           {/* Product Selection */}
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Select Product *
             </label>
-            <select
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => setIsDropdownOpen(true)}
+                placeholder="Search by product name or barcode..."
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Dropdown with filtered products */}
+            {isDropdownOpen && (
+              <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md max-h-60 overflow-auto">
+                {filteredProducts.length === 0 ? (
+                  <div className="px-4 py-2 text-gray-500">No products found</div>
+                ) : (
+                  filteredProducts.map(product => (
+                    <div
+                      key={product._id}
+                      onClick={() => handleProductSelect(product)}
+                      className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${formData.productId === product._id ? 'bg-orange-50' : ''
+                        }`}
+                    >
+                      <div className="font-medium">{product.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {product.barcode && `Barcode: ${product.barcode} | `}
+                        Rs.{product.sellingPrice.toFixed(2)} | Stock: {product.stock}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* Hidden input to store the selected product ID */}
+            <input
+              type="hidden"
               name="productId"
               value={formData.productId}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            >
-              <option value="">Choose a product...</option>
-              {products.map(product => (
-                <option key={product._id} value={product._id}>
-                  {product.name} - Rs.{product.sellingPrice.toFixed(2)} (Stock: {product.stock})
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Quantity */}

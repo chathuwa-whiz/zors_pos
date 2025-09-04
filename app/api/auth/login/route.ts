@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
         }
 
-        // generate JWT token
+        // generate JWT token - expires after 30 days
         const secret = process.env.JWT_SECRET;
         if (!secret) {
             throw new Error("JWT_SECRET environment variable is not defined");
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         const token = jwt.sign(
             { id: user._id, username: user.username, role: user.role }, 
             secret, 
-            { expiresIn: '24h' }
+            { expiresIn: '30d' }
         );
 
         // Create user object without password

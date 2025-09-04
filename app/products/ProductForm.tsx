@@ -23,6 +23,12 @@ interface FormData {
     stock: string;
     description: string;
     barcode: string;
+    supplier: string; // Add supplier field
+}
+
+interface Supplier {
+    _id: string;
+    name: string;
 }
 
 export default function ProductForm({ product, onSave, onClose }: ProductFormProps) {
@@ -37,7 +43,8 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
         dryfood: false,
         stock: '',
         description: '',
-        barcode: ''
+        barcode: '',
+        supplier: '' // Initialize supplier field
     });
 
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -45,12 +52,19 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [categories, setCategories] = useState<Category[]>([]);
+    const [suppliers, setSuppliers] = useState<Supplier[]>([]); // Add suppliers state
 
-    // Fetch categories from your API
+    // Fetch categories and suppliers from your API
     useEffect(() => {
-        fetch('/api/categories')
-            .then(res => res.json())
-            .then(data => setCategories(data.data || []));
+        Promise.all([
+            fetch('/api/categories').then(res => res.json()),
+            fetch('/api/suppliers').then(res => res.json())
+        ]).then(([categoriesData, suppliersData]) => {
+            setCategories(categoriesData.data || []);
+            setSuppliers(suppliersData || []);
+        }).catch(error => {
+            console.error('Error fetching data:', error);
+        });
     }, []);
 
     // Initialize form data when editing
@@ -67,7 +81,8 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
                 dryfood: product.dryfood || false,
                 stock: product.stock?.toString() || '',
                 description: product.description || '',
-                barcode: product.barcode || ''
+                barcode: product.barcode || '',
+                supplier: product.supplier || '' // Initialize supplier from product
             });
 
             if (product.image) {
@@ -266,6 +281,26 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
                                 ))}
                             </select>
                         </div>
+                    </div>
+
+                    {/* Supplier Selection */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Supplier
+                        </label>
+                        <select
+                            name="supplier"
+                            value={formData.supplier}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="">Select supplier (optional)</option>
+                            {suppliers.map(supplier => (
+                                <option key={supplier._id} value={supplier._id}>
+                                    {supplier.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Pricing */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { UserPlus, Home, Car, MapPin, ChefHat, Percent } from 'lucide-react';
+import { Home, Car, MapPin, ChefHat, UserPlus, User } from 'lucide-react';
 import { Order } from '@/app/types/pos';
 import { useState, useEffect } from 'react';
 
@@ -24,7 +24,7 @@ export default function OrderControls({
 }: OrderControlsProps) {
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [globalDiscount, setGlobalDiscount] = useState<Discount | null>(null);
-  const [customDiscount, setCustomDiscount] = useState<number>(0);
+  const [selectedDiscountId, setSelectedDiscountId] = useState<string>('');
 
   useEffect(() => {
     fetchDiscounts();
@@ -42,7 +42,7 @@ export default function OrderControls({
       if (response.ok) {
         const data = await response.json();
         setDiscounts(data);
-        
+
         // Find global discount
         const global = data.find((d: Discount) => d.isGlobal);
         if (global) {
@@ -58,17 +58,31 @@ export default function OrderControls({
     }
   };
 
-  const handleDiscountChange = (value: string) => {
-    const discountValue = parseFloat(value) || 0;
-    setCustomDiscount(discountValue);
-    onUpdateActiveOrder({ discountPercentage: discountValue });
-  };
-
   const handleDiscountSelect = (discountId: string) => {
+    setSelectedDiscountId(discountId);
     const selectedDiscount = discounts.find(d => d._id === discountId);
     if (selectedDiscount) {
       onUpdateActiveOrder({ discountPercentage: selectedDiscount.percentage });
     }
+  };
+
+  // Handle order type change with appropriate charges
+  const handleOrderTypeChange = (orderType: 'dine-in' | 'takeaway' | 'delivery') => {
+    const updates: Partial<Order> = { orderType };
+
+    // Reset charges based on order type
+    if (orderType === 'dine-in') {
+      updates.tableCharge = activeOrder.tableCharge || 0;
+      updates.deliveryCharge = 0; // Reset delivery charge
+    } else if (orderType === 'takeaway') {
+      updates.tableCharge = 0;
+      updates.deliveryCharge = 0; // Reset delivery charge
+    } else if (orderType === 'delivery') {
+      updates.tableCharge = 0;
+      updates.deliveryCharge = activeOrder.deliveryCharge || 0; // Keep existing or set to 0
+    }
+
+    onUpdateActiveOrder(updates);
   };
 
   return (
@@ -79,13 +93,22 @@ export default function OrderControls({
             onClick={onShowCustomerModal}
             className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg"
           >
-            <UserPlus className="w-4 h-4" />
-            <span>Customer</span>
+            {activeOrder.customer?.name ? (
+              <>
+                <User className="w-4 h-4" />
+                <span className="text-sm font-medium">{activeOrder.customer.name}</span>
+              </>
+            ) : (
+              <>
+                <UserPlus className="w-4 h-4" />
+                <span>Customer</span>
+              </>
+            )}
           </button>
 
           <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
             <button
-              onClick={() => onUpdateActiveOrder({ orderType: 'dine-in', tableCharge: activeOrder.tableCharge })}
+              onClick={() => handleOrderTypeChange('dine-in')}
               className={`px-3 py-1 rounded text-sm ${activeOrder.orderType === 'dine-in' ? 'bg-white shadow' : ''
                 }`}
             >
@@ -93,7 +116,7 @@ export default function OrderControls({
               Dine-in
             </button>
             <button
-              onClick={() => onUpdateActiveOrder({ orderType: 'takeaway', tableCharge: 0 })}
+              onClick={() => handleOrderTypeChange('takeaway')}
               className={`px-3 py-1 rounded text-sm ${activeOrder.orderType === 'takeaway' ? 'bg-white shadow' : ''
                 }`}
             >
@@ -101,7 +124,7 @@ export default function OrderControls({
               Takeaway
             </button>
             <button
-              onClick={() => onUpdateActiveOrder({ orderType: 'delivery', tableCharge: 0 })}
+              onClick={() => handleOrderTypeChange('delivery')}
               className={`px-3 py-1 rounded text-sm ${activeOrder.orderType === 'delivery' ? 'bg-white shadow' : ''
                 }`}
             >
@@ -114,27 +137,12 @@ export default function OrderControls({
 
       {/* Discount Selection */}
       <div className="mb-3 flex flex-wrap gap-3">
-        {/* Custom Discount Input */}
-        <div className="flex items-center space-x-2">
-          <Percent className="w-4 h-4 text-gray-500" />
-          <span className="text-sm text-gray-600">Custom Discount:</span>
-          <input
-            type="number"
-            placeholder="0"
-            value={customDiscount || activeOrder.discountPercentage || ''}
-            onChange={(e) => handleDiscountChange(e.target.value)}
-            className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-            min="0"
-            max="100"
-          />
-          <span className="text-sm text-gray-500">%</span>
-        </div>
 
         {/* Discount Dropdown */}
         {discounts.length > 0 && (
           <div className="flex items-center space-x-2">
             <select
-              value=""
+              value={selectedDiscountId}
               onChange={(e) => handleDiscountSelect(e.target.value)}
               className="px-2 py-1 border border-gray-300 rounded text-sm"
             >
@@ -171,6 +179,25 @@ export default function OrderControls({
               value={activeOrder.tableCharge || ''}
               onChange={(e) => onUpdateActiveOrder({ tableCharge: parseFloat(e.target.value) || 0 })}
               className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+            />
+            <span className="text-sm text-gray-500">Rs</span>
+          </div>
+        </div>
+      )}
+
+      {/* Delivery Charge Input for Delivery */}
+      {activeOrder.orderType === 'delivery' && (
+        <div className="mb-3">
+          <div className="flex items-center space-x-2">
+            <MapPin className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-600">Delivery Charge:</span>
+            <input
+              type="number"
+              placeholder="0"
+              value={activeOrder.deliveryCharge || ''}
+              onChange={(e) => onUpdateActiveOrder({ deliveryCharge: parseFloat(e.target.value) || 0 })}
+              className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+              min="0"
             />
             <span className="text-sm text-gray-500">Rs</span>
           </div>

@@ -8,7 +8,6 @@ export interface Order extends Document {
     customer?: Customer;
     cashier: User;
     orderType: 'dine-in' | 'takeaway' | 'delivery';
-    customDiscount?: number;
     appliedCoupon?: Coupon;
     kitchenNote?: string;
     createdAt: Date;
@@ -16,6 +15,7 @@ export interface Order extends Document {
     isDefault?: boolean;
     paymentDetails: PaymentDetails;
     tableCharge: number;
+    deliveryCharge?: number;
     discountPercentage: number;
     totalAmount: number;
 }
@@ -26,7 +26,6 @@ const orderSchema = new Schema<Order>({
     customer: { type: Object, default: {} },
     cashier: { type: Object, required: true },
     orderType: { type: String, enum: ['dine-in', 'takeaway', 'delivery'], required: true },
-    customDiscount: { type: Number, default: 0 },
     appliedCoupon: { type: Object },
     kitchenNote: { type: String },
     createdAt: { type: Date, default: Date.now },
@@ -34,6 +33,7 @@ const orderSchema = new Schema<Order>({
     isDefault: { type: Boolean, default: false },
     paymentDetails: { type: Object, required: true },
     tableCharge: { type: Number, default: 0 },
+    deliveryCharge: { type: Number, default: 0 },
     discountPercentage: { type: Number, default: 0 },
     totalAmount: { type: Number, required: true }
 }, { timestamps: true })

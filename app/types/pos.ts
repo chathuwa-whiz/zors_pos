@@ -1,4 +1,4 @@
-import { User } from "./user";
+import { User as UserModel } from "./user";
 
 export interface Product {
   _id: string;
@@ -14,6 +14,7 @@ export interface Product {
   stock: number;
   description?: string;
   barcode?: string;
+  supplier?: string;
 }
 
 export interface Category {
@@ -29,9 +30,10 @@ export interface CartItem {
 }
 
 export interface Customer {
+  _id?: string;
   name?: string;
-  phone?: string;
   email?: string;
+  phone?: string;
   birthDate?: string;
 }
 
@@ -57,9 +59,8 @@ export interface Order {
   name: string;
   cart: CartItem[];
   customer: Customer;
-  cashier: User;
+  cashier: UserModel;
   orderType: 'dine-in' | 'takeaway' | 'delivery';
-  customDiscount: number;
   appliedCoupon?: Coupon;
   kitchenNote: string;
   createdAt: Date;
@@ -67,6 +68,8 @@ export interface Order {
   isDefault?: boolean;
   paymentDetails?: PaymentDetails;
   tableCharge: number;
+  deliveryCharge?: number;
+  discountAmount: number;
   discountPercentage: number;
   totalAmount: number;
 }
@@ -74,8 +77,16 @@ export interface Order {
 export interface OrderTotals {
   subtotal: number;
   couponDiscount: number;
-  customDiscount: number;
+  discountAmount: number;
   discountPercentage: number;
   total: number;
   tableCharge: number;
+  deliveryCharge?: number;
+}
+
+export interface User {
+  _id: string;
+  username: string;
+  email: string;
+  role: 'admin' | 'staff';
 }
