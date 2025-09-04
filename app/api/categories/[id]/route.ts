@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import Category from '@/models/Category';
+import Category from '@/app/models/Category';
 import dbConnect from '@/app/lib/mongodb';
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {

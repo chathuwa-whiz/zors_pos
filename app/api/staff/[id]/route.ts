@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/app/lib/mongodb";
-import Staff from "@/models/Staff";
+import Staff from "@/app/models/Staff";
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   await dbConnect();
