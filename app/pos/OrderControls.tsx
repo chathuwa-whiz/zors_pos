@@ -1,6 +1,6 @@
 "use client";
 
-import { UserPlus, Home, Car, MapPin, ChefHat, Percent } from 'lucide-react';
+import { Home, Car, MapPin, ChefHat, UserPlus, User } from 'lucide-react';
 import { Order } from '@/app/types/pos';
 import { useState, useEffect } from 'react';
 
@@ -93,8 +93,17 @@ export default function OrderControls({
             onClick={onShowCustomerModal}
             className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg"
           >
-            <UserPlus className="w-4 h-4" />
-            <span>Customer</span>
+            {activeOrder.customer?.name ? (
+              <>
+                <User className="w-4 h-4" />
+                <span className="text-sm font-medium">{activeOrder.customer.name}</span>
+              </>
+            ) : (
+              <>
+                <UserPlus className="w-4 h-4" />
+                <span>Customer</span>
+              </>
+            )}
           </button>
 
           <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">

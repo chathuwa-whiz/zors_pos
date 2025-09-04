@@ -29,9 +29,10 @@ export interface CartItem {
 }
 
 export interface Customer {
+  _id?: string;
   name?: string;
-  phone?: string;
   email?: string;
+  phone?: string;
   birthDate?: string;
 }
 

@@ -131,6 +131,12 @@ export default function OrderComplete({
                     <span className="font-medium">{customer.name}</span>
                   </div>
                 )}
+                {customer._id && (
+                  <div className="flex items-center">
+                    <span className="text-gray-600 w-16">ID:</span>
+                    <span className="text-xs text-gray-500">{customer._id}</span>
+                  </div>
+                )}
                 {customer.phone && (
                   <div className="flex items-center">
                     <Phone className="w-3 h-3 mr-1" />
