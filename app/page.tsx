@@ -154,13 +154,13 @@ export default function HomePage() {
       adminOnly: true
     },
     {
-      id: 'inventory',
-      title: 'INVENTORY',
+      id: 'stocktransitions',
+      title: 'STOCK TRANSITIONS',
       description: 'Track stock levels, manage warehouse operations, and optimize inventory turnover.',
       icon: <FileText className="w-12 h-12" />,
       color: 'bg-gradient-to-br from-indigo-600 to-indigo-700',
       textColor: 'text-white',
-      href: '/inventory',
+      href: '/stock-transitions',
       adminOnly: true
     },
     {
