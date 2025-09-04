@@ -62,7 +62,7 @@ export default function OrdersPanel({
   onBarcodeScanned
 }: OrdersPanelProps) {
   return (
-    <div className="flex-1 bg-white border-l border-gray-200 flex flex-col max-h-screen">
+    <div className="flex-1 bg-gradient-to-br from-white to-green-50 border-l-4 border-green-900 flex flex-col max-h-screen">
       <OrderTabs
         orders={orders}
         activeOrderId={activeOrderId}
@@ -76,7 +76,7 @@ export default function OrdersPanel({
         onBarcodeScanned={onBarcodeScanned}
       />
 
-      <div className='overflow-y-scroll'>
+      <div className='overflow-y-auto flex-1'>
         {activeOrder && (
           <OrderControls
             activeOrder={activeOrder}
@@ -111,7 +111,6 @@ export default function OrdersPanel({
           />
         )}
       </div>
-
     </div>
   );
 }

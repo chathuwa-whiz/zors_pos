@@ -31,27 +31,27 @@ export default function ProductsPanel({
   });
 
   return (
-    <div className="flex-1 flex flex-col max-h-screen">
+    <div className="flex-1 flex flex-col max-h-screen bg-gradient-to-br from-green-50 to-lime-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 p-4 flex-shrink-0">
+      <header className="bg-gradient-to-r from-green-900 to-green-800 shadow-lg p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => window.location.href = '/'}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+              className="p-2 text-white hover:text-lime-400 hover:bg-green-800 rounded-lg transition-all duration-200 active:scale-95"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">POS System</h1>
-              <p className="text-sm text-gray-600">Welcome, {user.username}</p>
+              <h1 className="text-xl font-bold text-white">POS System</h1>
+              <p className="text-lime-400 text-sm">Welcome, {user.username}</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+              className="p-2 text-white hover:text-lime-400 hover:bg-green-800 rounded-lg transition-all duration-200 active:scale-95"
             >
               {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
             </button>
@@ -59,15 +59,15 @@ export default function ProductsPanel({
         </div>
 
         {/* Search and Categories */}
-        <div className="mt-4 flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <div className="mt-4 flex flex-col gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-600" />
             <input
               type="text"
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 text-base border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-lime-400 focus:border-lime-400 bg-white shadow-sm transition-all duration-200"
             />
           </div>
           
@@ -76,10 +76,10 @@ export default function ProductsPanel({
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 active:scale-95 min-w-[80px] ${
                   selectedCategory === category
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    ? 'bg-lime-400 text-green-900 shadow-md ring-1 ring-white'
+                    : 'bg-white text-green-900 border border-green-300 hover:bg-lime-50 hover:border-lime-400 shadow-sm'
                 }`}
               >
                 {category}
@@ -93,8 +93,8 @@ export default function ProductsPanel({
       <div className="flex-1 overflow-auto p-4">
         <div className={`${
           viewMode === 'grid' 
-            ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4'
-            : 'space-y-2'
+            ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'
+            : 'space-y-3'
         }`}>
           {filteredProducts.map(product => (
             <ProductCard 

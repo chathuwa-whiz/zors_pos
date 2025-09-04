@@ -15,52 +15,56 @@ export default function CartItems({
   onRemoveFromCart
 }: CartItemsProps) {
   return (
-    <div className="flex-1 overflow-auto p-4">
+    <div className="flex-1 overflow-auto p-6">
       {!activeOrder || activeOrder.cart.length === 0 ? (
-        <div className="text-center text-gray-500 mt-12">
-          <ShoppingCart className="w-16 h-16 mx-auto mb-4 opacity-50" />
-          <p className="text-lg">Cart is empty</p>
-          <p className="text-sm">Add items from the menu</p>
+        <div className="text-center text-green-600 mt-16">
+          <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ShoppingCart className="w-12 h-12 text-green-600" />
+          </div>
+          <p className="text-2xl font-bold text-green-900 mb-2">Cart is empty</p>
+          <p className="text-lg text-green-700">Add items from the menu to get started</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {activeOrder.cart.map(item => (
-            <div key={item.product._id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="flex items-start justify-between mb-3">
+            <div key={item.product._id} className="bg-white rounded-2xl p-6 border-2 border-green-200 shadow-md hover:shadow-lg transition-all duration-200">
+              <div className="flex items-start justify-between mb-4">
                 <div className="flex-1 pr-4">
-                  <h4 className="font-semibold text-gray-900 text-lg">{item.product.name}</h4>
-                  <p className="text-sm text-gray-500 mt-1">{item.product.description}</p>
-                  <p className="text-sm text-green-600 font-medium mt-1">
+                  <h4 className="font-bold text-green-900 text-xl mb-2">{item.product.name}</h4>
+                  {item.product.description && (
+                    <p className="text-base text-green-600 mb-2">{item.product.description}</p>
+                  )}
+                  <p className="text-lg text-green-700 font-semibold">
                     Rs.{item.product.sellingPrice.toFixed(2)} each
                   </p>
                 </div>
                 <button
                   onClick={() => onRemoveFromCart(item.product._id)}
-                  className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                  className="text-red-500 hover:text-red-700 p-3 hover:bg-red-50 rounded-xl transition-all duration-200 active:scale-95"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-6 h-6" />
                 </button>
               </div>
               
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
                   <button
                     onClick={() => onUpdateQuantity(item.product._id, -1)}
-                    className="w-10 h-10 bg-white border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+                    className="w-12 h-12 bg-green-100 border-2 border-green-300 rounded-xl flex items-center justify-center hover:bg-green-200 transition-all duration-200 active:scale-95 text-green-900"
                   >
-                    <Minus className="w-5 h-5" />
+                    <Minus className="w-6 h-6" />
                   </button>
-                  <span className="w-12 text-center font-bold text-lg">{item.quantity}</span>
+                  <span className="w-16 text-center font-bold text-2xl text-green-900">{item.quantity}</span>
                   <button
                     onClick={() => onUpdateQuantity(item.product._id, 1)}
-                    className="w-10 h-10 bg-white border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+                    className="w-12 h-12 bg-lime-400 border-2 border-lime-500 rounded-xl flex items-center justify-center hover:bg-lime-500 transition-all duration-200 active:scale-95 text-green-900"
                   >
-                    <Plus className="w-5 h-5" />
+                    <Plus className="w-6 h-6" />
                   </button>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm text-gray-500">Subtotal</div>
-                  <span className="font-bold text-green-600 text-xl">
+                  <div className="text-sm text-green-600 font-medium">Subtotal</div>
+                  <span className="font-bold text-green-900 text-2xl">
                     Rs.{item.subtotal.toFixed(2)}
                   </span>
                 </div>
