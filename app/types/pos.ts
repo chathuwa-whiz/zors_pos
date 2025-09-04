@@ -59,7 +59,6 @@ export interface Order {
   customer: Customer;
   cashier: UserModel;
   orderType: 'dine-in' | 'takeaway' | 'delivery';
-  customDiscount: number;
   appliedCoupon?: Coupon;
   kitchenNote: string;
   createdAt: Date;
@@ -68,6 +67,7 @@ export interface Order {
   paymentDetails?: PaymentDetails;
   tableCharge: number;
   deliveryCharge?: number;
+  discountAmount: number;
   discountPercentage: number;
   totalAmount: number;
 }
@@ -75,7 +75,7 @@ export interface Order {
 export interface OrderTotals {
   subtotal: number;
   couponDiscount: number;
-  customDiscount: number;
+  discountAmount: number;
   discountPercentage: number;
   total: number;
   tableCharge: number;

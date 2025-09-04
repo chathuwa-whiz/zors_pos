@@ -148,12 +148,13 @@ export default function POSSystem() {
         customer: {},
         cashier: currentUser!,
         orderType: 'dine-in',
-        customDiscount: 0,
         kitchenNote: '',
         tableCharge: 0,
+        deliveryCharge: 0,
         createdAt: new Date(),
         status: 'active',
         isDefault: true,
+        discountAmount: 0,
         discountPercentage: 0,
         totalAmount: 0
       };
@@ -202,11 +203,12 @@ export default function POSSystem() {
       customer: {},
       cashier: user!,
       orderType: 'dine-in',
-      customDiscount: 0,
       kitchenNote: '',
       tableCharge: 0,
+      deliveryCharge: 0,
       createdAt: new Date(),
       status: 'active',
+      discountAmount: 0,
       discountPercentage: 0,
       totalAmount: 0
     };
@@ -374,7 +376,7 @@ export default function POSSystem() {
 
   // Calculate totals
   const calculateTotals = (): OrderTotals => {
-    if (!activeOrder) return { subtotal: 0, couponDiscount: 0, customDiscount: 0, discountPercentage: 0, tableCharge: 0, deliveryCharge: 0, total: 0 };
+    if (!activeOrder) return { subtotal: 0, couponDiscount: 0, discountAmount: 0, discountPercentage: 0, tableCharge: 0, deliveryCharge: 0, total: 0 };
 
     const subtotal = activeOrder.cart.reduce((sum, item) => sum + item.subtotal, 0);
 
@@ -397,20 +399,19 @@ export default function POSSystem() {
 
     // Calculate discount percentage amount
     const discountPercentage = activeOrder.discountPercentage || 0;
-    const discountPercentageAmount = subtotal * (discountPercentage / 100);
+    const discountAmount = subtotal * (discountPercentage / 100);
 
-    const customDiscount = activeOrder.customDiscount || 0;
     const tableCharge = activeOrder.orderType === 'dine-in' ? (activeOrder.tableCharge || 0) : 0;
     const deliveryCharge = activeOrder.orderType === 'delivery' ? (activeOrder.deliveryCharge || 0) : 0;
 
-    const discountedAmount = subtotal - couponDiscount - customDiscount - discountPercentageAmount;
+    const discountedAmount = subtotal - couponDiscount - discountAmount;
     const total = Math.max(0, discountedAmount) + tableCharge + deliveryCharge;
 
     return {
       subtotal,
       couponDiscount,
-      customDiscount,
-      discountPercentage: discountPercentageAmount,
+      discountAmount,
+      discountPercentage,
       tableCharge,
       deliveryCharge,
       total
@@ -458,7 +459,17 @@ export default function POSSystem() {
   const completeOrder = async () => {
     if (!activeOrder) return;
 
+    // Validate that payment details are set
+    if (!activeOrder.paymentDetails) {
+      alert('Payment details are required to complete the order.');
+      return;
+    }
+
     const currentTotals = calculateTotals();
+
+    console.log('Order before completion:', activeOrder); // Debug log
+    console.log('Payment details:', activeOrder.paymentDetails); // Debug log
+    console.log('Calculated totals:', currentTotals); // Debug log
 
     // Validate stock availability before completing order
     const stockValidationErrors = [];
@@ -483,18 +494,11 @@ export default function POSSystem() {
       ...activeOrder,
       status: 'completed' as 'active' | 'completed',
       totalAmount: currentTotals.total,
-      paymentDetails: activeOrder.paymentDetails || {
-        method: paymentMethod,
-        ...(paymentMethod === 'cash' ? {
-          cashGiven: 0,
-          change: 0
-        } : {
-          invoiceId: '',
-          bankServiceCharge: 0,
-          bankName: ''
-        })
-      }
+      // Use the payment details that should already be set by CartSummary
+      paymentDetails: activeOrder.paymentDetails
     };
+
+    console.log('Final order data:', finalOrderData); // Debug log
 
     // Store a copy with the client-side ID for the receipt
     const clientSideOrderData = { ...finalOrderData };
@@ -511,11 +515,12 @@ export default function POSSystem() {
         customer: finalOrderData.customer,
         cashier: finalOrderData.cashier,
         orderType: finalOrderData.orderType,
-        customDiscount: finalOrderData.customDiscount,
         kitchenNote: finalOrderData.kitchenNote,
         tableCharge: finalOrderData.tableCharge,
+        deliveryCharge: finalOrderData.deliveryCharge || 0,
         createdAt: finalOrderData.createdAt,
         isDefault: finalOrderData.isDefault,
+        discountAmount: finalOrderData.discountAmount,
         discountPercentage: finalOrderData.discountPercentage,
         appliedCoupon: finalOrderData.appliedCoupon
       };
@@ -572,12 +577,13 @@ export default function POSSystem() {
           customer: {},
           cashier: user!,
           orderType: 'dine-in',
-          customDiscount: 0,
           kitchenNote: '',
           tableCharge: 0,
+          deliveryCharge: 0,
           createdAt: new Date(),
           status: 'active',
           isDefault: true,
+          discountAmount: 0,
           discountPercentage: 0,
           totalAmount: 0
         };
@@ -603,12 +609,13 @@ export default function POSSystem() {
       customer: {},
       cashier: user!,
       orderType: 'dine-in',
-      customDiscount: 0,
       kitchenNote: '',
       tableCharge: 0,
+      deliveryCharge: 0,
       createdAt: new Date(),
       status: 'active',
       isDefault: true,
+      discountAmount: 0,
       discountPercentage: 0,
       totalAmount: 0
     };
@@ -641,6 +648,10 @@ export default function POSSystem() {
         customer={completedOrderData.order.customer}
         orderId={completedOrderData.order._id}
         orderType={completedOrderData.order.orderType}
+        paymentDetails={completedOrderData.order.paymentDetails}
+        kitchenNote={completedOrderData.order.kitchenNote}
+        cashierName={completedOrderData.order.cashier?.username}
+        tableName={completedOrderData.order.name}
         onBackToPOS={() => {
           setOrderComplete(false);
           setCompletedOrderData(null);

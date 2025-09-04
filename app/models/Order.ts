@@ -8,7 +8,6 @@ export interface Order extends Document {
     customer?: Customer;
     cashier: User;
     orderType: 'dine-in' | 'takeaway' | 'delivery';
-    customDiscount?: number;
     appliedCoupon?: Coupon;
     kitchenNote?: string;
     createdAt: Date;
@@ -27,7 +26,6 @@ const orderSchema = new Schema<Order>({
     customer: { type: Object, default: {} },
     cashier: { type: Object, required: true },
     orderType: { type: String, enum: ['dine-in', 'takeaway', 'delivery'], required: true },
-    customDiscount: { type: Number, default: 0 },
     appliedCoupon: { type: Object },
     kitchenNote: { type: String },
     createdAt: { type: Date, default: Date.now },
