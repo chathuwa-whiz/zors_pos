@@ -26,20 +26,26 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [stockFilter, setStockFilter] = useState('all');
   const [priceRange, setPriceRange] = useState({ min: 0, max: Infinity });
+  const [selectedSupplier, setSelectedSupplier] = useState('all');
 
   // Fetch products
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/products');
-      if (!response.ok) throw new Error('Failed to fetch products');
-
+      const params = new URLSearchParams();
+      
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+      if (selectedCategory !== 'All') {
+        params.append('category', selectedCategory);
+      }
+      
+      const response = await fetch(`/api/products?${params.toString()}`);
       const data = await response.json();
       setProducts(data);
-      setFilteredProducts(data);
-    } catch (err) {
-      setError('Failed to load products');
-      console.error(err);
+    } catch (error) {
+      console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
     }
@@ -47,13 +53,16 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [searchQuery, selectedCategory]); // Add dependencies for auto-fetch
 
   // Filter products based on search and filters
   useEffect(() => {
     const filtered = products.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+        product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product as any).barcode?.toLowerCase().includes(searchQuery.toLowerCase()) || // Add barcode search
+        product.supplier?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
 
@@ -62,14 +71,17 @@ export default function ProductsPage() {
         (stockFilter === 'out' && product.stock === 0) ||
         (stockFilter === 'available' && product.stock > 0);
 
-      // Remove max price constraint - only filter by minimum price
       const matchesPrice = product.sellingPrice >= priceRange.min;
 
-      return matchesSearch && matchesCategory && matchesStock && matchesPrice;
+      const matchesSupplier = selectedSupplier === 'all' || 
+        (selectedSupplier === 'none' && !product.supplier) ||
+        product.supplier === selectedSupplier;
+
+      return matchesSearch && matchesCategory && matchesStock && matchesPrice && matchesSupplier;
     });
 
     setFilteredProducts(filtered);
-  }, [products, searchQuery, selectedCategory, stockFilter, priceRange]);
+  }, [products, searchQuery, selectedCategory, stockFilter, priceRange, selectedSupplier]);
 
   // Get unique categories
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
@@ -149,18 +161,6 @@ export default function ProductsPage() {
         {/* Search and Controls */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search products by name or description..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
             {/* Controls */}
             <div className="flex items-center space-x-2">
               <button
@@ -191,7 +191,7 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Filters */}
+          {/* Filters - Now includes search */}
           {showFilters && (
             <ProductFilters
               categories={categories}
@@ -201,6 +201,10 @@ export default function ProductsPage() {
               setStockFilter={setStockFilter}
               priceRange={priceRange}
               setPriceRange={setPriceRange}
+              selectedSupplier={selectedSupplier}
+              setSelectedSupplier={setSelectedSupplier}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
             />
           )}
         </div>

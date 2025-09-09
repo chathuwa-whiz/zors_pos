@@ -31,6 +31,14 @@ interface Supplier {
     name: string;
 }
 
+const generateBarcode = (): string => {
+    // Generate a 13-digit EAN-13 style barcode
+    const timestamp = Date.now().toString();
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const barcode = (timestamp.slice(-7) + random + '000').slice(0, 13);
+    return barcode;
+};
+
 export default function ProductForm({ product, onSave, onClose }: ProductFormProps) {
     const [formData, setFormData] = useState<FormData>({
         id: '',
@@ -43,7 +51,7 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
         dryfood: false,
         stock: '',
         description: '',
-        barcode: '',
+        barcode: '', // Add barcode field
         supplier: '' // Initialize supplier field
     });
 
@@ -391,14 +399,26 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Barcode
                         </label>
-                        <input
-                            type="text"
-                            name="barcode"
-                            value={formData.barcode}
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Enter barcode number"
-                        />
+                        <div className="flex space-x-2">
+                            <input
+                                type="text"
+                                name="barcode"
+                                value={formData.barcode}
+                                onChange={handleChange}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Enter barcode or generate automatically"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const generatedBarcode = generateBarcode();
+                                    setFormData({...formData, barcode: generatedBarcode});
+                                }}
+                                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                            >
+                                Generate
+                            </button>
+                        </div>
                     </div>
 
                     {/* Description */}

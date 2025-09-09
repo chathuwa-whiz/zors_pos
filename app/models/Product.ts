@@ -1,35 +1,36 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-export interface Product extends Document {
+export interface IProduct extends Document {
   name: string;
+  description?: string;
+  category: string;
   costPrice: number;
   sellingPrice: number;
-  discount?: number;
-  category: string;
-  size?: string;
-  dryfood?: boolean;
-  image?: string;
-  imagePublicId?: string;
   stock: number;
-  description?: string;
-  barcode?: string;
-  supplier?: mongoose.Types.ObjectId;
+  minStock: number;
+  barcode?: string; // New barcode field
+  image?: string;
+  supplier?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const ProductSchema = new Schema<Product>({
-    name: { type: String, required: true },
-    costPrice: { type: Number, required: true },
-    sellingPrice: { type: Number, required: true },
-    discount: { type: Number, default: 0 },
-    category: { type: String, required: true },
-    size: { type: String },
-    dryfood: { type: Boolean, default: false },
-    image: { type: String },
-    imagePublicId: { type: String },
-    stock: { type: Number, required: true, min: 0 },
-    description: { type: String },
-    barcode: { type: String },
-    supplier: { type: Schema.Types.ObjectId, ref: 'Supplier' },
-}, { timestamps: true })
+const ProductSchema = new Schema<IProduct>({
+  name: { type: String, required: true },
+  description: { type: String },
+  category: { type: String, required: true },
+  costPrice: { type: Number, required: true },
+  sellingPrice: { type: Number, required: true },
+  stock: { type: Number, required: true, default: 0 },
+  minStock: { type: Number, required: true, default: 5 },
+  barcode: { type: String, unique: true, sparse: true }, // Unique but optional
+  image: { type: String },
+  supplier: { type: String },
+}, {
+  timestamps: true
+});
 
-export default mongoose.models.Product || mongoose.model<Product>('Product', ProductSchema);
+// Add index for barcode for faster lookups
+ProductSchema.index({ barcode: 1 });
+
+export default mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);

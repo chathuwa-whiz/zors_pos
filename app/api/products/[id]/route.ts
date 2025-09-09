@@ -52,6 +52,9 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
             dryfood?: boolean;
             image?: string;
             imagePublicId?: string;
+            barcode?: string; // Add barcode field
+            supplier?: string; // Add supplier field
+            minStock?: number; // Add minStock field
         } = {};
         
         // Only update fields that are present in formData
@@ -76,6 +79,9 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         const stock = formData.get('stock');
         if (stock !== null) updateData.stock = Number(stock);
         
+        const minStock = formData.get('minStock');
+        if (minStock !== null) updateData.minStock = Number(minStock);
+        
         const description = formData.get('description');
         if (description !== null) updateData.description = description as string;
 
@@ -83,6 +89,14 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         if (formData.has('dryfood')) {
             updateData.dryfood = formData.get('dryfood') === 'true';
         }
+
+        // Handle barcode
+        const barcode = formData.get('barcode');
+        if (barcode !== null) updateData.barcode = barcode as string;
+
+        // Handle supplier
+        const supplier = formData.get('supplier');
+        if (supplier !== null) updateData.supplier = supplier as string;
 
         // Handle image upload
         const file = formData.get("image") as File;
@@ -106,6 +120,19 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
             const uploadResult = await uploadImageToCloudinary(file, "products");
             updateData.image = uploadResult.secure_url;
             updateData.imagePublicId = uploadResult.public_id;
+        }
+
+        // Handle barcode uniqueness check
+        if (updateData.barcode && updateData.barcode.trim() !== '') {
+            const existingProduct = await Product.findOne({ 
+                barcode: updateData.barcode,
+                _id: { $ne: id } // Exclude current product
+            });
+            if (existingProduct) {
+                return NextResponse.json({ error: 'Barcode already exists' }, { status: 400 });
+            }
+        } else {
+            updateData.barcode = undefined; // Remove empty barcode
         }
 
         const product = await Product.findByIdAndUpdate(

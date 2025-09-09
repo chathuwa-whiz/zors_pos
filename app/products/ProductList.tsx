@@ -120,6 +120,13 @@ export default function ProductList({
                   <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
                 </div>
 
+                {/* Barcode Display in Grid View */}
+                {(product as any).barcode && (
+                  <div className="mb-2">
+                    <p className="text-xs text-gray-500">Barcode: <span className="font-mono">{(product as any).barcode}</span></p>
+                  </div>
+                )}
+
                 <div className="mb-3">
                   <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
                     {product.category}
@@ -173,79 +180,70 @@ export default function ProductList({
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="text-left px-6 py-4 font-semibold text-gray-900">Product</th>
-              <th className="text-left px-6 py-4 font-semibold text-gray-900">Category</th>
-              <th className="text-left px-6 py-4 font-semibold text-gray-900">Supplier</th>
-              <th className="text-left px-6 py-4 font-semibold text-gray-900">Price</th>
-              <th className="text-left px-6 py-4 font-semibold text-gray-900">Stock</th>
-              <th className="text-left px-6 py-4 font-semibold text-gray-900">Status</th>
-              <th className="text-center px-6 py-4 font-semibold text-gray-900">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barcode</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {products.map((product, index) => {
+          <tbody className="bg-white divide-y divide-gray-200">
+            {products.map((product) => {
+              // Define stockStatus and isLowStock for each product in list view
               const stockStatus = getStockStatus(product.stock);
               const isLowStock = product.stock > 0 && product.stock < 10;
-
+              
               return (
-                <tr
-                  key={product._id}
-                  className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} ${isLowStock ? 'border-l-4 border-l-yellow-400' : ''}`}
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        {product.image ? (
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            width={48}
-                            height={48}
-                            className="object-cover rounded-lg"
-                          />
-                        ) : (
+                <tr key={product._id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div className="flex items-center">
+                      {product.image ? (
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          width={40}
+                          height={40}
+                          className="rounded-full"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                           <Package className="w-6 h-6 text-gray-400" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{product.name}</div>
-                        <div className="text-sm text-gray-500 line-clamp-1">{product.description}</div>
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {product.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <span className="font-mono text-xs">
+                      {(product as any).barcode || 'N/A'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
                       {product.category}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <Building2 className="w-4 h-4 mr-2 text-gray-400" />
-                      {getSupplierName(product.supplier)}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    Rs.{product.sellingPrice.toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div className="flex items-center">
+                      <span className={`font-medium ${stockStatus.status === 'out' ? 'text-red-600' : stockStatus.status === 'low' ? 'text-yellow-600' : 'text-gray-900'}`}>
+                        {product.stock}
+                      </span>
+                      {isLowStock && (
+                        <AlertTriangle className="inline-block w-4 h-4 ml-1 text-yellow-500" />
+                      )}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">Rs.{product.sellingPrice.toFixed(2)}</div>
-                    <div className="text-xs text-gray-500">Cost: Rs.{product.costPrice.toFixed(2)}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`font-medium ${stockStatus.status === 'out' ? 'text-red-600' : stockStatus.status === 'low' ? 'text-yellow-600' : 'text-gray-900'}`}>
-                      {product.stock}
-                    </span>
-                    {isLowStock && (
-                      <AlertTriangle className="inline-block w-4 h-4 ml-1 text-yellow-500" />
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${stockStatus.color}`}>
-                      {stockStatus.status === 'low' && <AlertTriangle className="w-3 h-3 mr-1" />}
-                      {stockStatus.text}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-center space-x-2">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex space-x-2">
                       <button
                         onClick={() => onEdit(product)}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
