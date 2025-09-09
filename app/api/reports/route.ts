@@ -157,6 +157,53 @@ export async function GET(request: NextRequest) {
             }
         ]);
 
+        // Calculate net profit (total revenue - total cost)
+        const netProfitData = await Order.aggregate([
+            { $match: dateFilter },
+            { $unwind: '$cart' },
+            {
+                $group: {
+                    _id: null,
+                    totalRevenue: { 
+                        $sum: { 
+                            $multiply: ['$cart.quantity', '$cart.product.sellingPrice'] 
+                        } 
+                    },
+                    totalCost: { 
+                        $sum: { 
+                            $multiply: ['$cart.quantity', '$cart.product.costPrice'] 
+                        } 
+                    }
+                }
+            },
+            {
+                $project: {
+                    totalRevenue: 1,
+                    totalCost: 1,
+                    netProfit: { $subtract: ['$totalRevenue', '$totalCost'] },
+                    profitMargin: {
+                        $cond: {
+                            if: { $gt: ['$totalRevenue', 0] },
+                            then: {
+                                $multiply: [
+                                    { $divide: [{ $subtract: ['$totalRevenue', '$totalCost'] }, '$totalRevenue'] },
+                                    100
+                                ]
+                            },
+                            else: 0
+                        }
+                    }
+                }
+            }
+        ]);
+
+        const profitData = netProfitData[0] || { 
+            totalRevenue: 0, 
+            totalCost: 0, 
+            netProfit: 0, 
+            profitMargin: 0 
+        };
+
         const reportData = {
             // Overview metrics
             overview: {
@@ -168,7 +215,10 @@ export async function GET(request: NextRequest) {
                 totalRevenue: totalRevenue[0]?.total || 0,
                 todayRevenue: todayRevenue[0]?.total || 0,
                 totalOrders: orders.length,
-                totalReturns: returns.length
+                totalReturns: returns.length,
+                netProfit: profitData.netProfit,
+                totalCost: profitData.totalCost,
+                profitMargin: profitData.profitMargin
             },
 
             // Charts data
