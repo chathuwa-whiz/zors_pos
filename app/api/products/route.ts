@@ -3,6 +3,15 @@ import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 
+// Add barcode generator function at the top
+const generateBarcode = (): string => {
+  // Generate a 13-digit EAN-13 style barcode
+  const timestamp = Date.now().toString();
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  const barcode = (timestamp.slice(-7) + random + '000').slice(0, 13);
+  return barcode;
+};
+
 export async function GET(request: Request) {
   try {
     await connectDB();
@@ -106,6 +115,27 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({
                 error: 'Missing required fields: name, costPrice, sellingPrice, category, and stock are required'
             }, { status: 400 });
+        }
+
+        // Auto-generate barcode if not provided
+        if (!productData.barcode || productData.barcode.trim() === '') {
+          let generatedBarcode;
+          let isUnique = false;
+          
+          // Keep generating until we get a unique barcode
+          do {
+            generatedBarcode = generateBarcode();
+            const existingProduct = await Product.findOne({ barcode: generatedBarcode });
+            isUnique = !existingProduct;
+          } while (!isUnique);
+          
+          productData.barcode = generatedBarcode;
+        } else {
+          // Check if manually entered barcode already exists
+          const existingProduct = await Product.findOne({ barcode: productData.barcode });
+          if (existingProduct) {
+            return NextResponse.json({ error: 'Barcode already exists' }, { status: 400 });
+          }
         }
 
         const newProduct = new Product(productData);

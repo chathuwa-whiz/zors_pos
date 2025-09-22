@@ -3,6 +3,15 @@ import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 
+// Add the same barcode generator function at the top
+const generateBarcode = (): string => {
+  // Generate a 13-digit EAN-13 style barcode
+  const timestamp = Date.now().toString();
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  const barcode = (timestamp.slice(-7) + random + '000').slice(0, 13);
+  return barcode;
+};
+
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
 
     try {
@@ -133,6 +142,40 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
             }
         } else {
             updateData.barcode = undefined; // Remove empty barcode
+        }
+
+        // Handle barcode for updates
+        if (!updateData.barcode || updateData.barcode.trim() === '') {
+          // Only auto-generate if the product doesn't already have a barcode
+          const currentProduct = await Product.findById(id);
+          if (!currentProduct?.barcode) {
+            let generatedBarcode;
+            let isUnique = false;
+            
+            // Keep generating until we get a unique barcode
+            do {
+              generatedBarcode = generateBarcode();
+              const existingProduct = await Product.findOne({ 
+                barcode: generatedBarcode,
+                _id: { $ne: id }
+              });
+              isUnique = !existingProduct;
+            } while (!isUnique);
+            
+            updateData.barcode = generatedBarcode;
+          } else {
+            // Keep existing barcode if no new one is provided
+            delete updateData.barcode;
+          }
+        } else {
+          // Check uniqueness for manually entered barcode
+          const existingProduct = await Product.findOne({ 
+            barcode: updateData.barcode,
+            _id: { $ne: id }
+          });
+          if (existingProduct) {
+            return NextResponse.json({ error: 'Barcode already exists' }, { status: 400 });
+          }
         }
 
         const product = await Product.findByIdAndUpdate(
