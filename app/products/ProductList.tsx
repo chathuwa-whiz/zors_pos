@@ -1,6 +1,6 @@
 "use client";
 
-import { Edit2, Trash2, Package, AlertTriangle, Building2 } from 'lucide-react';
+import { Edit2, Trash2, Package, AlertTriangle, Building2, Printer } from 'lucide-react';
 import { Product } from '@/app/types/pos';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
@@ -47,6 +47,99 @@ export default function ProductList({
     if (stock === 0) return { status: 'out', color: 'text-red-600 bg-red-100', text: 'Out of Stock' };
     if (stock < 10) return { status: 'low', color: 'text-yellow-600 bg-yellow-100', text: 'Low Stock' };
     return { status: 'good', color: 'text-green-600 bg-green-100', text: 'In Stock' };
+  };
+
+  const printSingleBarcode = (product: Product) => {
+    if (!(product as any).barcode) {
+      alert('This product does not have a barcode');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Barcode - ${product.name}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 20px;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+            }
+            .barcode-item {
+              border: 2px solid #000;
+              padding: 20px;
+              text-align: center;
+              background: white;
+              width: 300px;
+            }
+            .product-name {
+              font-size: 16px;
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+            .barcode-visual {
+              width: 100%;
+              height: 50px;
+              background: repeating-linear-gradient(
+                90deg,
+                #000 0px,
+                #000 2px,
+                #fff 2px,
+                #fff 4px
+              );
+              margin: 10px 0;
+            }
+            .barcode-display {
+              font-family: 'Courier New', monospace;
+              font-size: 18px;
+              font-weight: bold;
+              margin: 10px 0;
+              letter-spacing: 2px;
+            }
+            .price {
+              font-size: 14px;
+              color: #666;
+              margin-top: 10px;
+            }
+            .category {
+              font-size: 12px;
+              color: #888;
+              text-transform: uppercase;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="barcode-item">
+            <div class="product-name">${product.name}</div>
+            <div class="barcode-visual"></div>
+            <div class="barcode-display">${(product as any).barcode}</div>
+            <div class="price">Rs. ${product.sellingPrice.toFixed(2)}</div>
+            <div class="category">${product.category}</div>
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.close();
+              }, 500);
+            }
+          </script>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
 
   if (loading) {
@@ -123,7 +216,19 @@ export default function ProductList({
                 {/* Barcode Display in Grid View */}
                 {(product as any).barcode && (
                   <div className="mb-2">
-                    <p className="text-xs text-gray-500">Barcode: <span className="font-mono">{(product as any).barcode}</span></p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-gray-500">Barcode: <span className="font-mono">{(product as any).barcode}</span></p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          printSingleBarcode(product);
+                        }}
+                        className="p-1 text-gray-500 hover:text-purple-600 transition-colors"
+                        title="Print barcode"
+                      >
+                        <Printer className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -251,6 +356,15 @@ export default function ProductList({
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
+                      {(product as any).barcode && (
+                        <button
+                          onClick={() => printSingleBarcode(product)}
+                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                          title="Print barcode"
+                        >
+                          <Printer className="w-4 h-4" />
+                        </button>
+                      )}
                       <button
                         onClick={() => onDelete(product._id)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
