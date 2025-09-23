@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { LogOut, Menu, X, Bell, ShoppingCart, AlertTriangle } from 'lucide-react';
+import { LogOut, Menu, X, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { User } from '@/app/types/user';
 import Image from 'next/image';
@@ -87,6 +87,7 @@ export default function Header() {
                             className="flex items-center space-x-3"
                             whileHover={{ scale: 1.02 }}
                             transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                            onClick={() => window.location.href = '/'}
                         >
                             <div className="relative">
                                 <motion.div
@@ -123,25 +124,6 @@ export default function Header() {
 
                         {/* Right Section - User Info & Actions */}
                         <div className="flex items-center space-x-3">
-                            {/* Notifications */}
-                            <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="relative p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                                title="Notifications"
-                            >
-                                <Bell className="w-5 h-5" />
-                                {lowStockCount > 0 && (
-                                    <motion.span
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center"
-                                    >
-                                        {lowStockCount > 9 ? '9+' : lowStockCount}
-                                    </motion.span>
-                                )}
-                            </motion.button>
-
                             {/* User Profile Section */}
                             <div className="hidden md:flex items-center space-x-3 pl-3 border-l border-gray-200">
                                 <div className="text-right">
@@ -270,17 +252,8 @@ export default function Header() {
                                         initial={{ x: -20, opacity: 0 }}
                                         animate={{ x: 0, opacity: 1 }}
                                         transition={{ delay: 0.3 }}
-                                        className="flex items-center justify-between pt-2"
+                                        className="flex justify-end pt-2"
                                     >
-                                        <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-red-600 transition-colors duration-200">
-                                            <Bell className="w-4 h-4" />
-                                            <span className="text-sm">Notifications</span>
-                                            {lowStockCount > 0 && (
-                                                <span className="w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                                                    {lowStockCount}
-                                                </span>
-                                            )}
-                                        </button>
                                         <motion.button
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
