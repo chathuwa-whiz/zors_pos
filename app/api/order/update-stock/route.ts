@@ -2,15 +2,17 @@ import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 
+// Define interfaces for type safety
+interface Product {
+    _id: string;
+    name: string;
+    sellingPrice: number;
+    stock: number;
+}
+
 interface CartItem {
-    product: {
-        _id: string;
-        name: string;
-        sellingPrice: number;
-        stock: number;
-    };
+    product: Product;
     quantity: number;
-    subtotal: number;
 }
 
 export async function POST(req: NextRequest) {
@@ -46,11 +48,11 @@ export async function POST(req: NextRequest) {
                 const newStock = product.stock - item.quantity;
 
                 // Update the product stock
-                const updatedProduct = await Product.findByIdAndUpdate(
-                    item.product._id,
-                    { stock: newStock },
-                    { new: true, runValidators: true }
-                );
+                // const updatedProduct = await Product.findByIdAndUpdate(
+                //     item.product._id,
+                //     { stock: newStock },
+                //     { new: true, runValidators: true }
+                // );
 
                 stockUpdates.push({
                     productId: item.product._id,

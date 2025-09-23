@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import {
-  BarChart3,
   TrendingUp,
   TrendingDown,
   Package,
@@ -10,12 +9,10 @@ import {
   ShoppingCart,
   RotateCcw,
   Calendar,
-  Filter,
   Download,
   RefreshCw,
   DollarSign,
   AlertTriangle,
-  Eye,
   ChevronRight,
   CreditCard,
   Banknote
@@ -95,7 +92,7 @@ export default function ReportsPage() {
   const [customDateRange, setCustomDateRange] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [selectedView, setSelectedView] = useState<'overview' | 'sales' | 'inventory' | 'customers'>('overview');
+  // const [selectedView, setSelectedView] = useState<'overview' | 'sales' | 'inventory' | 'customers'>('overview');
 
   useEffect(() => {
     fetchReports();

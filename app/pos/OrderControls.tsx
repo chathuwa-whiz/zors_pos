@@ -2,7 +2,7 @@
 
 import { Home, Car, MapPin, ChefHat, UserPlus, User } from 'lucide-react';
 import { Order } from '@/app/types/pos';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface OrderControlsProps {
   activeOrder: Order;
@@ -26,11 +26,7 @@ export default function OrderControls({
   const [globalDiscount, setGlobalDiscount] = useState<Discount | null>(null);
   const [selectedDiscountId, setSelectedDiscountId] = useState<string>('');
 
-  useEffect(() => {
-    fetchDiscounts();
-  }, []);
-
-  const fetchDiscounts = async () => {
+  const fetchDiscounts = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/discounts', {
@@ -54,7 +50,11 @@ export default function OrderControls({
     } catch (error) {
       console.error('Failed to fetch discounts:', error);
     }
-  };
+  }, [activeOrder.discountPercentage, onUpdateActiveOrder]);
+
+  useEffect(() => {
+    fetchDiscounts();
+  }, [fetchDiscounts]);
 
   const handleDiscountSelect = (discountId: string) => {
     setSelectedDiscountId(discountId);
@@ -106,33 +106,30 @@ export default function OrderControls({
           <div className="flex space-x-1 bg-white rounded-lg p-1 border border-green-300 shadow-sm">
             <button
               onClick={() => handleOrderTypeChange('dine-in')}
-              className={`px-3 py-1.5 rounded text-xs font-semibold transition-all duration-200 active:scale-95 ${
-                activeOrder.orderType === 'dine-in' 
-                  ? 'bg-lime-400 text-green-900 shadow-sm' 
+              className={`px-3 py-1.5 rounded text-xs font-semibold transition-all duration-200 active:scale-95 ${activeOrder.orderType === 'dine-in'
+                  ? 'bg-lime-400 text-green-900 shadow-sm'
                   : 'text-green-900 hover:bg-lime-100'
-              }`}
+                }`}
             >
               <Home className="w-3 h-3 inline mr-1" />
               Dine-in
             </button>
             <button
               onClick={() => handleOrderTypeChange('takeaway')}
-              className={`px-3 py-1.5 rounded text-xs font-semibold transition-all duration-200 active:scale-95 ${
-                activeOrder.orderType === 'takeaway' 
-                  ? 'bg-lime-400 text-green-900 shadow-sm' 
+              className={`px-3 py-1.5 rounded text-xs font-semibold transition-all duration-200 active:scale-95 ${activeOrder.orderType === 'takeaway'
+                  ? 'bg-lime-400 text-green-900 shadow-sm'
                   : 'text-green-900 hover:bg-lime-100'
-              }`}
+                }`}
             >
               <Car className="w-3 h-3 inline mr-1" />
               Takeaway
             </button>
             <button
               onClick={() => handleOrderTypeChange('delivery')}
-              className={`px-3 py-1.5 rounded text-xs font-semibold transition-all duration-200 active:scale-95 ${
-                activeOrder.orderType === 'delivery' 
-                  ? 'bg-lime-400 text-green-900 shadow-sm' 
+              className={`px-3 py-1.5 rounded text-xs font-semibold transition-all duration-200 active:scale-95 ${activeOrder.orderType === 'delivery'
+                  ? 'bg-lime-400 text-green-900 shadow-sm'
                   : 'text-green-900 hover:bg-lime-100'
-              }`}
+                }`}
             >
               <MapPin className="w-3 h-3 inline mr-1" />
               Delivery

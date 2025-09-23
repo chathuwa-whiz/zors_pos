@@ -5,11 +5,9 @@ import {
   TrendingUp,
   TrendingDown,
   Package,
-  Calendar,
   Filter,
   Download,
   Search,
-  Eye,
   Plus,
   Minus,
   ArrowUpDown,
@@ -75,7 +73,7 @@ export default function StockTransitions() {
   });
 
   const [showFilters, setShowFilters] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
+  // const [showAddModal, setShowAddModal] = useState(false);
 
   // Fetch stock transitions
   const fetchTransitions = async (page = 1) => {

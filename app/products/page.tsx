@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Package, Plus, Search, Filter, Grid, List } from 'lucide-react';
+import { Package, Plus, Filter, Grid, List } from 'lucide-react';
 import { Product } from '@/app/types/pos';
 import ProductList from './ProductList';
 import ProductForm from './ProductForm';
