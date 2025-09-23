@@ -3,6 +3,32 @@ import StockTransition from "@/app/models/StockTransition";
 import Product from "@/app/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 
+// Define interfaces for type safety
+interface StockTransitionFilter {
+    productId?: string;
+    transactionType?: string;
+    createdAt?: {
+        $gte?: Date;
+        $lte?: Date;
+    };
+}
+
+interface StockTransitionRequestBody {
+    productId: string;
+    transactionType: 'sale' | 'purchase' | 'customer_return' | 'supplier_return' | 'adjustment';
+    quantity: number;
+    unitPrice?: number;
+    reference?: string;
+    party?: {
+        name: string;
+        type: string;
+        id: string;
+    };
+    userId: string;
+    userName: string;
+    notes?: string;
+}
+
 export async function GET(request: NextRequest) {
     try {
         await connectDB();
@@ -16,7 +42,7 @@ export async function GET(request: NextRequest) {
         const endDate = searchParams.get('endDate');
 
         // Build filter object
-        const filter: any = {};
+        const filter: StockTransitionFilter = {};
 
         if (productId) {
             filter.productId = productId;
@@ -70,6 +96,7 @@ export async function POST(request: NextRequest) {
     try {
         await connectDB();
 
+        const requestBody: StockTransitionRequestBody = await request.json();
         const {
             productId,
             transactionType,
@@ -80,7 +107,7 @@ export async function POST(request: NextRequest) {
             userId,
             userName,
             notes = ''
-        } = await request.json();
+        } = requestBody;
 
         // Validate required fields
         if (!productId || !transactionType || !quantity || !userId || !userName) {

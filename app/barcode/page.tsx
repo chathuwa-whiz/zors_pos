@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Search, Printer, Download, Package } from 'lucide-react';
+import { Search, Printer, Package } from 'lucide-react';
 import { Product } from '@/app/types/pos';
 import { useBarcode } from 'next-barcode';
 
@@ -19,7 +19,7 @@ export default function BarcodePage() {
         const response = await fetch('/api/products');
         const data = await response.json();
         // Only show products that have barcodes
-        const productsWithBarcodes = data.filter((product: Product) => (product as any).barcode);
+        const productsWithBarcodes = data.filter((product: Product) => product.barcode);
         setProducts(productsWithBarcodes);
         setFilteredProducts(productsWithBarcodes);
       } catch (error) {
@@ -36,7 +36,7 @@ export default function BarcodePage() {
   useEffect(() => {
     const filtered = products.filter(product =>
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (product as any).barcode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.category.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredProducts(filtered);
@@ -181,7 +181,7 @@ export default function BarcodePage() {
               <div class="barcode-item">
                 <div class="product-name">${product.name}</div>
                 <svg class="barcode-svg" id="barcode-${index}"></svg>
-                <div class="barcode-display">${(product as any).barcode}</div>
+                <div class="barcode-display">${product.barcode}</div>
                 <div class="price">Rs. ${product.sellingPrice.toFixed(2)}</div>
                 <div class="category">${product.category}</div>
               </div>
@@ -190,7 +190,7 @@ export default function BarcodePage() {
           <script>
             window.onload = function() {
               ${products.map((product, index) => `
-                JsBarcode("#barcode-${index}", "${(product as any).barcode}", {
+                JsBarcode("#barcode-${index}", "${product.barcode}", {
                   format: "CODE128",
                   width: 2,
                   height: 40,
@@ -210,9 +210,9 @@ export default function BarcodePage() {
   };
 
   // Barcode Preview Component using next-barcode
-  const BarcodePreview = ({ value }: { value: string }) => {
+  const BarcodePreview = ({ value }: { value: string | undefined }) => {
     const { inputRef } = useBarcode({
-      value,
+      value: value || '',
       options: {
         format: 'CODE128',
         width: 2,
@@ -340,9 +340,9 @@ export default function BarcodePage() {
 
                     {/* Barcode Preview using next-barcode */}
                     <div className="bg-gray-50 p-3 rounded-lg mb-3">
-                      <BarcodePreview value={(product as any).barcode} />
+                      <BarcodePreview value={product.barcode} />
                       <div className="text-xs font-mono text-center mt-1 font-bold">
-                        {(product as any).barcode}
+                        {product.barcode}
                       </div>
                     </div>
 

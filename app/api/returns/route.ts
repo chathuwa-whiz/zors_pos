@@ -3,7 +3,59 @@ import dbConnect from '@/app/lib/mongodb';
 import Product from '@/app/models/Product';
 import Return from '@/app/models/Return';
 import StockTransition from '@/app/models/StockTransition';
-import User from '@/app/models/User';
+
+// Define interfaces for type safety
+interface ReturnItem {
+  _id: string;
+  productId: {
+    _id: string;
+  };
+  productName: string;
+  returnType: 'customer' | 'supplier';
+  quantity: number;
+  reason: string;
+  notes?: string;
+  unitPrice: number;
+  totalValue: number;
+  cashier: {
+    _id: string;
+  };
+  cashierName: string;
+  createdAt: Date;
+}
+
+interface TransformedReturn {
+  _id: string;
+  product: {
+    _id: string;
+    name: string;
+    sellingPrice: number;
+  };
+  returnType: 'customer' | 'supplier';
+  quantity: number;
+  reason: string;
+  notes?: string;
+  cashier: {
+    _id: string;
+    username: string;
+  };
+  createdAt: string;
+  totalValue: number;
+}
+
+interface UserInfo {
+  _id: string;
+  username: string;
+  role?: string;
+}
+
+interface ReturnRequestBody {
+  productId: string;
+  returnType: 'customer' | 'supplier';
+  quantity: number;
+  reason: string;
+  notes?: string;
+}
 
 export async function GET() {
   try {
@@ -13,7 +65,7 @@ export async function GET() {
     const returns = await Return.find();
 
     // Transform the data to match the expected format
-    const transformedReturns = returns.map((returnItem: any) => ({
+    const transformedReturns: TransformedReturn[] = returns.map((returnItem: ReturnItem) => ({
       _id: returnItem._id.toString(),
       product: {
         _id: returnItem.productId._id.toString(),
@@ -44,7 +96,7 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
 
-    const body = await request.json();
+    const body: ReturnRequestBody = await request.json();
     const { productId, returnType, quantity, reason, notes } = body;
 
     // Validate required fields
@@ -65,7 +117,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate quantity
-    const returnQuantity = parseInt(quantity);
+    const returnQuantity = parseInt(quantity.toString());
     if (isNaN(returnQuantity) || returnQuantity <= 0) {
       return NextResponse.json(
         { error: 'Invalid quantity' },
@@ -83,14 +135,14 @@ export async function POST(request: NextRequest) {
 
     // Get user info from request headers
     const userInfoHeader = request.headers.get('x-user-info');
-    let user;
+    let user: UserInfo;
 
     if (userInfoHeader) {
       try {
-        user = JSON.parse(userInfoHeader);
+        user = JSON.parse(userInfoHeader) as UserInfo;
       } catch (err) {
         return NextResponse.json(
-          { error: 'Invalid user info format' },
+          { error: 'Invalid user info format', err },
           { status: 400 }
         );
       }
@@ -105,7 +157,7 @@ export async function POST(request: NextRequest) {
     const previousStock = product.stock;
 
     // Calculate new stock based on return type
-    let newStock;
+    let newStock: number;
     if (returnType === 'customer') {
       // Customer return increases stock
       newStock = product.stock + returnQuantity;
@@ -167,7 +219,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Return the created record with proper formatting
-    const responseData = {
+    const responseData: TransformedReturn = {
       _id: savedReturn._id.toString(),
       product: {
         _id: product._id.toString(),
@@ -183,8 +235,7 @@ export async function POST(request: NextRequest) {
         username: user.username
       },
       createdAt: savedReturn.createdAt.toISOString(),
-      totalValue: savedReturn.totalValue,
-      newStock
+      totalValue: savedReturn.totalValue
     };
 
     return NextResponse.json(

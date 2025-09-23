@@ -19,7 +19,6 @@ interface CustomerModalProps {
 }
 
 export default function CustomerModal({
-  activeOrder,
   onClose,
   onUpdateActiveOrder
 }: CustomerModalProps) {

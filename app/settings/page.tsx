@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Lock, Eye, EyeOff, Shield, CheckCircle, AlertCircle, Key, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { User } from '@/app/types/user';
 
 export default function SettingsPage() {
   const [oldPassword, setOldPassword] = useState("");
@@ -12,7 +13,7 @@ export default function SettingsPage() {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     // Get user from localStorage
@@ -56,6 +57,7 @@ export default function SettingsPage() {
       }
     } catch (error) {
       setMessage("Network error. Please try again.");
+      console.error("Error changing password:", error);
     } finally {
       setLoading(false);
     }
@@ -278,7 +280,7 @@ export default function SettingsPage() {
             <div className="space-y-2 text-sm text-green-700">
               <p>• Use a combination of letters, numbers, and symbols</p>
               <p>• Make it at least 8 characters long for better security</p>
-              <p>• Don't share your password with anyone</p>
+              <p>• Don&apos;t share your password with anyone</p>
               <p>• Change your password regularly</p>
             </div>
           </div>

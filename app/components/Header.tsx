@@ -5,13 +5,13 @@ import { LogOut, Menu, X, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { User } from '@/app/types/user';
 import Image from 'next/image';
+import { Product } from '../types/pos';
 
 export default function Header() {
 
     const [user, setUser] = useState<User | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [products, setProducts] = useState([]);
     const [lowStockCount, setLowStockCount] = useState(0);
 
     useEffect(() => {
@@ -30,9 +30,9 @@ export default function Header() {
             const response = await fetch('/api/products');
             if (response.ok) {
                 const data = await response.json();
-                setProducts(data);
+
                 // Count products with low stock (assuming stock < 10 is low)
-                const lowStock = data.filter((product: any) => product.stock < 10);
+                const lowStock = data.filter((product: Product) => product.stock < 10);
                 setLowStockCount(lowStock.length);
             }
         } catch (error) {

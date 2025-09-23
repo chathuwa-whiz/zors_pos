@@ -3,6 +3,57 @@ import OrderModel from "@/app/models/Order";
 import StockTransition from "@/app/models/StockTransition";
 import { NextRequest, NextResponse } from "next/server";
 
+// Define interfaces for type safety
+interface Product {
+    _id: string;
+    name: string;
+    sellingPrice: number;
+    stock: number;
+}
+
+interface CartItem {
+    product: Product;
+    quantity: number;
+}
+
+interface Customer {
+    _id?: string;
+    name: string;
+}
+
+interface Cashier {
+    _id: string;
+    username: string;
+}
+
+interface OrderData {
+    cart: CartItem[];
+    customer?: Customer;
+    cashier: Cashier;
+    orderType: string;
+    kitchenNote?: string;
+}
+
+interface StockTransitionData {
+    productId: string;
+    productName: string;
+    transactionType: 'sale';
+    quantity: number;
+    previousStock: number;
+    newStock: number;
+    unitPrice: number;
+    totalValue: number;
+    reference: string;
+    party?: {
+        name: string;
+        type: 'customer';
+        id: string;
+    };
+    user: string;
+    userName: string;
+    notes: string;
+}
+
 export async function GET() {
     try {
         await connectDB();
@@ -20,7 +71,7 @@ export async function POST(req: NextRequest) {
     try {
         await connectDB();
 
-        const orderData = await req.json();
+        const orderData: OrderData = await req.json();
 
         // Validate required fields
         if (!orderData.cart || !Array.isArray(orderData.cart) || orderData.cart.length === 0) {
@@ -33,10 +84,10 @@ export async function POST(req: NextRequest) {
 
         // Create stock transitions for each cart item
         try {
-            const stockTransitions = orderData.cart.map((item: any) => ({
+            const stockTransitions: StockTransitionData[] = orderData.cart.map((item: CartItem) => ({
                 productId: item.product._id,
                 productName: item.product.name,
-                transactionType: 'sale',
+                transactionType: 'sale' as const,
                 quantity: item.quantity,
                 previousStock: item.product.stock,
                 newStock: item.product.stock - item.quantity,
@@ -45,7 +96,7 @@ export async function POST(req: NextRequest) {
                 reference: savedOrder._id.toString(),
                 party: orderData.customer?.name ? {
                     name: orderData.customer.name,
-                    type: 'customer',
+                    type: 'customer' as const,
                     id: orderData.customer._id || 'manual'
                 } : undefined,
                 user: orderData.cashier._id,
