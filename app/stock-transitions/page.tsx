@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -73,10 +73,9 @@ export default function StockTransitions() {
   });
 
   const [showFilters, setShowFilters] = useState(false);
-  // const [showAddModal, setShowAddModal] = useState(false);
 
   // Fetch stock transitions
-  const fetchTransitions = async (page = 1) => {
+  const fetchTransitions = useCallback(async (page = 1) => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -99,10 +98,10 @@ export default function StockTransitions() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.limit, filters.productId, filters.transactionType, filters.startDate, filters.endDate]);
 
   // Fetch products for filter dropdown
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const response = await fetch('/api/products');
       if (!response.ok) throw new Error('Failed to fetch products');
@@ -111,12 +110,12 @@ export default function StockTransitions() {
     } catch (error) {
       console.error('Error fetching products:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchProducts();
     fetchTransitions();
-  }, [filters]);
+  }, [fetchProducts, fetchTransitions]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));

@@ -51,7 +51,7 @@ export default function ProductList({
   };
 
   const printSingleBarcode = (product: Product) => {
-    if (!(product as any).barcode) {
+    if (!product.barcode) {
       alert('This product does not have a barcode');
       return;
     }
@@ -115,13 +115,13 @@ export default function ProductList({
           <div class="barcode-item">
             <div class="product-name">${product.name}</div>
             <svg class="barcode-svg" id="barcode"></svg>
-            <div class="barcode-display">${(product as any).barcode}</div>
+            <div class="barcode-display">${product.barcode}</div>
             <div class="price">Rs. ${product.sellingPrice.toFixed(2)}</div>
             <div class="category">${product.category}</div>
           </div>
           <script>
             window.onload = function() {
-              JsBarcode("#barcode", "${(product as any).barcode}", {
+              JsBarcode("#barcode", "${product.barcode}", {
                 format: "CODE128",
                 width: 2,
                 height: 50,
@@ -233,13 +233,13 @@ export default function ProductList({
                 </div>
 
                 {/* Barcode Display in Grid View */}
-                {(product as any).barcode && (
+                {product.barcode && (
                   <div className="mb-2">
                     <div className="bg-gray-50 p-2 rounded">
-                      <BarcodePreview value={(product as any).barcode} />
+                      <BarcodePreview value={product.barcode} />
                     </div>
                     <div className="flex items-center justify-between mt-1">
-                      <p className="text-xs text-gray-500 font-mono">{(product as any).barcode}</p>
+                      <p className="text-xs text-gray-500 font-mono">{product.barcode}</p>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -347,13 +347,13 @@ export default function ProductList({
                     {product.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {(product as any).barcode ? (
+                    {product.barcode ? (
                       <div className="space-y-1">
                         <div className="bg-gray-50 p-1 rounded w-20">
-                          <BarcodePreview value={(product as any).barcode} />
+                          <BarcodePreview value={product.barcode} />
                         </div>
                         <span className="font-mono text-xs block">
-                          {(product as any).barcode}
+                          {product.barcode}
                         </span>
                       </div>
                     ) : (
@@ -387,7 +387,7 @@ export default function ProductList({
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
-                      {(product as any).barcode && (
+                      {product.barcode && (
                         <button
                           onClick={() => printSingleBarcode(product)}
                           className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
