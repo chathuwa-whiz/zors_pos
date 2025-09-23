@@ -32,6 +32,9 @@ interface ReportData {
     todayRevenue: number;
     totalOrders: number;
     totalReturns: number;
+    netProfit: number;
+    totalCost: number;
+    profitMargin: number;
   };
   salesByDay: Array<{
     date: string;
@@ -283,7 +286,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Key Metrics Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -333,6 +336,33 @@ export default function ReportsPage() {
                 </p>
               </div>
               <Users className="w-8 h-8 text-orange-200" />
+            </div>
+          </div>
+
+          <div className={`rounded-xl p-6 text-white ${
+            reportData.overview.netProfit >= 0 
+              ? 'bg-gradient-to-r from-teal-500 to-teal-600' 
+              : 'bg-gradient-to-r from-red-500 to-red-600'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-sm ${
+                  reportData.overview.netProfit >= 0 ? 'text-teal-100' : 'text-red-100'
+                }`}>Net Profit</p>
+                <p className="text-2xl font-bold">{formatCurrency(reportData.overview.netProfit)}</p>
+                <p className={`text-sm mt-1 ${
+                  reportData.overview.netProfit >= 0 ? 'text-teal-100' : 'text-red-100'
+                }`}>
+                  Margin: {reportData.overview.profitMargin.toFixed(1)}%
+                </p>
+              </div>
+              {reportData.overview.netProfit >= 0 ? (
+                <TrendingUp className={`w-8 h-8 ${
+                  reportData.overview.netProfit >= 0 ? 'text-teal-200' : 'text-red-200'
+                }`} />
+              ) : (
+                <TrendingDown className="w-8 h-8 text-red-200" />
+              )}
             </div>
           </div>
         </div>

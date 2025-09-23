@@ -43,7 +43,7 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
         dryfood: false,
         stock: '',
         description: '',
-        barcode: '',
+        barcode: '', // Add barcode field
         supplier: '' // Initialize supplier field
     });
 
@@ -387,17 +387,16 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
                     </div>
 
                     {/* Barcode */}
-                    <div>
+                    <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Barcode
                         </label>
                         <input
                             type="text"
-                            name="barcode"
                             value={formData.barcode}
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Enter barcode number"
+                            onChange={(e) => setFormData({...formData, barcode: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Leave empty to auto-generate barcode"
                         />
                     </div>
 

@@ -70,7 +70,7 @@ export default function HomePage() {
   const modules: DashboardModule[] = [
     {
       id: 'pos',
-      title: 'Point of Sale',
+      title: 'Make a Bill',
       description: 'Streamlined checkout experience with real-time inventory tracking and payment processing.',
       icon: <ShoppingCart className="w-8 h-8" />,
       color: 'bg-gradient-to-br from-green-900 via-green-800 to-green-900',
@@ -81,15 +81,16 @@ export default function HomePage() {
       badge: 'Essential'
     },
     {
-      id: 'returns',
-      title: 'Returns & Exchanges',
-      description: 'Handle customer returns and supplier exchanges with automated stock adjustments.',
-      icon: <RotateCcw className="w-8 h-8" />,
-      color: 'bg-gradient-to-br from-orange-600 via-orange-500 to-orange-600',
+      id: 'products',
+      title: 'Inventory Management',
+      description: 'Adding product with real-time stock monitoring.',
+      icon: <Package className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-red-600 via-red-500 to-red-600',
       textColor: 'text-white',
-      href: '/returns',
-      adminOnly: false,
-      priority: 'high'
+      href: '/products',
+      adminOnly: true,
+      priority: 'high',
+      badge: 'Core'
     },
     {
       id: 'categories',
@@ -103,20 +104,8 @@ export default function HomePage() {
       priority: 'medium'
     },
     {
-      id: 'products',
-      title: 'Inventory Management',
-      description: 'Complete product lifecycle management with real-time stock monitoring.',
-      icon: <Package className="w-8 h-8" />,
-      color: 'bg-gradient-to-br from-red-600 via-red-500 to-red-600',
-      textColor: 'text-white',
-      href: '/products',
-      adminOnly: true,
-      priority: 'high',
-      badge: 'Core'
-    },
-    {
       id: 'suppliers',
-      title: 'Supplier Network',
+      title: 'Suppliers',
       description: 'Manage vendor relationships and streamline procurement processes.',
       icon: <Truck className="w-8 h-8" />,
       color: 'bg-gradient-to-br from-amber-600 via-amber-500 to-amber-600',
@@ -125,9 +114,25 @@ export default function HomePage() {
       adminOnly: true,
       priority: 'medium'
     },
+    
+    
+    {
+      id: 'returns',
+      title: 'Returns & Exchanges',
+      description: 'Handle customer returns and supplier exchanges with automated stock adjustments.',
+      icon: <RotateCcw className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-orange-600 via-orange-500 to-orange-600',
+      textColor: 'text-white',
+      href: '/returns',
+      adminOnly: false,
+      priority: 'high'
+    },
+    
+    
+    
     {
       id: 'customers',
-      title: 'Customer Relations',
+      title: 'Customers Details',
       description: 'Build lasting relationships with comprehensive customer profile management.',
       icon: <Users className="w-8 h-8" />,
       color: 'bg-gradient-to-br from-purple-600 via-purple-500 to-purple-600',
@@ -138,7 +143,7 @@ export default function HomePage() {
     },
     {
       id: 'reports',
-      title: 'Business Analytics',
+      title: 'Reports Analysis',
       description: 'Data-driven insights to optimize operations and boost profitability.',
       icon: <BarChart3 className="w-8 h-8" />,
       color: 'bg-gradient-to-br from-indigo-600 via-indigo-500 to-indigo-600',
@@ -148,27 +153,17 @@ export default function HomePage() {
       priority: 'high',
       badge: 'Insights'
     },
-    {
-      id: 'settings',
-      title: 'System Settings',
-      description: 'Configure system preferences and maintain operational parameters.',
-      icon: <Settings className="w-8 h-8" />,
-      color: 'bg-gradient-to-br from-gray-700 via-gray-600 to-gray-700',
-      textColor: 'text-white',
-      href: '/settings',
-      adminOnly: true,
-      priority: 'low'
-    },
+    
     {
       id: 'stocktransitions',
-      title: 'Stock Analytics',
+      title: 'Stock Transitions',
       description: 'Monitor inventory movements and optimize stock level strategies.',
       icon: <Activity className="w-8 h-8" />,
       color: 'bg-gradient-to-br from-teal-600 via-teal-500 to-teal-600',
       textColor: 'text-white',
       href: '/stock-transitions',
       adminOnly: true,
-      priority: 'medium'
+      priority: 'high'
     },
     {
       id: 'discounts',
@@ -191,7 +186,18 @@ export default function HomePage() {
       href: '/staff',
       adminOnly: true,
       priority: 'low'
-    }
+    },
+    {
+      id: 'settings',
+      title: 'System Settings',
+      description: 'Configure system preferences and maintain operational parameters.',
+      icon: <Settings className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-gray-700 via-gray-600 to-gray-700',
+      textColor: 'text-white',
+      href: '/settings',
+      adminOnly: true,
+      priority: 'low'
+    },
   ];
 
   const filteredModules = user?.role === 'admin'
