@@ -4,6 +4,7 @@ import { Edit2, Trash2, Package, AlertTriangle, Building2, Printer } from 'lucid
 import { Product } from '@/app/types/pos';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { useBarcode } from 'next-barcode';
 
 interface ProductListProps {
   products: Product[];
@@ -85,16 +86,9 @@ export default function ProductList({
               font-weight: bold;
               margin-bottom: 10px;
             }
-            .barcode-visual {
+            .barcode-svg {
               width: 100%;
               height: 50px;
-              background: repeating-linear-gradient(
-                90deg,
-                #000 0px,
-                #000 2px,
-                #fff 2px,
-                #fff 4px
-              );
               margin: 10px 0;
             }
             .barcode-display {
@@ -115,17 +109,25 @@ export default function ProductList({
               text-transform: uppercase;
             }
           </style>
+          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
         </head>
         <body>
           <div class="barcode-item">
             <div class="product-name">${product.name}</div>
-            <div class="barcode-visual"></div>
+            <svg class="barcode-svg" id="barcode"></svg>
             <div class="barcode-display">${(product as any).barcode}</div>
             <div class="price">Rs. ${product.sellingPrice.toFixed(2)}</div>
             <div class="category">${product.category}</div>
           </div>
           <script>
             window.onload = function() {
+              JsBarcode("#barcode", "${(product as any).barcode}", {
+                format: "CODE128",
+                width: 2,
+                height: 50,
+                displayValue: false
+              });
+              
               setTimeout(function() {
                 window.print();
                 window.close();
@@ -135,11 +137,28 @@ export default function ProductList({
         </body>
       </html>
     `;
-    
+
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
+  };
+
+  // Barcode Preview Component using next-barcode
+  const BarcodePreview = ({ value }: { value: string }) => {
+    const { inputRef } = useBarcode({
+      value,
+      options: {
+        format: 'CODE128',
+        width: 1,
+        height: 20,
+        displayValue: false,
+        background: '#ffffff',
+        lineColor: '#000000',
+      }
+    });
+
+    return <svg ref={inputRef} className="w-full h-4" />;
   };
 
   if (loading) {
@@ -216,8 +235,11 @@ export default function ProductList({
                 {/* Barcode Display in Grid View */}
                 {(product as any).barcode && (
                   <div className="mb-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-gray-500">Barcode: <span className="font-mono">{(product as any).barcode}</span></p>
+                    <div className="bg-gray-50 p-2 rounded">
+                      <BarcodePreview value={(product as any).barcode} />
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-xs text-gray-500 font-mono">{(product as any).barcode}</p>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -301,7 +323,7 @@ export default function ProductList({
               // Define stockStatus and isLowStock for each product in list view
               const stockStatus = getStockStatus(product.stock);
               const isLowStock = product.stock > 0 && product.stock < 10;
-              
+
               return (
                 <tr key={product._id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -325,9 +347,18 @@ export default function ProductList({
                     {product.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className="font-mono text-xs">
-                      {(product as any).barcode || 'N/A'}
-                    </span>
+                    {(product as any).barcode ? (
+                      <div className="space-y-1">
+                        <div className="bg-gray-50 p-1 rounded w-20">
+                          <BarcodePreview value={(product as any).barcode} />
+                        </div>
+                        <span className="font-mono text-xs block">
+                          {(product as any).barcode}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">N/A</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">

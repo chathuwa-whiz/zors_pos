@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Printer, Download, Package } from 'lucide-react';
 import { Product } from '@/app/types/pos';
+import { useBarcode } from 'next-barcode';
 
 export default function BarcodePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -147,16 +148,9 @@ export default function BarcodePage() {
               margin: 8px 0;
               letter-spacing: 2px;
             }
-            .barcode-visual {
+            .barcode-svg {
               width: 100%;
               height: 40px;
-              background: repeating-linear-gradient(
-                90deg,
-                #000 0px,
-                #000 2px,
-                #fff 2px,
-                #fff 4px
-              );
               margin: 5px 0;
             }
             .price {
@@ -178,14 +172,15 @@ export default function BarcodePage() {
               }
             }
           </style>
+          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
         </head>
         <body>
           <h2 style="text-align: center; margin-bottom: 20px;">Product Barcodes</h2>
           <div class="barcode-grid">
-            ${products.map(product => `
+            ${products.map((product, index) => `
               <div class="barcode-item">
                 <div class="product-name">${product.name}</div>
-                <div class="barcode-visual"></div>
+                <svg class="barcode-svg" id="barcode-${index}"></svg>
                 <div class="barcode-display">${(product as any).barcode}</div>
                 <div class="price">Rs. ${product.sellingPrice.toFixed(2)}</div>
                 <div class="category">${product.category}</div>
@@ -194,15 +189,41 @@ export default function BarcodePage() {
           </div>
           <script>
             window.onload = function() {
+              ${products.map((product, index) => `
+                JsBarcode("#barcode-${index}", "${(product as any).barcode}", {
+                  format: "CODE128",
+                  width: 2,
+                  height: 40,
+                  displayValue: false
+                });
+              `).join('')}
+              
               setTimeout(function() {
                 window.print();
                 window.close();
-              }, 500);
+              }, 1000);
             }
           </script>
         </body>
       </html>
     `;
+  };
+
+  // Barcode Preview Component using next-barcode
+  const BarcodePreview = ({ value }: { value: string }) => {
+    const { inputRef } = useBarcode({
+      value,
+      options: {
+        format: 'CODE128',
+        width: 2,
+        height: 30,
+        displayValue: false,
+        background: '#ffffff',
+        lineColor: '#000000',
+      }
+    });
+
+    return <svg ref={inputRef} className="w-full h-6" />;
   };
 
   if (loading) {
@@ -317,11 +338,9 @@ export default function BarcodePage() {
                       </div>
                     </div>
 
-                    {/* Barcode Preview */}
+                    {/* Barcode Preview using next-barcode */}
                     <div className="bg-gray-50 p-3 rounded-lg mb-3">
-                      <div className="h-6 bg-gray-800 bg-opacity-20" style={{
-                        background: 'repeating-linear-gradient(90deg, #000 0px, #000 1px, #fff 1px, #fff 2px)'
-                      }}></div>
+                      <BarcodePreview value={(product as any).barcode} />
                       <div className="text-xs font-mono text-center mt-1 font-bold">
                         {(product as any).barcode}
                       </div>
