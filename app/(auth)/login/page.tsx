@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
 import { LoginRequest } from '@/app/types/user'
-import { Eye, EyeOff, User, Lock, AlertCircle, CheckCircle } from 'lucide-react'
+import { Eye, EyeOff, User, Lock, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import Image from 'next/image'
 

@@ -3,13 +3,22 @@ import connectDB from '@/app/lib/mongodb';
 import Discount from '@/app/models/Discount';
 import jwt from 'jsonwebtoken';
 
+// Define the JWT payload interface
+interface JWTPayload {
+  id: string;
+  username: string;
+  role: string;
+  iat?: number;
+  exp?: number;
+}
+
 // JWT verification helper
-const verifyToken = (token: string) => {
+const verifyToken = (token: string): JWTPayload => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     throw new Error('JWT_SECRET is not defined');
   }
-  return jwt.verify(token, secret);
+  return jwt.verify(token, secret) as JWTPayload;
 };
 
 export async function GET(request: NextRequest) {
@@ -25,7 +34,7 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Verify token
-    const decoded: any = verifyToken(token);
+    const decoded: JWTPayload = verifyToken(token);
     const userRole = decoded.role;
 
     // Only admins can fetch all discounts
@@ -37,16 +46,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(discounts);
   } catch (error: unknown) {
     console.error('Error fetching discounts:', error);
-    
+
     // Handle specific JWT errors
     if (error instanceof jwt.TokenExpiredError) {
       return NextResponse.json({ error: 'Token expired' }, { status: 401 });
     }
-    
+
     if (error instanceof jwt.JsonWebTokenError) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
-    
+
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
@@ -65,7 +74,7 @@ export async function POST(request: NextRequest) {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Verify token
-    const decoded: any = verifyToken(token);
+    const decoded: JWTPayload = verifyToken(token);
     const userRole = decoded.role;
 
     // Only admins can create discounts
@@ -109,16 +118,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newDiscount, { status: 201 });
   } catch (error: unknown) {
     console.error('Error creating discount:', error);
-    
+
     // Handle specific JWT errors
     if (error instanceof jwt.TokenExpiredError) {
       return NextResponse.json({ error: 'Token expired' }, { status: 401 });
     }
-    
+
     if (error instanceof jwt.JsonWebTokenError) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
-    
+
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
@@ -137,7 +146,7 @@ export async function PUT(request: NextRequest) {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Verify token
-    const decoded: any = verifyToken(token);
+    const decoded: JWTPayload = verifyToken(token);
     const userRole = decoded.role;
 
     // Only admins can update discounts
@@ -157,7 +166,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Validate percentage if provided
-    let discountPercentage;
+    let discountPercentage: number | undefined;
     if (percentage !== undefined) {
       discountPercentage = Number(percentage);
       if (isNaN(discountPercentage) || discountPercentage < 0 || discountPercentage > 100) {
@@ -173,7 +182,13 @@ export async function PUT(request: NextRequest) {
       await Discount.updateMany({ isGlobal: true, _id: { $ne: id } }, { isGlobal: false });
     }
 
-    const updateData: any = {};
+    const updateData: Partial<{
+      name: string;
+      percentage: number;
+      isGlobal: boolean;
+      updatedAt: Date;
+    }> = {};
+
     if (name !== undefined) updateData.name = name;
     if (percentage !== undefined) updateData.percentage = discountPercentage;
     if (isGlobal !== undefined) updateData.isGlobal = isGlobal;
@@ -191,16 +206,16 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(updatedDiscount);
   } catch (error: unknown) {
     console.error('Error updating discount:', error);
-    
+
     // Handle specific JWT errors
     if (error instanceof jwt.TokenExpiredError) {
       return NextResponse.json({ error: 'Token expired' }, { status: 401 });
     }
-    
+
     if (error instanceof jwt.JsonWebTokenError) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
-    
+
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
@@ -219,7 +234,7 @@ export async function DELETE(request: NextRequest) {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Verify token
-    const decoded: any = verifyToken(token);
+    const decoded: JWTPayload = verifyToken(token);
     const userRole = decoded.role;
 
     // Only admins can delete discounts
@@ -243,16 +258,16 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ message: 'Discount deleted successfully' });
   } catch (error: unknown) {
     console.error('Error deleting discount:', error);
-    
+
     // Handle specific JWT errors
     if (error instanceof jwt.TokenExpiredError) {
       return NextResponse.json({ error: 'Token expired' }, { status: 401 });
     }
-    
+
     if (error instanceof jwt.JsonWebTokenError) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
-    
+
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }

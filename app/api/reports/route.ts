@@ -7,6 +7,14 @@ import Return from '@/app/models/Return';
 import Customer from '@/app/models/Customer';
 import User from '@/app/models/User';
 
+// Define interface for date filter
+interface DateFilter {
+    createdAt?: {
+        $gte?: Date;
+        $lte?: Date;
+    };
+}
+
 export async function GET(request: NextRequest) {
     try {
         await connectDB();
@@ -17,7 +25,7 @@ export async function GET(request: NextRequest) {
         const endDate = searchParams.get('endDate');
 
         // Calculate date range
-        let dateFilter: any = {};
+        let dateFilter: DateFilter = {};
         if (startDate && endDate) {
             dateFilter = {
                 createdAt: {
@@ -164,15 +172,15 @@ export async function GET(request: NextRequest) {
             {
                 $group: {
                     _id: null,
-                    totalRevenue: { 
-                        $sum: { 
-                            $multiply: ['$cart.quantity', '$cart.product.sellingPrice'] 
-                        } 
+                    totalRevenue: {
+                        $sum: {
+                            $multiply: ['$cart.quantity', '$cart.product.sellingPrice']
+                        }
                     },
-                    totalCost: { 
-                        $sum: { 
-                            $multiply: ['$cart.quantity', '$cart.product.costPrice'] 
-                        } 
+                    totalCost: {
+                        $sum: {
+                            $multiply: ['$cart.quantity', '$cart.product.costPrice']
+                        }
                     }
                 }
             },
@@ -197,11 +205,11 @@ export async function GET(request: NextRequest) {
             }
         ]);
 
-        const profitData = netProfitData[0] || { 
-            totalRevenue: 0, 
-            totalCost: 0, 
-            netProfit: 0, 
-            profitMargin: 0 
+        const profitData = netProfitData[0] || {
+            totalRevenue: 0,
+            totalCost: 0,
+            netProfit: 0,
+            profitMargin: 0
         };
 
         const reportData = {

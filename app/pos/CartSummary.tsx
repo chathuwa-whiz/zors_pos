@@ -84,7 +84,8 @@ export default function CartSummary({
     return false;
   };
 
-  const handlePaymentDetailsUpdate = () => {
+  // Update payment details whenever relevant values change
+  useEffect(() => {
     const paymentDetails = {
       method: paymentMethod,
       ...(paymentMethod === 'cash' ? {
@@ -98,11 +99,7 @@ export default function CartSummary({
     };
 
     onUpdateActiveOrder({ paymentDetails });
-  };
-
-  useEffect(() => {
-    handlePaymentDetailsUpdate();
-  }, [paymentMethod, cashGiven, invoiceId, selectedBank]);
+  }, [paymentMethod, cashGiven, invoiceId, selectedBank, selectedBankCharge?.charge, totals.total, onUpdateActiveOrder]);
 
   return (
     <div className="border-t-2 border-green-200 p-6 flex-shrink-0 bg-gradient-to-b from-green-50 to-white">
@@ -201,22 +198,20 @@ export default function CartSummary({
           <div className="flex space-x-3">
             <button
               onClick={() => setPaymentMethod('cash')}
-              className={`flex-1 py-4 px-6 rounded-xl text-lg font-bold transition-all duration-200 active:scale-95 flex items-center justify-center space-x-2 ${
-                paymentMethod === 'cash'
+              className={`flex-1 py-4 px-6 rounded-xl text-lg font-bold transition-all duration-200 active:scale-95 flex items-center justify-center space-x-2 ${paymentMethod === 'cash'
                   ? 'bg-lime-400 text-green-900 shadow-lg'
                   : 'bg-white text-green-900 border-2 border-green-300 hover:bg-lime-50'
-              }`}
+                }`}
             >
               <Banknote className="w-6 h-6" />
               <span>Cash</span>
             </button>
             <button
               onClick={() => setPaymentMethod('card')}
-              className={`flex-1 py-4 px-6 rounded-xl text-lg font-bold transition-all duration-200 active:scale-95 flex items-center justify-center space-x-2 ${
-                paymentMethod === 'card'
+              className={`flex-1 py-4 px-6 rounded-xl text-lg font-bold transition-all duration-200 active:scale-95 flex items-center justify-center space-x-2 ${paymentMethod === 'card'
                   ? 'bg-lime-400 text-green-900 shadow-lg'
                   : 'bg-white text-green-900 border-2 border-green-300 hover:bg-lime-50'
-              }`}
+                }`}
             >
               <CreditCard className="w-6 h-6" />
               <span>Card</span>
@@ -287,11 +282,10 @@ export default function CartSummary({
           <button
             onClick={handleCompleteOrder}
             disabled={!isPaymentValid()}
-            className={`w-full py-4 rounded-xl font-bold text-xl transition-all duration-200 active:scale-95 flex items-center justify-center space-x-2 ${
-              isPaymentValid()
+            className={`w-full py-4 rounded-xl font-bold text-xl transition-all duration-200 active:scale-95 flex items-center justify-center space-x-2 ${isPaymentValid()
                 ? 'bg-green-900 text-white hover:bg-green-800 shadow-lg'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+              }`}
           >
             <Calculator className="w-6 h-6" />
             <span>Complete Order</span>
