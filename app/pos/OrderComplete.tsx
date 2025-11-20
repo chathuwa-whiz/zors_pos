@@ -16,6 +16,15 @@ interface OrderCompleteProps {
   tableName?: string;
 }
 
+type ReceiptTemplate = {
+  logoUrl?: string;
+  companyName?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  footerGreeting?: string;
+};
+
 export default function OrderComplete({
   totals,
   items = [],
@@ -29,9 +38,28 @@ export default function OrderComplete({
   tableName
 }: OrderCompleteProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [template, setTemplate] = useState<ReceiptTemplate>({
+    logoUrl: '',
+    companyName: 'ZORS POS',
+    address: '',
+    phone: '',
+    email: '',
+    footerGreeting: 'Thank you for your business!'
+  });
 
   useEffect(() => {
     setCurrentTime(new Date());
+  }, []);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('orderCompleteTemplate');
+      if (raw) {
+        setTemplate(prev => ({ ...prev, ...JSON.parse(raw) }));
+      }
+    } catch (e) {
+      console.error('Failed to load receipt template', e);
+    }
   }, []);
 
   const handlePrint = () => {
@@ -42,9 +70,6 @@ export default function OrderComplete({
   };
 
   const { subtotal, couponDiscount, tableCharge, deliveryCharge, total, discountPercentage, discountAmount } = totals;
-
-  console.log('OrderComplete - Totals:', totals);
-  console.log('OrderComplete - PaymentDetails:', paymentDetails);
 
   // Calculate final total including bank charges if card payment
   const bankServiceCharge = paymentDetails?.bankServiceCharge || 0;
@@ -81,14 +106,19 @@ export default function OrderComplete({
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6 print:shadow-none print:rounded-none">
           {/* Header */}
           <div className="text-center border-b pb-4 mb-4">
-            <h1 className="text-2xl font-bold text-gray-900">ZORS POS</h1>
-            <p className="text-sm text-gray-600">Point of Sale System</p>
-            <p className="text-xs text-gray-500 mt-1">
-              📍 Your Business Address Here
-            </p>
-            <p className="text-xs text-gray-500">
-              📞 Your Phone Number | 📧 Your Email
-            </p>
+            {template.logoUrl && (
+              <img 
+                src={template.logoUrl} 
+                alt="Company Logo" 
+                className="mx-auto mb-2 max-h-20 object-contain" 
+              />
+            )}
+            <h1 className="text-2xl font-bold text-gray-900">{template.companyName || 'ZORS POS'}</h1>
+            {template.address && <p className="text-sm text-gray-600 whitespace-pre-line">{template.address}</p>}
+            <div className="text-xs text-gray-500 mt-1">
+              {template.phone && <span>📞 {template.phone} </span>}
+              {template.email && <span className="ml-2">| 📧 {template.email}</span>}
+            </div>
           </div>
 
           {/* Receipt Details */}
@@ -122,42 +152,24 @@ export default function OrderComplete({
           {/* Customer Information */}
           {customer && (customer.name || customer.phone || customer.email) && (
             <div className="border-b pb-4 mb-4">
-              <h3 className="font-semibold text-gray-700 mb-2 flex items-center">
-                <User className="w-4 h-4 mr-2" />
-                Customer Information
-              </h3>
-              <div className="text-sm space-y-1">
+              <h3 className="font-semibold text-gray-700 mb-2">Customer Information</h3>
+              <div className="space-y-1 text-sm">
                 {customer.name && (
-                  <div className="flex items-center">
-                    <span className="text-gray-600 w-16">Name:</span>
-                    <span className="font-medium">{customer.name}</span>
-                  </div>
-                )}
-                {customer._id && (
-                  <div className="flex items-center">
-                    <span className="text-gray-600 w-16">ID:</span>
-                    <span className="text-xs text-gray-500">{customer._id}</span>
+                  <div className="flex items-center text-gray-600">
+                    <User className="w-4 h-4 mr-2" />
+                    {customer.name}
                   </div>
                 )}
                 {customer.phone && (
-                  <div className="flex items-center">
-                    <Phone className="w-3 h-3 mr-1" />
-                    <span className="text-gray-600 w-14">Phone:</span>
-                    <span>{customer.phone}</span>
+                  <div className="flex items-center text-gray-600">
+                    <Phone className="w-4 h-4 mr-2" />
+                    {customer.phone}
                   </div>
                 )}
                 {customer.email && (
-                  <div className="flex items-center">
-                    <Mail className="w-3 h-3 mr-1" />
-                    <span className="text-gray-600 w-14">Email:</span>
-                    <span>{customer.email}</span>
-                  </div>
-                )}
-                {customer.birthDate && (
-                  <div className="flex items-center">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    <span className="text-gray-600 w-14">DOB:</span>
-                    <span>{new Date(customer.birthDate).toLocaleDateString()}</span>
+                  <div className="flex items-center text-gray-600">
+                    <Mail className="w-4 h-4 mr-2" />
+                    {customer.email}
                   </div>
                 )}
               </div>
@@ -168,31 +180,24 @@ export default function OrderComplete({
           <div className="border-b pb-4 mb-4">
             <h3 className="font-semibold text-gray-700 mb-3">Items Ordered</h3>
             {items.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {items.map((item, index) => (
                   <div key={index} className="flex justify-between text-sm">
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900">{item.product.name}</p>
-                      <div className="text-gray-500 text-xs">
-                        <span>{item.quantity} × {formatCurrency(item.product.sellingPrice)}</span>
-                        {item.product.discount && item.product.discount > 0 && (
-                          <span className="ml-2 text-green-600">
-                            ({item.product.discount}% off)
-                          </span>
-                        )}
-                      </div>
+                      <span className="font-medium">{item.product.name}</span>
                       {item.note && (
-                        <p className="text-xs text-gray-500 italic">Note: {item.note}</p>
+                        <p className="text-xs text-gray-500 ml-2">Note: {item.note}</p>
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">{formatCurrency(item.subtotal)}</p>
+                      <span className="text-gray-600">x{item.quantity}</span>
+                      <span className="ml-4 font-medium">{formatCurrency(item.subtotal)}</span>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">No items found</p>
+              <p className="text-sm text-gray-500">No items in order</p>
             )}
           </div>
 
@@ -200,59 +205,53 @@ export default function OrderComplete({
           <div className="space-y-2 mb-4">
             <h3 className="font-semibold text-gray-700 mb-3">Billing Summary</h3>
 
-            {/* Subtotal */}
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Subtotal:</span>
-              <span>{formatCurrency(subtotal)}</span>
+              <span className="text-gray-600">Subtotal</span>
+              <span className="font-medium">{formatCurrency(subtotal)}</span>
             </div>
 
-            {/* Discounts */}
             {couponDiscount > 0 && (
               <div className="flex justify-between text-sm text-green-600">
-                <span>Coupon Discount:</span>
+                <span>Coupon Discount</span>
                 <span>-{formatCurrency(couponDiscount)}</span>
               </div>
             )}
 
             {discountAmount > 0 && (
               <div className="flex justify-between text-sm text-green-600">
-                <span>Discount ({discountPercentage}%):</span>
+                <span>Discount ({discountPercentage}%)</span>
                 <span>-{formatCurrency(discountAmount)}</span>
               </div>
             )}
 
-            {/* Additional Charges */}
             {tableCharge > 0 && (
-              <div className="flex justify-between text-sm text-blue-600">
-                <span>Table Charge:</span>
-                <span>+{formatCurrency(tableCharge)}</span>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Table Charge</span>
+                <span className="font-medium">{formatCurrency(tableCharge)}</span>
               </div>
             )}
 
             {deliveryCharge && deliveryCharge > 0 && (
-              <div className="flex justify-between text-sm text-purple-600">
-                <span>Delivery Charge:</span>
-                <span>+{formatCurrency(deliveryCharge)}</span>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Delivery Charge</span>
+                <span className="font-medium">{formatCurrency(deliveryCharge)}</span>
               </div>
             )}
 
-            {/* Order Total */}
             <div className="flex justify-between text-sm font-medium border-t pt-2">
-              <span>Order Total:</span>
+              <span className="text-gray-700">Total</span>
               <span>{formatCurrency(total)}</span>
             </div>
 
-            {/* Bank Service Charge */}
             {bankServiceCharge > 0 && (
               <div className="flex justify-between text-sm text-orange-600">
-                <span>Service Charge ({paymentDetails?.bankName}):</span>
-                <span>+{formatCurrency(bankServiceCharge)}</span>
+                <span>Bank Service Charge</span>
+                <span>{formatCurrency(bankServiceCharge)}</span>
               </div>
             )}
 
-            {/* Final Total */}
             <div className="flex justify-between font-bold text-lg border-t pt-2 text-gray-900">
-              <span>Final Total:</span>
+              <span>Final Total</span>
               <span>{formatCurrency(finalTotal)}</span>
             </div>
           </div>
@@ -260,56 +259,47 @@ export default function OrderComplete({
           {/* Payment Information */}
           {paymentDetails && (
             <div className="border-t pt-4 mb-4">
-              <h3 className="font-semibold text-gray-700 mb-3">Payment Information</h3>
-              <div className="space-y-2 text-sm">
+              <h3 className="font-semibold text-gray-700 mb-2">Payment Information</h3>
+              <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Payment Method:</span>
                   <span className="font-medium capitalize">{paymentDetails.method}</span>
                 </div>
-
-                {paymentDetails.method === 'cash' && (
+                {paymentDetails.method === 'cash' && paymentDetails.cashGiven && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Amount Paid:</span>
-                      <span>{formatCurrency(paymentDetails.cashGiven || 0)}</span>
+                      <span className="text-gray-600">Cash Given:</span>
+                      <span>{formatCurrency(paymentDetails.cashGiven)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Change:</span>
-                      <span className="font-medium text-green-600">
-                        {formatCurrency(paymentDetails.change || 0)}
-                      </span>
-                    </div>
-                  </>
-                )}
-
-                {paymentDetails.method === 'card' && (
-                  <>
-                    {paymentDetails.invoiceId && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Transaction ID:</span>
-                        <span className="font-medium">{paymentDetails.invoiceId}</span>
-                      </div>
-                    )}
-                    {paymentDetails.bankName && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Payment Method:</span>
-                        <span>{paymentDetails.bankName}</span>
+                    {paymentDetails.change !== undefined && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Change:</span>
+                        <span className="font-medium">{formatCurrency(paymentDetails.change)}</span>
                       </div>
                     )}
                   </>
                 )}
-
-                <div className="flex justify-between font-medium">
-                  <span className="text-gray-600">Status:</span>
-                  <span className="text-green-600">✓ Paid</span>
-                </div>
+                {paymentDetails.method === 'card' && paymentDetails.invoiceId && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Invoice ID:</span>
+                    <span className="font-mono text-xs">{paymentDetails.invoiceId}</span>
+                  </div>
+                )}
+                {paymentDetails.bankName && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Bank:</span>
+                    <span>{paymentDetails.bankName}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           {/* Footer */}
           <div className="text-center pt-4 border-t">
-            <p className="text-xs text-gray-500 mb-2">Thank you for your business!</p>
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              {template.footerGreeting || 'Thank you for your business!'}
+            </p>
             <p className="text-xs text-gray-500 mb-2">Please keep this receipt for your records</p>
             <div className="text-xs text-gray-400 space-y-1">
               <p>🔄 Return Policy: 7 days with receipt</p>
@@ -318,13 +308,6 @@ export default function OrderComplete({
             </div>
           </div>
 
-          {/* QR Code Placeholder */}
-          <div className="text-center mt-4 pt-4 border-t">
-            <div className="w-16 h-16 bg-gray-200 mx-auto mb-2 flex items-center justify-center text-xs text-gray-500">
-              QR Code
-            </div>
-            <p className="text-xs text-gray-500">Scan for digital receipt</p>
-          </div>
         </div>
 
         {/* Action Buttons */}

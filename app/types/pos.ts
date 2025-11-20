@@ -90,3 +90,12 @@ export interface User {
   email: string;
   role: 'admin' | 'staff';
 }
+
+export interface ReceiptTemplate {
+  logoUrl?: string;
+  companyName?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  footerGreeting?: string;
+};

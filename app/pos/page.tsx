@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Product, Order, Coupon, OrderTotals, CartItem } from '@/app/types/pos';
 import { User } from '@/app/types/user';
 import { useRouter } from 'next/navigation';
@@ -278,14 +278,15 @@ export default function POSSystem() {
   };
 
   // Update active order
-  const updateActiveOrder = (updates: Partial<Order>) => {
-    const updatedOrders = orders.map(order =>
-      order._id === activeOrderId
-        ? { ...order, ...updates }
-        : order
+  const updateActiveOrder = useCallback((updates: Partial<Order>) => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order._id === activeOrderId
+          ? { ...order, ...updates }
+          : order
+      )
     );
-    setOrders(updatedOrders);
-  };
+  }, [activeOrderId]);
 
   // Add to cart with stock validation
   const addToCart = (product: Product) => {
