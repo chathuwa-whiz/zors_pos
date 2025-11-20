@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Package, Plus, Search, Filter, Grid, List } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Package, Plus, Filter, Grid, List } from 'lucide-react';
 import { Product } from '@/app/types/pos';
 import ProductList from './ProductList';
 import ProductForm from './ProductForm';
@@ -29,7 +29,7 @@ export default function ProductsPage() {
   const [selectedSupplier, setSelectedSupplier] = useState('all');
 
   // Fetch products
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -49,11 +49,11 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, selectedCategory]);
 
   useEffect(() => {
     fetchProducts();
-  }, [searchQuery, selectedCategory]); // Add dependencies for auto-fetch
+  }, [fetchProducts]);
 
   // Filter products based on search and filters
   useEffect(() => {
@@ -61,7 +61,7 @@ export default function ProductsPage() {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (product as any).barcode?.toLowerCase().includes(searchQuery.toLowerCase()) || // Add barcode search
+        product.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) || // Add barcode search
         product.supplier?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Package, RotateCcw, Search, Filter, Calendar, User, Plus, TrendingUp, AlertCircle, RefreshCw, Download } from 'lucide-react';
+import { Package, RotateCcw, Search, Filter, Calendar, Plus, TrendingUp, AlertCircle, RefreshCw, Download } from 'lucide-react';
 import { Product } from '@/app/types/pos';
 import { User as UserType } from '@/app/types/user';
 import { useRouter } from 'next/navigation';
@@ -96,7 +96,7 @@ export default function ReturnsPage() {
 
     // Filter returns based on search, type, and date range
     useEffect(() => {
-        let filtered = returns.filter(returnItem => {
+        const filtered = returns.filter(returnItem => {
             const matchesSearch = returnItem.product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 returnItem.reason.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 returnItem.cashier.username.toLowerCase().includes(searchQuery.toLowerCase());

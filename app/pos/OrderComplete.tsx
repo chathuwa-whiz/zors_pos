@@ -36,7 +36,9 @@ export default function OrderComplete({
 
   const handlePrint = () => {
     window.print();
-    onBackToPOS && onBackToPOS();
+    if (onBackToPOS) {
+      onBackToPOS();
+    }
   };
 
   const { subtotal, couponDiscount, tableCharge, deliveryCharge, total, discountPercentage, discountAmount } = totals;

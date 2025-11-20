@@ -30,7 +30,4 @@ const ProductSchema = new Schema<IProduct>({
   timestamps: true
 });
 
-// Add index for barcode for faster lookups
-ProductSchema.index({ barcode: 1 });
-
 export default mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);

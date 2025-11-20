@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
-  BarChart3,
   TrendingUp,
   TrendingDown,
   Package,
@@ -10,12 +9,10 @@ import {
   ShoppingCart,
   RotateCcw,
   Calendar,
-  Filter,
   Download,
   RefreshCw,
   DollarSign,
   AlertTriangle,
-  Eye,
   ChevronRight,
   CreditCard,
   Banknote
@@ -95,13 +92,9 @@ export default function ReportsPage() {
   const [customDateRange, setCustomDateRange] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [selectedView, setSelectedView] = useState<'overview' | 'sales' | 'inventory' | 'customers'>('overview');
+  // const [selectedView, setSelectedView] = useState<'overview' | 'sales' | 'inventory' | 'customers'>('overview');
 
-  useEffect(() => {
-    fetchReports();
-  }, [period, startDate, endDate]);
-
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     try {
       setLoading(true);
       let url = `/api/reports?period=${period}`;
@@ -121,7 +114,11 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period, startDate, endDate, customDateRange]);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   const exportToCSV = () => {
     if (!reportData) return;
