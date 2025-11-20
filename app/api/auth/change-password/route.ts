@@ -4,7 +4,6 @@ import User from "@/app/models/User";
 import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
-  await dbConnect();
   const { oldPassword, newPassword } = await req.json();
 
   // Find the currently logged-in admin user (replace with your auth logic)

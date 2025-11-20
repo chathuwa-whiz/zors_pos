@@ -8,9 +8,6 @@ import jwt from "jsonwebtoken";
 export async function POST(req: NextRequest) {
 
     try {
-
-        await connectDB();
-
         const { username, password }: LoginRequest = await req.json();
 
         // validations

@@ -14,7 +14,7 @@ const verifyToken = (token: string) => {
 
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
+    
 
     // Get authorization header
     const authHeader = request.headers.get('authorization');
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB();
+    
 
     // Get authorization header
     const authHeader = request.headers.get('authorization');
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    await connectDB();
+    
 
     // Get authorization header
     const authHeader = request.headers.get('authorization');
@@ -208,7 +208,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    await connectDB();
+    
 
     // Get authorization header
     const authHeader = request.headers.get('authorization');

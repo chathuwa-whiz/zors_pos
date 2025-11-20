@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
     try {
-        await connectDB();
+        
 
         const orders = await OrderModel.find();
 
@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
     try {
-        await connectDB();
+        
 
         const orderData = await req.json();
 

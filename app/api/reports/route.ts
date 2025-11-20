@@ -9,7 +9,7 @@ import User from '@/app/models/User';
 
 export async function GET(request: NextRequest) {
     try {
-        await connectDB();
+        
 
         const { searchParams } = new URL(request.url);
         const period = searchParams.get('period') || '30'; // days

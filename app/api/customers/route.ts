@@ -5,9 +5,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
     try {
-
-        await connectDB();
-
         const { name, email, phone, birthDate }: Customer = await req.json();
 
         const customer = new CustomerModel({ name, email, phone, birthDate });
@@ -25,9 +22,6 @@ export async function POST(req: NextRequest) {
 export async function GET() {
 
     try {
-
-        await connectDB();
-
         const customers = await CustomerModel.find();
 
         return NextResponse.json(customers);

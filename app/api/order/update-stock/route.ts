@@ -15,7 +15,7 @@ interface CartItem {
 
 export async function POST(req: NextRequest) {
     try {
-        await connectDB();
+        
 
         const { cartItems }: { cartItems: CartItem[] } = await req.json();
 

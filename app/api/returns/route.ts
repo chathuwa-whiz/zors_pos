@@ -7,8 +7,6 @@ import User from '@/app/models/User';
 
 export async function GET() {
   try {
-    await dbConnect();
-
     // Fetch returns from database with product details
     const returns = await Return.find();
 

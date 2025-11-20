@@ -4,7 +4,6 @@ import dbConnect from '@/app/lib/mongodb';
 
 export async function GET() {
   try {
-    await dbConnect();
     const categories = await Category.find();
     return NextResponse.json({ success: true, data: categories });
   } catch (error: unknown) {
@@ -15,7 +14,6 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await dbConnect();
     const body = await request.json();
     if (!body.name) {
       return NextResponse.json(

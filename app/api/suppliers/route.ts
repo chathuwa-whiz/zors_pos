@@ -4,7 +4,7 @@ import connectDB from '@/app/lib/mongodb';
 
 export async function GET() {
   try {
-    await connectDB();
+    
     const suppliers = await Supplier.find();
     return NextResponse.json(suppliers);
   } catch (error: unknown) {
@@ -15,7 +15,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await connectDB();
+    
     const body = await request.json();
     const supplier = await Supplier.create(body);
     return NextResponse.json(supplier, { status: 201 });
