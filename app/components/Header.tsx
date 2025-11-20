@@ -107,7 +107,7 @@ export default function Header() {
                         </motion.div>
 
                         {/* Center - Quick Actions (Desktop) */}
-                        <div className="hidden lg:flex items-center space-x-4">
+                        {user && <div className="hidden lg:flex items-center space-x-4">
                             {lowStockCount > 0 && (
                                 <motion.div
                                     initial={{ scale: 0 }}
@@ -120,7 +120,7 @@ export default function Header() {
                                     </span>
                                 </motion.div>
                             )}
-                        </div>
+                        </div>}
 
                         {/* Right Section - User Info & Actions */}
                         <div className="flex items-center space-x-3">
