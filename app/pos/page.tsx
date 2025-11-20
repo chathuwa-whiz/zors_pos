@@ -103,6 +103,7 @@ export default function POSSystem() {
       const data: Product[] = await response.json();
       setCategories(['All', ...Array.from(new Set(data.map(p => p.category)))]);
       setProducts(data);
+      console.log('Products refreshed from database');
     } catch (err) {
       console.error(err);
     } finally {
@@ -301,15 +302,33 @@ export default function POSSystem() {
       return;
     }
 
+    // Optimistically update the product stock in the UI
+    setProducts(prevProducts =>
+      prevProducts.map(p =>
+        p._id === product._id
+          ? { ...p, stock: p.stock - 1 }
+          : p
+      )
+    );
+
     if (existingItem) {
       const updatedCart = activeOrder.cart.map(item =>
         item.product._id === product._id
-          ? { ...item, quantity: item.quantity + 1, subtotal: (item.quantity + 1) * product.sellingPrice }
+          ? { 
+              ...item, 
+              quantity: item.quantity + 1, 
+              subtotal: (item.quantity + 1) * product.sellingPrice,
+              product: { ...item.product, stock: item.product.stock - 1 } // Update product stock in cart
+            }
           : item
       );
       updateActiveOrder({ cart: updatedCart });
     } else {
-      const updatedCart = [...activeOrder.cart, { product, quantity: 1, subtotal: product.sellingPrice }];
+      const updatedCart = [...activeOrder.cart, { 
+        product: { ...product, stock: product.stock - 1 }, 
+        quantity: 1, 
+        subtotal: product.sellingPrice 
+      }];
       updateActiveOrder({ cart: updatedCart });
     }
   };
@@ -339,19 +358,51 @@ export default function POSSystem() {
   const updateQuantity = (productId: string, change: number) => {
     if (!activeOrder) return;
 
+    const cartItem = activeOrder.cart.find(item => item.product._id === productId);
+    if (!cartItem) return;
+
+    const newQuantity = cartItem.quantity + change;
+
+    // If reducing quantity, add back to product stock
+    if (change < 0) {
+      setProducts(prevProducts =>
+        prevProducts.map(p =>
+          p._id === productId
+            ? { ...p, stock: p.stock + Math.abs(change) }
+            : p
+        )
+      );
+    } else {
+      // If increasing quantity, check stock and reduce
+      const product = products.find(p => p._id === productId);
+      if (!product || product.stock < change) {
+        alert(`Cannot add more items. Only ${product?.stock || 0} in stock.`);
+        return;
+      }
+
+      setProducts(prevProducts =>
+        prevProducts.map(p =>
+          p._id === productId
+            ? { ...p, stock: p.stock - change }
+            : p
+        )
+      );
+    }
+
     const updatedCart = activeOrder.cart.map(item => {
       if (item.product._id === productId) {
-        const newQuantity = Math.max(0, item.quantity + change);
-
-        // Check stock availability when increasing quantity
-        if (change > 0 && newQuantity > item.product.stock) {
-          alert(`Cannot add more items. Only ${item.product.stock} in stock.`);
-          return item; // Return unchanged item
+        if (newQuantity === 0) {
+          return null;
         }
-
-        return newQuantity === 0
-          ? null
-          : { ...item, quantity: newQuantity, subtotal: newQuantity * item.product.sellingPrice };
+        return { 
+          ...item, 
+          quantity: newQuantity, 
+          subtotal: newQuantity * item.product.sellingPrice,
+          product: { 
+            ...item.product, 
+            stock: item.product.stock + (change < 0 ? Math.abs(change) : -change) 
+          }
+        };
       }
       return item;
     }).filter(Boolean) as CartItem[];
@@ -362,6 +413,19 @@ export default function POSSystem() {
   // Remove from cart
   const removeFromCart = (productId: string) => {
     if (!activeOrder) return;
+    
+    const cartItem = activeOrder.cart.find(item => item.product._id === productId);
+    if (!cartItem) return;
+
+    // Return stock to products when removing from cart
+    setProducts(prevProducts =>
+      prevProducts.map(p =>
+        p._id === productId
+          ? { ...p, stock: p.stock + cartItem.quantity }
+          : p
+      )
+    );
+
     const updatedCart = activeOrder.cart.filter(item => item.product._id !== productId);
     updateActiveOrder({ cart: updatedCart });
   };
@@ -446,7 +510,7 @@ export default function POSSystem() {
       const result = await response.json();
       console.log('Stock updated successfully:', result);
 
-      // Refresh products to get updated stock values
+      // Refresh products to get updated stock values from database
       await fetchProducts();
 
       return result;
@@ -472,24 +536,8 @@ export default function POSSystem() {
     console.log('Payment details:', activeOrder.paymentDetails); // Debug log
     console.log('Calculated totals:', currentTotals); // Debug log
 
-    // Validate stock availability before completing order
-    const stockValidationErrors = [];
-    for (const item of activeOrder.cart) {
-      const currentProduct = products.find(p => p._id === item.product._id);
-      if (!currentProduct) {
-        stockValidationErrors.push(`Product ${item.product.name} not found`);
-        continue;
-      }
-      if (currentProduct.stock < item.quantity) {
-        stockValidationErrors.push(`Insufficient stock for ${item.product.name}. Available: ${currentProduct.stock}, Required: ${item.quantity}`);
-      }
-    }
-
-    if (stockValidationErrors.length > 0) {
-      alert(`Cannot complete order:\n${stockValidationErrors.join('\n')}`);
-      return;
-    }
-
+    // No need to validate stock again since we've been tracking it optimistically
+    
     // Create final order data with all required fields
     const finalOrderData = {
       ...activeOrder,
@@ -542,13 +590,14 @@ export default function POSSystem() {
       const savedOrder = await response.json();
       console.log('Order saved to database:', savedOrder);
 
-      // Update product stock
+      // Update product stock in database
       try {
         await updateProductStock(activeOrder.cart);
-        console.log('Product stock updated successfully');
+        console.log('Product stock updated successfully in database');
       } catch (stockError) {
         console.error('Failed to update product stock:', stockError);
-        // You might want to show a warning but still complete the order
+        // Revert optimistic updates if stock update fails
+        await fetchProducts();
         alert('Order completed but failed to update stock. Please manually adjust inventory.');
       }
 
@@ -595,7 +644,8 @@ export default function POSSystem() {
       setShowCheckout(false);
     } catch (error) {
       console.error('Error saving order:', error);
-      // You could add error handling UI here
+      // Revert optimistic updates on error
+      await fetchProducts();
       alert('Failed to save order. Please try again.');
     }
   };
@@ -622,6 +672,8 @@ export default function POSSystem() {
     };
     setOrders([initialOrder]);
     setActiveOrderId('1');
+    // Refresh products to get fresh stock data
+    fetchProducts();
   };
 
   if (!user) {
@@ -656,6 +708,8 @@ export default function POSSystem() {
         onBackToPOS={() => {
           setOrderComplete(false);
           setCompletedOrderData(null);
+          // Refresh products when returning to POS
+          fetchProducts();
         }}
       />
     );
