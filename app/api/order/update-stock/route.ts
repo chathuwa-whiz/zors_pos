@@ -1,4 +1,3 @@
-import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -17,8 +16,6 @@ interface CartItem {
 
 export async function POST(req: NextRequest) {
     try {
-        
-
         const { cartItems }: { cartItems: CartItem[] } = await req.json();
 
         if (!cartItems || !Array.isArray(cartItems)) {
@@ -48,11 +45,16 @@ export async function POST(req: NextRequest) {
                 const newStock = product.stock - item.quantity;
 
                 // Update the product stock
-                // const updatedProduct = await Product.findByIdAndUpdate(
-                //     item.product._id,
-                //     { stock: newStock },
-                //     { new: true, runValidators: true }
-                // );
+                const updatedProduct = await Product.findByIdAndUpdate(
+                    item.product._id,
+                    { stock: newStock },
+                    { new: true, runValidators: true }
+                );
+
+                if (!updatedProduct) {
+                    errors.push(`Failed to update stock for product ${product.name}`);
+                    continue;
+                }
 
                 stockUpdates.push({
                     productId: item.product._id,
