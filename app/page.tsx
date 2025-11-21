@@ -317,20 +317,11 @@ export default function HomePage() {
                   }`}>
                   {user?.role?.toUpperCase()}
                 </span>
-                <span className="text-green-700 text-sm">•</span>
-                <span className="text-green-700 text-sm font-medium">
-                  {new Date().toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
               </div>
             </div>
           </div>
 
-          <motion.p
+          {/* <motion.p
             className="text-xl text-green-800 max-w-2xl mx-auto leading-relaxed"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -340,7 +331,7 @@ export default function HomePage() {
               ? 'Take control of your business operations with comprehensive management tools and real-time insights.'
               : 'Process transactions efficiently with our streamlined Point of Sale system designed for speed and accuracy.'
             }
-          </motion.p>
+          </motion.p> */}
         </motion.div>
 
         {/* Low Stock Warning */}
@@ -420,7 +411,14 @@ export default function HomePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-800 text-sm font-medium">Last Access</p>
-                <p className="text-2xl font-bold text-green-900">Today</p>
+                <span className="text-2xl font-bold text-green-900">
+                  {new Date().toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    // year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
               </div>
               <Clock className="w-8 h-8 text-green-600" />
             </div>
