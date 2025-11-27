@@ -59,7 +59,8 @@ export default function OrdersPanel({
   onApplyCoupon,
   onCompleteOrder,
   onShowCustomerModal,
-  onBarcodeScanned
+  onBarcodeScanned,
+  resetPOSData
 }: OrdersPanelProps) {
   return (
     <div className="flex-1 bg-gradient-to-br from-white to-green-50 border-l-4 border-green-900 flex flex-col max-h-screen">
@@ -74,6 +75,7 @@ export default function OrdersPanel({
         onDragOver={onDragOver}
         onDrop={onDrop}
         onBarcodeScanned={onBarcodeScanned}
+        resetPOSData={resetPOSData}
       />
 
       <div className='overflow-y-auto flex-1'>

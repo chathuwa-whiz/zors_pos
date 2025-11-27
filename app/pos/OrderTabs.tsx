@@ -26,7 +26,8 @@ export default function OrderTabs({
   onDragStart,
   onDragOver,
   onDrop,
-  onBarcodeScanned
+  onBarcodeScanned,
+  resetPOSData
 }: OrderTabsProps) {
   const [barcodeInput, setBarcodeInput] = useState('');
   const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -72,6 +73,14 @@ export default function OrderTabs({
         >
           <Plus className="w-4 h-4" />
           <span className="text-sm">New Order</span>
+        </button>
+        <button
+          onClick={resetPOSData}
+          title="Reset POS Data"
+          className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 active:scale-95 shadow-md"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="text-sm">Reset</span>
         </button>
       </div>
 

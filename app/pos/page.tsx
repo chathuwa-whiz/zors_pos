@@ -750,6 +750,7 @@ export default function POSSystem() {
         onCompleteOrder={completeOrder}
         onShowCustomerModal={() => setShowCustomerModal(true)}
         onBarcodeScanned={handleBarcodeScanned}
+        resetPOSData={resetPOSData}
       />
 
       {showCustomerModal && activeOrder && (
@@ -759,15 +760,6 @@ export default function POSSystem() {
           onUpdateActiveOrder={updateActiveOrder}
         />
       )}
-
-      {/* Debug button - remove in production */}
-      <button
-        onClick={resetPOSData}
-        className="fixed top-30 right-4 bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 opacity-20 hover:opacity-100 transition-opacity"
-        title="Reset POS Data"
-      >
-        Reset
-      </button>
     </div>
   );
 }
