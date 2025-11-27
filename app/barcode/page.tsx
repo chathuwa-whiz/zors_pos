@@ -105,8 +105,6 @@ export default function BarcodePage() {
     
     printWindow.document.write(printContent);
     printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
   };
 
   const generatePrintContent = (products: Product[]) => {
