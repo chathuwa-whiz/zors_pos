@@ -1,6 +1,6 @@
 "use client";
 
-import { Edit2, Trash2, Package, AlertTriangle, Building2, Printer } from 'lucide-react';
+import { Edit2, Trash2, Package, AlertTriangle, Building2, Printer, Plus, Minus } from 'lucide-react';
 import { Product } from '@/app/types/pos';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
@@ -13,6 +13,7 @@ interface ProductListProps {
   onEdit: (product: Product) => void;
   onDelete: (productId: string) => void;
   searchQuery: string;
+  onStockUpdate?: () => void; // Add callback to refresh products after stock update
 }
 
 interface Supplier {
@@ -26,9 +27,13 @@ export default function ProductList({
   viewMode,
   onEdit,
   onDelete,
-  searchQuery
+  searchQuery,
+  onStockUpdate
 }: ProductListProps) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [quickStockProduct, setQuickStockProduct] = useState<string | null>(null);
+  const [quickStockValue, setQuickStockValue] = useState<string>('');
+  const [updatingStock, setUpdatingStock] = useState<string | null>(null);
 
   // Fetch suppliers to display supplier names
   useEffect(() => {
@@ -48,6 +53,62 @@ export default function ProductList({
     if (stock === 0) return { status: 'out', color: 'text-red-600 bg-red-100', text: 'Out of Stock' };
     if (stock < 10) return { status: 'low', color: 'text-yellow-600 bg-yellow-100', text: 'Low Stock' };
     return { status: 'good', color: 'text-green-600 bg-green-100', text: 'In Stock' };
+  };
+
+  // Quick stock update function
+  const handleQuickStockUpdate = async (product: Product, adjustment: number) => {
+    const newStock = product.stock + adjustment;
+    if (newStock < 0) {
+      alert('Stock cannot be negative');
+      return;
+    }
+
+    setUpdatingStock(product._id);
+
+    try {
+      // Get user from localStorage
+      const storedUser = localStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+
+      const formData = new FormData();
+      formData.append('stock', newStock.toString());
+      if (user) {
+        formData.append('userId', user._id || 'system');
+        formData.append('userName', user.username || user.name || 'System');
+      }
+
+      const response = await fetch(`/api/products/${product._id}`, {
+        method: 'PUT',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update stock');
+      }
+
+      // Refresh products list
+      if (onStockUpdate) {
+        onStockUpdate();
+      }
+    } catch (error) {
+      console.error('Error updating stock:', error);
+      alert('Failed to update stock');
+    } finally {
+      setUpdatingStock(null);
+      setQuickStockProduct(null);
+      setQuickStockValue('');
+    }
+  };
+
+  // Handle custom stock input
+  const handleCustomStockSubmit = async (product: Product) => {
+    const adjustment = parseInt(quickStockValue);
+    if (isNaN(adjustment) || adjustment === 0) {
+      setQuickStockProduct(null);
+      setQuickStockValue('');
+      return;
+    }
+    await handleQuickStockUpdate(product, adjustment);
   };
 
   const printSingleBarcode = (product: Product) => {
@@ -140,8 +201,6 @@ export default function ProductList({
 
     printWindow.document.write(printContent);
     printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
   };
 
   // Barcode Preview Component using next-barcode
@@ -159,6 +218,96 @@ export default function ProductList({
     });
 
     return <svg ref={inputRef} className="w-full h-4" />;
+  };
+
+  // Quick Stock Adjustment Component
+  const QuickStockAdjuster = ({ product }: { product: Product }) => {
+    const isUpdating = updatingStock === product._id;
+    const isExpanded = quickStockProduct === product._id;
+
+    if (isUpdating) {
+      return (
+        <div className="flex items-center justify-center py-1">
+          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      );
+    }
+
+    if (isExpanded) {
+      return (
+        <div className="flex items-center space-x-1 bg-blue-50 rounded-lg p-1">
+          <input
+            type="number"
+            value={quickStockValue}
+            onChange={(e) => setQuickStockValue(e.target.value)}
+            placeholder="+/-"
+            className="w-16 px-2 py-1 text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleCustomStockSubmit(product);
+              } else if (e.key === 'Escape') {
+                setQuickStockProduct(null);
+                setQuickStockValue('');
+              }
+            }}
+          />
+          <button
+            onClick={() => handleCustomStockSubmit(product)}
+            className="p-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+            title="Apply"
+          >
+            <Plus className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => {
+              setQuickStockProduct(null);
+              setQuickStockValue('');
+            }}
+            className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors"
+            title="Cancel"
+          >
+            ×
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center space-x-1">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleQuickStockUpdate(product, -1);
+          }}
+          disabled={product.stock === 0}
+          className="p-1 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Decrease stock by 1"
+        >
+          <Minus className="w-3 h-3" />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setQuickStockProduct(product._id);
+          }}
+          className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors font-medium min-w-[40px]"
+          title="Click to enter custom amount"
+        >
+          {product.stock}
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleQuickStockUpdate(product, 1);
+          }}
+          className="p-1 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
+          title="Increase stock by 1"
+        >
+          <Plus className="w-3 h-3" />
+        </button>
+      </div>
+    );
   };
 
   if (loading) {
@@ -271,10 +420,8 @@ export default function ProductList({
                     <p className="text-lg font-bold text-green-600">Rs.{product.sellingPrice.toFixed(2)}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-500">Stock</p>
-                    <p className={`text-lg font-bold ${stockStatus.status === 'out' ? 'text-red-600' : 'text-gray-900'}`}>
-                      {product.stock}
-                    </p>
+                    <p className="text-sm text-gray-500 mb-1">Stock</p>
+                    <QuickStockAdjuster product={product} />
                   </div>
                 </div>
 
@@ -320,7 +467,6 @@ export default function ProductList({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {products.map((product) => {
-              // Define stockStatus and isLowStock for each product in list view
               const stockStatus = getStockStatus(product.stock);
               const isLowStock = product.stock > 0 && product.stock < 10;
 
@@ -369,12 +515,10 @@ export default function ProductList({
                     Rs.{product.sellingPrice.toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex items-center">
-                      <span className={`font-medium ${stockStatus.status === 'out' ? 'text-red-600' : stockStatus.status === 'low' ? 'text-yellow-600' : 'text-gray-900'}`}>
-                        {product.stock}
-                      </span>
+                    <div className="flex items-center space-x-2">
+                      <QuickStockAdjuster product={product} />
                       {isLowStock && (
-                        <AlertTriangle className="inline-block w-4 h-4 ml-1 text-yellow-500" />
+                        <AlertTriangle className="w-4 h-4 text-yellow-500" />
                       )}
                     </div>
                   </td>

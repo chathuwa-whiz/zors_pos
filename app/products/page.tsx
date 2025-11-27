@@ -224,6 +224,7 @@ export default function ProductsPage() {
           onEdit={handleEdit}
           onDelete={handleDelete}
           searchQuery={searchQuery}
+          onStockUpdate={fetchProducts}
         />
       </div>
 
