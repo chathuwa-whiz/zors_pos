@@ -27,53 +27,65 @@ export const generateSingleBarcodeHTML = (product: Product, quantity: number = 1
           .barcode-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8mm;
+            gap: 5mm;
           }
           .barcode-item {
             border: 1px solid #000;
-            padding: 5mm;
+            padding: 3mm;
             text-align: center;
             page-break-inside: avoid;
             background: white;
-            height: 45mm;
+            min-height: 42mm;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
           }
           .product-name {
-            font-size: 10pt;
+            font-size: 9pt;
             font-weight: bold;
-            margin-bottom: 2mm;
-            white-space: nowrap;
+            line-height: 1.2;
+            min-height: 8mm;
+            max-height: 12mm;
             overflow: hidden;
-            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            word-break: break-word;
+          }
+          .barcode-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2mm 0;
           }
           .barcode-svg {
             width: 100%;
-            height: 15mm;
-            margin: 2mm 0;
+            height: 12mm;
           }
           .barcode-display {
             font-family: 'Courier New', monospace;
-            font-size: 9pt;
+            font-size: 8pt;
             font-weight: bold;
             letter-spacing: 1px;
-            margin: 2mm 0;
+            margin: 1mm 0;
           }
           .price {
             font-size: 9pt;
-            color: #333;
+            font-weight: bold;
+            color: #000;
           }
           .category {
-            font-size: 8pt;
+            font-size: 7pt;
             color: #666;
             text-transform: uppercase;
+            margin-top: 1mm;
           }
           @media print {
             body {
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
-              padding: 0;
+              padding: 5mm;
             }
           }
         </style>
@@ -83,7 +95,9 @@ export const generateSingleBarcodeHTML = (product: Product, quantity: number = 1
           ${barcodes.map((_, index) => `
             <div class="barcode-item">
               <div class="product-name">${product.name}</div>
-              <svg class="barcode-svg" id="barcode-${index}"></svg>
+              <div class="barcode-container">
+                <svg class="barcode-svg" id="barcode-${index}"></svg>
+              </div>
               <div class="barcode-display">${product.barcode}</div>
               <div class="price">Rs. ${product.sellingPrice.toFixed(2)}</div>
               <div class="category">${product.category}</div>
@@ -105,7 +119,7 @@ export const generateSingleBarcodeHTML = (product: Product, quantity: number = 1
                 JsBarcode("#barcode-${index}", "${product.barcode}", {
                   format: "CODE128",
                   width: 2,
-                  height: 50,
+                  height: 45,
                   displayValue: false,
                   margin: 0
                 });
@@ -129,7 +143,6 @@ export const generateSingleBarcodeHTML = (product: Product, quantity: number = 1
           
           // Also handle if user closes print dialog via escape or cancel
           window.addEventListener('focus', function() {
-            // Small delay to check if print dialog was closed
             setTimeout(function() {
               if (printAttempted) {
                 window.close();
@@ -187,33 +200,41 @@ export const generateMultipleBarcodeHTML = (products: { product: Product; quanti
           .barcode-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8mm;
+            gap: 5mm;
           }
           .barcode-item {
             border: 1px solid #000;
-            padding: 5mm;
+            padding: 3mm;
             text-align: center;
             page-break-inside: avoid;
             background: white;
-            height: 45mm;
+            min-height: 42mm;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
           }
           .product-name {
             font-size: 9pt;
             font-weight: bold;
-            margin-bottom: 2mm;
-            height: 10mm;
+            line-height: 1.2;
+            min-height: 8mm;
+            max-height: 12mm;
             overflow: hidden;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
+            word-break: break-word;
+          }
+          .barcode-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2mm 0;
           }
           .barcode-svg {
             width: 100%;
             height: 12mm;
-            margin: 2mm 0;
           }
           .barcode-display {
             font-family: 'Courier New', monospace;
@@ -223,19 +244,21 @@ export const generateMultipleBarcodeHTML = (products: { product: Product; quanti
             margin: 1mm 0;
           }
           .price {
-            font-size: 8pt;
-            color: #333;
+            font-size: 9pt;
+            font-weight: bold;
+            color: #000;
           }
           .category {
             font-size: 7pt;
             color: #666;
             text-transform: uppercase;
+            margin-top: 1mm;
           }
           @media print {
             body {
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
-              padding: 0;
+              padding: 5mm;
             }
             h2 {
               display: none;
@@ -249,7 +272,9 @@ export const generateMultipleBarcodeHTML = (products: { product: Product; quanti
           ${allBarcodes.map(({ product, index }) => `
             <div class="barcode-item">
               <div class="product-name">${product.name}</div>
-              <svg class="barcode-svg" id="barcode-${index}"></svg>
+              <div class="barcode-container">
+                <svg class="barcode-svg" id="barcode-${index}"></svg>
+              </div>
               <div class="barcode-display">${product.barcode}</div>
               <div class="price">Rs. ${product.sellingPrice.toFixed(2)}</div>
               <div class="category">${product.category}</div>
@@ -271,7 +296,7 @@ export const generateMultipleBarcodeHTML = (products: { product: Product; quanti
                 JsBarcode("#barcode-${index}", "${product.barcode}", {
                   format: "CODE128",
                   width: 2,
-                  height: 40,
+                  height: 45,
                   displayValue: false,
                   margin: 0
                 });
@@ -295,7 +320,6 @@ export const generateMultipleBarcodeHTML = (products: { product: Product; quanti
           
           // Also handle if user closes print dialog via escape or cancel
           window.addEventListener('focus', function() {
-            // Small delay to check if print dialog was closed
             setTimeout(function() {
               if (printAttempted) {
                 window.close();
