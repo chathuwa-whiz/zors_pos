@@ -15,6 +15,7 @@ interface OrderTabsProps {
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, targetOrderId: string) => void;
   onBarcodeScanned: (barcode: string) => void;
+  resetPOSData: () => void;
 }
 
 export default function OrderTabs({
