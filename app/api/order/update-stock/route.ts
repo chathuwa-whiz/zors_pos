@@ -1,3 +1,4 @@
+import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -16,6 +17,8 @@ interface CartItem {
 
 export async function POST(req: NextRequest) {
     try {
+        await connectDB();
+        
         const { cartItems }: { cartItems: CartItem[] } = await req.json();
 
         if (!cartItems || !Array.isArray(cartItems)) {

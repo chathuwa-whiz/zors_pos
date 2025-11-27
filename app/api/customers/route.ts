@@ -1,4 +1,3 @@
-import connectDB from "@/app/lib/mongodb";
 import { Customer } from "@/app/types/pos";
 import CustomerModel from "@/app/models/Customer";
 import { NextRequest, NextResponse } from "next/server";

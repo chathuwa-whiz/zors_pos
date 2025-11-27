@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import Category from '@/app/models/Category';
-import dbConnect from '@/app/lib/mongodb';
+import connectDB from '@/app/lib/mongodb';
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
+    await connectDB();
     const { id } = await context.params;
     const body = await request.json();
     const updated = await Category.findByIdAndUpdate(id, { name: body.name }, { new: true });
@@ -16,6 +17,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
+    await connectDB();
     const { id } = await context.params;
     await Category.findByIdAndDelete(id);
     return NextResponse.json({ success: true });

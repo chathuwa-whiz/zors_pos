@@ -1,9 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
-import connectDB from "@/app/lib/mongodb";
 import Staff from "@/app/models/Staff";
+import connectDB from "@/app/lib/mongodb";
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    await connectDB();
 
     const { id } = await context.params;
     const body = await req.json();
@@ -23,6 +24,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    await connectDB();
     const { id } = await context.params;
     const deleted = await Staff.findByIdAndDelete(id);
     if (!deleted) {

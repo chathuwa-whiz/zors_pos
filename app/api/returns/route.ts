@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/app/lib/mongodb';
 import Product from '@/app/models/Product';
 import Return from '@/app/models/Return';
 import StockTransition from '@/app/models/StockTransition';
+import connectDB from '@/app/lib/mongodb';
 
 // Define interfaces for type safety
 interface ReturnItem {
@@ -59,6 +59,7 @@ interface ReturnRequestBody {
 
 export async function GET() {
   try {
+    await connectDB();
     // Fetch returns from database with product details
     const returns = await Return.find();
 
@@ -92,7 +93,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await dbConnect();
+    await connectDB();
 
     const body: ReturnRequestBody = await request.json();
     const { productId, returnType, quantity, reason, notes } = body;

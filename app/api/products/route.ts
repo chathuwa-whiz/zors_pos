@@ -58,6 +58,7 @@ export async function GET(request: Request) {
 
 export async function POST(req: NextRequest) {
   try {
+    await connectDB();
 
     const formData = await req.formData();
 

@@ -1,10 +1,11 @@
-import connectDB from "@/app/lib/mongodb";
 import { Customer } from "@/app/types/pos";
 import CustomerModel from "@/app/models/Customer";
 import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/app/lib/mongodb";
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
+        await connectDB();
         const { id } = await context.params;
         if (!id) {
             return NextResponse.json({ error: "Customer ID is required" }, { status: 400 });
@@ -32,6 +33,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
+        await connectDB();
         const { id } = await context.params;
         if (!id) {
             return NextResponse.json({ error: "Customer ID is required" }, { status: 400 });

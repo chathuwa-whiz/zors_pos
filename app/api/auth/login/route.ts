@@ -1,13 +1,15 @@
 import bcrypt from "bcryptjs";
-import connectDB from "@/app/lib/mongodb";
 import User from "@/app/models/User";
 import { LoginRequest } from "@/app/types/user";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import connectDB from "@/app/lib/mongodb";
 
 export async function POST(req: NextRequest) {
 
     try {
+        await connectDB();
+        
         const { username, password }: LoginRequest = await req.json();
 
         // validations

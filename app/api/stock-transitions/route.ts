@@ -1,7 +1,7 @@
-import connectDB from "@/app/lib/mongodb";
 import StockTransition from "@/app/models/StockTransition";
 import Product from "@/app/models/Product";
 import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/app/lib/mongodb";
 
 // Define interfaces for type safety
 interface StockTransitionFilter {
@@ -31,7 +31,7 @@ interface StockTransitionRequestBody {
 
 export async function GET(request: NextRequest) {
     try {
-        
+        await connectDB();
 
         const { searchParams } = new URL(request.url);
         const page = parseInt(searchParams.get('page') || '1');
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        
+        await connectDB();
 
         const requestBody: StockTransitionRequestBody = await request.json();
         const {

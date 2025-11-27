@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/app/lib/mongodb";
 import User from "@/app/models/User";
 import bcrypt from "bcryptjs";
+import connectDB from "@/app/lib/mongodb";
 
 export async function POST(req: NextRequest) {
+
+  await connectDB();
+  
   const { oldPassword, newPassword } = await req.json();
 
   // Find the currently logged-in admin user (replace with your auth logic)

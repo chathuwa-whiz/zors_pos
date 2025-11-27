@@ -1,8 +1,8 @@
-import connectDB from "@/app/lib/mongodb";
 import OrderModel from "@/app/models/Order";
 import StockTransition from "@/app/models/StockTransition";
 import Product from "@/app/models/Product";
 import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/app/lib/mongodb";
 
 // Define interfaces for type safety
 interface ProductData {
@@ -57,6 +57,7 @@ interface StockTransitionData {
 
 export async function GET() {
     try {
+        await connectDB();
 
         const orders = await OrderModel.find();
 
@@ -69,6 +70,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
     try {
+        await connectDB();
 
         const orderData: OrderData = await req.json();
 

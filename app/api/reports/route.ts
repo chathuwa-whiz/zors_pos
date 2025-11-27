@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/app/lib/mongodb';
 import Product from '@/app/models/Product';
 import Order from '@/app/models/Order';
 import StockTransition from '@/app/models/StockTransition';
 import Return from '@/app/models/Return';
 import Customer from '@/app/models/Customer';
 import User from '@/app/models/User';
+import connectDB from '@/app/lib/mongodb';
 
 // Define interface for date filter
 interface DateFilter {
@@ -17,7 +17,7 @@ interface DateFilter {
 
 export async function GET(request: NextRequest) {
     try {
-        
+        await connectDB();
 
         const { searchParams } = new URL(request.url);
         const period = searchParams.get('period') || '30'; // days

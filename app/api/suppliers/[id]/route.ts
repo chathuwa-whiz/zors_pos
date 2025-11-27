@@ -4,7 +4,7 @@ import connectDB from '@/app/lib/mongodb';
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    
+    await connectDB();
     const body = await request.json();
     const { id } = await context.params;
     const supplier = await Supplier.findByIdAndUpdate(id, body, { new: true });
@@ -18,7 +18,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 
 export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    
+    await connectDB();
     const { id } = await context.params;
     const supplier = await Supplier.findByIdAndDelete(id);
     if (!supplier) return NextResponse.json({ error: 'Supplier not found' }, { status: 404 });

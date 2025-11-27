@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import Category from '@/app/models/Category';
-import dbConnect from '@/app/lib/mongodb';
+import connectDB from '@/app/lib/mongodb';
 
 export async function GET() {
   try {
+    await connectDB();
     const categories = await Category.find();
     return NextResponse.json({ success: true, data: categories });
   } catch (error: unknown) {
@@ -14,6 +15,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    await connectDB();
     const body = await request.json();
     if (!body.name) {
       return NextResponse.json(

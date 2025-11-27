@@ -16,6 +16,7 @@ const generateBarcode = (): string => {
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
 
     try {
+        await connectDB();
 
         const { id } = await context.params;
 
@@ -35,6 +36,8 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
+        await connectDB();
+
         const { id } = await context.params;
 
         const formData = await req.formData();
@@ -250,6 +253,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
+        await connectDB();
         const { id } = await context.params;
 
         const product = await Product.findById(id);

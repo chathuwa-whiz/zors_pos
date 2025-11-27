@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/app/lib/mongodb';
 import Discount from '@/app/models/Discount';
 import jwt from 'jsonwebtoken';
+import connectDB from '@/app/lib/mongodb';
 
 // Define the JWT payload interface
 interface JWTPayload {
@@ -23,7 +23,7 @@ const verifyToken = (token: string): JWTPayload => {
 
 export async function GET(request: NextRequest) {
   try {
-    
+    await connectDB();
 
     // Get authorization header
     const authHeader = request.headers.get('authorization');
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    
+    await connectDB();
 
     // Get authorization header
     const authHeader = request.headers.get('authorization');
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    
+    await connectDB();
 
     // Get authorization header
     const authHeader = request.headers.get('authorization');
@@ -223,7 +223,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    
+    await connectDB();
 
     // Get authorization header
     const authHeader = request.headers.get('authorization');
