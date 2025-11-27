@@ -32,6 +32,7 @@ interface OrdersPanelProps {
   onCompleteOrder: () => void;
   onShowCustomerModal: () => void;
   onBarcodeScanned: (barcode: string) => void;
+  resetPOSData: () => void;
 }
 
 export default function OrdersPanel({
