@@ -1,16 +1,17 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Search, Printer, Package } from 'lucide-react';
+import { Search, Printer, Package, Plus, Minus } from 'lucide-react';
 import { Product } from '@/app/types/pos';
 import { useBarcode } from 'next-barcode';
+import { printMultipleBarcodes } from '@/app/utils/barcodePrintTemplates';
 
 export default function BarcodePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<Record<string, number>>({}); // productId -> quantity
 
   // Fetch products
   useEffect(() => {
@@ -40,171 +41,88 @@ export default function BarcodePage() {
       product.category.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredProducts(filtered);
-    
-    // Clear selections for products that are no longer visible
-    setSelectedProducts(prev => prev.filter(id => filtered.some(p => p._id === id)));
   }, [products, searchQuery]);
 
-  const handleSelectProduct = (productId: string, event?: React.MouseEvent) => {
-    // Prevent event bubbling if it's from a checkbox click
-    if (event) {
-      event.stopPropagation();
-    }
-    
+  const handleSelectProduct = (productId: string) => {
     setSelectedProducts(prev => {
-      if (prev.includes(productId)) {
-        return prev.filter(id => id !== productId);
+      if (prev[productId]) {
+        const { [productId]: _, ...rest } = prev;
+        return rest;
       } else {
-        return [...prev, productId];
+        return { ...prev, [productId]: 1 };
       }
+    });
+  };
+
+  const handleQuantityChange = (productId: string, delta: number) => {
+    setSelectedProducts(prev => {
+      const currentQty = prev[productId] || 0;
+      const newQty = Math.max(0, currentQty + delta);
+      
+      if (newQty === 0) {
+        const { [productId]: _, ...rest } = prev;
+        return rest;
+      }
+      
+      return { ...prev, [productId]: newQty };
+    });
+  };
+
+  const handleSetQuantity = (productId: string, quantity: number) => {
+    setSelectedProducts(prev => {
+      if (quantity <= 0) {
+        const { [productId]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [productId]: quantity };
     });
   };
 
   const handleSelectAll = () => {
-    if (selectedProducts.length === filteredProducts.length) {
-      setSelectedProducts([]);
+    if (Object.keys(selectedProducts).length === filteredProducts.length) {
+      setSelectedProducts({});
     } else {
-      setSelectedProducts(filteredProducts.map(p => p._id));
+      const newSelection: Record<string, number> = {};
+      filteredProducts.forEach(p => {
+        newSelection[p._id] = selectedProducts[p._id] || 1;
+      });
+      setSelectedProducts(newSelection);
     }
   };
 
   const handleCardClick = (productId: string, event: React.MouseEvent) => {
-    // Prevent selection if clicking on checkbox directly
     const target = event.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.closest('input[type="checkbox"]')) {
+    // Don't toggle if clicking on quantity controls or checkbox
+    if (
+      target.tagName === 'INPUT' ||
+      target.tagName === 'BUTTON' ||
+      target.closest('input') ||
+      target.closest('button')
+    ) {
       return;
     }
-    
     handleSelectProduct(productId);
   };
 
-  const handleCheckboxChange = (productId: string, event: React.ChangeEvent<HTMLInputElement>) => {
-    event.stopPropagation();
-    setSelectedProducts(prev => {
-      if (event.target.checked) {
-        return prev.includes(productId) ? prev : [...prev, productId];
-      } else {
-        return prev.filter(id => id !== productId);
-      }
-    });
-  };
-
   const handlePrintBarcodes = () => {
-    const selectedProductsData = products.filter(p => selectedProducts.includes(p._id));
-    
+    const selectedProductsData = Object.entries(selectedProducts)
+      .filter(([_, quantity]) => quantity > 0)
+      .map(([productId, quantity]) => ({
+        product: products.find(p => p._id === productId)!,
+        quantity
+      }))
+      .filter(item => item.product);
+
     if (selectedProductsData.length === 0) {
       alert('Please select at least one product to print barcodes');
       return;
     }
 
-    // Create print window
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const printContent = generatePrintContent(selectedProductsData);
-    
-    printWindow.document.write(printContent);
-    printWindow.document.close();
+    printMultipleBarcodes(selectedProductsData);
   };
 
-  const generatePrintContent = (products: Product[]) => {
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Product Barcodes</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              margin: 0;
-              padding: 20px;
-            }
-            .barcode-grid {
-              display: grid;
-              grid-template-columns: repeat(3, 1fr);
-              gap: 15px;
-              margin-top: 20px;
-            }
-            .barcode-item {
-              border: 1px solid #ddd;
-              padding: 10px;
-              text-align: center;
-              page-break-inside: avoid;
-              background: white;
-            }
-            .product-name {
-              font-size: 12px;
-              font-weight: bold;
-              margin-bottom: 5px;
-              height: 30px;
-              overflow: hidden;
-            }
-            .barcode-display {
-              font-family: 'Courier New', monospace;
-              font-size: 14px;
-              font-weight: bold;
-              margin: 8px 0;
-              letter-spacing: 2px;
-            }
-            .barcode-svg {
-              width: 100%;
-              height: 40px;
-              margin: 5px 0;
-            }
-            .price {
-              font-size: 11px;
-              color: #666;
-              margin-top: 5px;
-            }
-            .category {
-              font-size: 10px;
-              color: #888;
-              text-transform: uppercase;
-            }
-            @media print {
-              body { margin: 0; padding: 10px; }
-              .barcode-grid { gap: 10px; }
-              .barcode-item { 
-                border: 1px solid #000;
-                margin-bottom: 10px;
-              }
-            }
-          </style>
-          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-        </head>
-        <body>
-          <h2 style="text-align: center; margin-bottom: 20px;">Product Barcodes</h2>
-          <div class="barcode-grid">
-            ${products.map((product, index) => `
-              <div class="barcode-item">
-                <div class="product-name">${product.name}</div>
-                <svg class="barcode-svg" id="barcode-${index}"></svg>
-                <div class="barcode-display">${product.barcode}</div>
-                <div class="price">Rs. ${product.sellingPrice.toFixed(2)}</div>
-                <div class="category">${product.category}</div>
-              </div>
-            `).join('')}
-          </div>
-          <script>
-            window.onload = function() {
-              ${products.map((product, index) => `
-                JsBarcode("#barcode-${index}", "${product.barcode}", {
-                  format: "CODE128",
-                  width: 2,
-                  height: 40,
-                  displayValue: false
-                });
-              `).join('')}
-              
-              setTimeout(function() {
-                window.print();
-                window.close();
-              }, 1000);
-            }
-          </script>
-        </body>
-      </html>
-    `;
+  const getTotalLabels = () => {
+    return Object.values(selectedProducts).reduce((sum, qty) => sum + qty, 0);
   };
 
   // Barcode Preview Component using next-barcode
@@ -222,6 +140,50 @@ export default function BarcodePage() {
     });
 
     return <svg ref={inputRef} className="w-full h-6" />;
+  };
+
+  // Quantity Selector Component
+  const QuantitySelector = ({ productId }: { productId: string }) => {
+    const quantity = selectedProducts[productId] || 0;
+    const isSelected = quantity > 0;
+
+    if (!isSelected) {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSetQuantity(productId, 1);
+          }}
+          className="px-3 py-1 text-sm bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors"
+        >
+          Add
+        </button>
+      );
+    }
+
+    return (
+      <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={() => handleQuantityChange(productId, -1)}
+          className="p-1 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
+        >
+          <Minus className="w-4 h-4" />
+        </button>
+        <input
+          type="number"
+          value={quantity}
+          onChange={(e) => handleSetQuantity(productId, parseInt(e.target.value) || 0)}
+          className="w-14 px-2 py-1 text-center border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          min="0"
+        />
+        <button
+          onClick={() => handleQuantityChange(productId, 1)}
+          className="p-1 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
+    );
   };
 
   if (loading) {
@@ -246,7 +208,7 @@ export default function BarcodePage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Barcode Printing</h1>
-              <p className="text-gray-600">Print barcodes for your products</p>
+              <p className="text-gray-600">Select products and specify quantities to print</p>
             </div>
           </div>
         </div>
@@ -274,24 +236,37 @@ export default function BarcodePage() {
                 onClick={handleSelectAll}
                 className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
               >
-                {selectedProducts.length === filteredProducts.length && filteredProducts.length > 0 ? 'Deselect All' : 'Select All'}
+                {Object.keys(selectedProducts).length === filteredProducts.length && filteredProducts.length > 0 
+                  ? 'Deselect All' 
+                  : 'Select All'}
               </button>
               <button
                 onClick={handlePrintBarcodes}
-                disabled={selectedProducts.length === 0}
+                disabled={getTotalLabels() === 0}
                 className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 <Printer className="w-4 h-4" />
-                <span>Print Selected ({selectedProducts.length})</span>
+                <span>Print ({getTotalLabels()} labels)</span>
               </button>
             </div>
           </div>
 
-          {filteredProducts.length > 0 && (
-            <div className="mt-4 text-sm text-gray-600">
-              Showing {filteredProducts.length} products with barcodes
-            </div>
-          )}
+          {/* Summary */}
+          <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
+            <span>Showing {filteredProducts.length} products with barcodes</span>
+            {Object.keys(selectedProducts).length > 0 && (
+              <>
+                <span>•</span>
+                <span className="text-purple-600 font-medium">
+                  {Object.keys(selectedProducts).length} products selected
+                </span>
+                <span>•</span>
+                <span className="text-purple-600 font-medium">
+                  {getTotalLabels()} total labels to print
+                </span>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Products Grid */}
@@ -310,7 +285,8 @@ export default function BarcodePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => {
-              const isSelected = selectedProducts.includes(product._id);
+              const quantity = selectedProducts[product._id] || 0;
+              const isSelected = quantity > 0;
               
               return (
                 <div
@@ -323,20 +299,16 @@ export default function BarcodePage() {
                   onClick={(e) => handleCardClick(product._id, e)}
                 >
                   <div className="p-4">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-start justify-between mb-3">
                       <h3 className="font-semibold text-gray-900 text-sm flex-1 mr-2">{product.name}</h3>
-                      <div className="flex-shrink-0">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(e) => handleCheckboxChange(product._id, e)}
-                          className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
+                      {isSelected && (
+                        <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
+                          ×{quantity}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Barcode Preview using next-barcode */}
+                    {/* Barcode Preview */}
                     <div className="bg-gray-50 p-3 rounded-lg mb-3">
                       <BarcodePreview value={product.barcode} />
                       <div className="text-xs font-mono text-center mt-1 font-bold">
@@ -344,7 +316,8 @@ export default function BarcodePage() {
                       </div>
                     </div>
 
-                    <div className="space-y-1">
+                    {/* Product Info */}
+                    <div className="space-y-1 mb-3">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500">Price:</span>
                         <span className="font-medium">Rs. {product.sellingPrice.toFixed(2)}</span>
@@ -361,6 +334,11 @@ export default function BarcodePage() {
                           {product.stock}
                         </span>
                       </div>
+                    </div>
+
+                    {/* Quantity Selector */}
+                    <div className="flex justify-center pt-2 border-t border-gray-100">
+                      <QuantitySelector productId={product._id} />
                     </div>
                   </div>
                 </div>
