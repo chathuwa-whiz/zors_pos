@@ -13,7 +13,8 @@ import {
   ArrowUpDown,
   Building2,
   User,
-  Settings
+  Settings,
+  Delete
 } from 'lucide-react';
 
 interface Product {
@@ -133,6 +134,8 @@ export default function StockTransitions() {
         return <TrendingDown className="w-4 h-4 text-orange-600" />;
       case 'adjustment':
         return <Settings className="w-4 h-4 text-purple-600" />;
+      case 'delete':
+        return <Delete className="w-4 h-4 text-gray-600" />;
       default:
         return <ArrowUpDown className="w-4 h-4 text-gray-600" />;
     }
@@ -150,6 +153,8 @@ export default function StockTransitions() {
         return 'bg-orange-50 text-orange-700 border-orange-200';
       case 'adjustment':
         return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'delete':
+        return 'bg-gray-50 text-gray-700 border-gray-200';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }
@@ -167,6 +172,8 @@ export default function StockTransitions() {
         return 'Supplier Return';
       case 'adjustment':
         return 'Stock Adjustment';
+      case 'delete':
+        return 'Deletion';
       default:
         return type;
     }

@@ -1,6 +1,7 @@
 import { deleteImageFromCloudinary, uploadImageToCloudinary } from "@/app/lib/cloudinary";
 import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
+import StockTransition from "@/app/models/StockTransition";
 import { NextRequest, NextResponse } from "next/server";
 
 // Add the same barcode generator function at the top
@@ -35,14 +36,16 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await context.params;
+
         const formData = await req.formData();
 
-        // get the current product
+        // Get the current product to compare stock
         const currentProduct = await Product.findById(id);
-
         if (!currentProduct) {
             return NextResponse.json({ error: 'Product not found' }, { status: 404 });
         }
+
+        const previousStock = currentProduct.stock;
 
         // Extract product data from FormData
         const updateData: {
@@ -175,33 +178,126 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
           }
         }
 
-        const product = await Product.findByIdAndUpdate(
+        const updatedProduct = await Product.findByIdAndUpdate(
             id,
             updateData,
             { new: true, runValidators: true }
         );
 
-        if (!product) {
-            return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+        // Create stock transition if stock changed
+        const newStock = updatedProduct.stock;
+        if (previousStock !== newStock) {
+            try {
+                const stockDifference = newStock - previousStock;
+                const transactionType = stockDifference > 0 ? 'purchase' : 'adjustment';
+
+                const userId = formData.get('userId') as string;
+                const userName = formData.get('userName') as string;
+
+                // Build stock transition data
+                const stockTransitionData: {
+                    productId: string;
+                    productName: string;
+                    transactionType: string;
+                    quantity: number;
+                    previousStock: number;
+                    newStock: number;
+                    unitPrice: number;
+                    totalValue: number;
+                    reference: string;
+                    party: { name: string; type: string; id: string };
+                    user?: string;
+                    userName: string;
+                    notes: string;
+                } = {
+                    productId: updatedProduct._id,
+                    productName: updatedProduct.name,
+                    transactionType: transactionType,
+                    quantity: Math.abs(stockDifference),
+                    previousStock: previousStock,
+                    newStock: newStock,
+                    unitPrice: updatedProduct.costPrice || 0,
+                    totalValue: Math.abs(stockDifference) * (updatedProduct.costPrice || 0),
+                    reference: `STOCK_ADJUSTMENT_${updatedProduct._id}`,
+                    party: {
+                        name: 'System',
+                        type: 'system',
+                        id: 'system'
+                    },
+                    userName: userName || 'System',
+                    notes: `Stock ${stockDifference > 0 ? 'increased' : 'decreased'} from ${previousStock} to ${newStock} via product update`
+                };
+
+                // Only add user if it's a valid ObjectId
+                if (userId && userId !== 'system' && /^[a-fA-F0-9]{24}$/.test(userId)) {
+                    stockTransitionData.user = userId;
+                }
+
+                const stockTransition = new StockTransition(stockTransitionData);
+                await stockTransition.save();
+            } catch (transitionError) {
+                console.error('Error creating stock transition for product update:', transitionError);
+            }
         }
 
-        return NextResponse.json(product, { status: 200 });
+        return NextResponse.json(updatedProduct);
 
-    } catch (error: unknown) {
+    } catch (error) {
         console.error('Error updating product:', error);
         return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
     }
 }
 
 export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
-
     try {
         const { id } = await context.params;
 
-        const product = await Product.findByIdAndDelete(id);
-
+        const product = await Product.findById(id);
         if (!product) {
             return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+        }
+
+        // Create stock transition for remaining stock being removed
+        if (product.stock > 0) {
+            try {
+                // Build stock transition data without user field for system operations
+                const stockTransitionData: {
+                    productId: string;
+                    productName: string;
+                    transactionType: string;
+                    quantity: number;
+                    previousStock: number;
+                    newStock: number;
+                    unitPrice: number;
+                    totalValue: number;
+                    reference: string;
+                    party: { name: string; type: string; id: string };
+                    userName: string;
+                    notes: string;
+                } = {
+                    productId: product._id,
+                    productName: product.name,
+                    transactionType: 'delete',
+                    quantity: product.stock,
+                    previousStock: product.stock,
+                    newStock: 0,
+                    unitPrice: product.costPrice || 0,
+                    totalValue: product.stock * (product.costPrice || 0),
+                    reference: `PRODUCT_DELETED_${product._id}`,
+                    party: {
+                        name: 'System',
+                        type: 'system',
+                        id: 'system'
+                    },
+                    userName: 'System',
+                    notes: `Product deleted: ${product.name}. Remaining stock (${product.stock}) removed from inventory.`
+                };
+
+                const stockTransition = new StockTransition(stockTransitionData);
+                await stockTransition.save();
+            } catch (transitionError) {
+                console.error('Error creating stock transition for deleted product:', transitionError);
+            }
         }
 
         // Delete image from Cloudinary if it exists
@@ -209,9 +305,11 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
             await deleteImageFromCloudinary(product.imagePublicId);
         }
 
-        return NextResponse.json({ message: 'Product deleted successfully' }, { status: 200 });
+        await Product.findByIdAndDelete(id);
 
-    } catch (error: unknown) {
+        return NextResponse.json({ message: 'Product deleted successfully' });
+
+    } catch (error) {
         console.error('Error deleting product:', error);
         return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
     }

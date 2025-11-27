@@ -159,11 +159,21 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
                 throw new Error('Please enter a valid stock quantity');
             }
 
+            // Get user from localStorage
+            const storedUser = localStorage.getItem('user');
+            const user = storedUser ? JSON.parse(storedUser) : null;
+
             // Create FormData for submission
             const submitData = new FormData();
             Object.entries(formData).forEach(([key, value]) => {
                 submitData.append(key, value.toString());
             });
+
+            // Add user information for stock transition tracking
+            if (user) {
+                submitData.append('userId', user._id || 'system');
+                submitData.append('userName', user.username || user.name || 'System');
+            }
 
             if (imageFile) {
                 submitData.append('image', imageFile);

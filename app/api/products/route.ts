@@ -1,6 +1,7 @@
 import { uploadImageToCloudinary } from "@/app/lib/cloudinary";
 import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
+import StockTransition from "@/app/models/StockTransition";
 import { NextRequest, NextResponse } from "next/server";
 
 // Add barcode generator function at the top
@@ -149,6 +150,34 @@ export async function POST(req: NextRequest) {
 
     const newProduct = new Product(productData);
     await newProduct.save();
+
+    // Create stock transition for initial stock if stock > 0
+    if (newProduct.stock > 0) {
+      try {
+        const stockTransition = new StockTransition({
+          productId: newProduct._id,
+          productName: newProduct.name,
+          transactionType: 'purchase', // Initial stock is treated as a purchase
+          quantity: newProduct.stock,
+          previousStock: 0,
+          newStock: newProduct.stock,
+          unitPrice: newProduct.costPrice || 0,
+          totalValue: newProduct.stock * (newProduct.costPrice || 0),
+          reference: `PRODUCT_CREATED_${newProduct._id}`,
+          party: {
+            name: 'System',
+            type: 'system',
+            id: 'system'
+          },
+          user: formData.get('userId') || 'system',
+          userName: formData.get('userName') as string || 'System',
+          notes: `Initial stock added for new product: ${newProduct.name}`
+        });
+        await stockTransition.save();
+      } catch (transitionError) {
+        console.error('Error creating stock transition for new product:', transitionError);
+      }
+    }
 
     return NextResponse.json(newProduct, { status: 201 });
 
