@@ -1,4 +1,3 @@
-import { uploadImageToCloudinary } from "@/app/lib/cloudinary";
 import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
 import StockTransition from "@/app/models/StockTransition";
@@ -11,6 +10,14 @@ const generateBarcode = (): string => {
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
   const barcode = (timestamp.slice(-7) + random + '000').slice(0, 13);
   return barcode;
+};
+
+// Helper function to convert File to base64
+const fileToBase64 = async (file: File): Promise<string> => {
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const base64String = buffer.toString('base64');
+  return `data:${file.type};base64,${base64String}`;
 };
 
 // Define interface for MongoDB query
@@ -66,13 +73,13 @@ export async function POST(req: NextRequest) {
     const file = formData.get("image") as File;
 
     // Validate file type
-    if (file && !file.type.startsWith('image/')) {
+    if (file && file.size > 0 && !file.type.startsWith('image/')) {
       return NextResponse.json({ error: 'File must be an image' }, { status: 400 });
     }
 
-    // Validate file size (5MB limit)
-    if (file && file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 });
+    // Validate file size (2MB limit for base64 storage)
+    if (file && file.size > 2 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File size must be less than 2MB' }, { status: 400 });
     }
 
     // Parse values from FormData
@@ -92,7 +99,6 @@ export async function POST(req: NextRequest) {
       stock: number;
       description?: string;
       image?: string;
-      imagePublicId?: string;
       supplier?: string;
       barcode?: string;
     } = {
@@ -124,11 +130,9 @@ export async function POST(req: NextRequest) {
       delete productData.barcode;
     }
 
-    // Upload image to Cloudinary if file is provided
+    // Convert image to base64 if file is provided
     if (file && file.size > 0) {
-      const uploadResult = await uploadImageToCloudinary(file, "products");
-      productData.image = uploadResult.secure_url;
-      productData.imagePublicId = uploadResult.public_id;
+      productData.image = await fileToBase64(file);
     }
 
     // Validate required fields
@@ -157,7 +161,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log('Product data to save:', productData); // Debug log
+    console.log('Product data to save:', { ...productData, image: productData.image ? '[BASE64_IMAGE]' : undefined });
 
     // Create product with explicit field assignment to ensure all fields are included
     const newProduct = new Product({
@@ -176,7 +180,7 @@ export async function POST(req: NextRequest) {
     });
     
     const savedProduct = await newProduct.save();
-    console.log('Saved product:', savedProduct.toObject()); // Debug log to verify saved data
+    console.log('Saved product:', { ...savedProduct.toObject(), image: savedProduct.image ? '[BASE64_IMAGE]' : undefined });
 
     // Create stock transition for initial stock if stock > 0
     if (savedProduct.stock > 0) {
@@ -184,7 +188,7 @@ export async function POST(req: NextRequest) {
         const stockTransition = new StockTransition({
           productId: savedProduct._id,
           productName: savedProduct.name,
-          transactionType: 'purchase', // Initial stock is treated as a purchase
+          transactionType: 'purchase',
           quantity: savedProduct.stock,
           previousStock: 0,
           newStock: savedProduct.stock,

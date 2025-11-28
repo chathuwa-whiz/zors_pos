@@ -10,7 +10,6 @@ export interface IProduct extends Document {
   minStock: number;
   barcode?: string;
   image?: string;
-  imagePublicId?: string;
   supplier?: string;
   discount?: number;
   size?: string;
@@ -29,7 +28,6 @@ const ProductSchema = new Schema<IProduct>({
   minStock: { type: Number, required: true, default: 5 },
   barcode: { type: String, unique: true, sparse: true },
   image: { type: String },
-  imagePublicId: { type: String },
   supplier: { type: String },
   discount: { type: Number, default: 0 },
   size: { type: String },
