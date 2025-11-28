@@ -64,9 +64,9 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
             dryfood?: boolean;
             image?: string;
             imagePublicId?: string;
-            barcode?: string; // Add barcode field
-            supplier?: string; // Add supplier field
-            minStock?: number; // Add minStock field
+            barcode?: string;
+            supplier?: string;
+            minStock?: number;
         } = {};
         
         // Only update fields that are present in formData

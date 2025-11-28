@@ -8,9 +8,13 @@ export interface IProduct extends Document {
   sellingPrice: number;
   stock: number;
   minStock: number;
-  barcode?: string; // New barcode field
+  barcode?: string;
   image?: string;
+  imagePublicId?: string;
   supplier?: string;
+  discount?: number;
+  size?: string;
+  dryfood?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,11 +27,15 @@ const ProductSchema = new Schema<IProduct>({
   sellingPrice: { type: Number, required: true },
   stock: { type: Number, required: true, default: 0 },
   minStock: { type: Number, required: true, default: 5 },
-  barcode: { type: String, unique: true, sparse: true }, // Unique but optional
+  barcode: { type: String, unique: true, sparse: true },
   image: { type: String },
+  imagePublicId: { type: String },
   supplier: { type: String },
+  discount: { type: Number, default: 0 },
+  size: { type: String },
+  dryfood: { type: Boolean, default: false },
 }, {
-  timestamps: true
+  timestamps: true,
 });
 
 export default mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
