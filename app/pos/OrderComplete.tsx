@@ -1,6 +1,7 @@
 "use client";
 import { Customer, CartItem, OrderTotals, PaymentDetails } from '../types/pos';
 import { Check, Printer, MapPin, Home, Car, User, Phone, Mail, Calendar } from 'lucide-react';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 interface OrderCompleteProps {
@@ -107,10 +108,12 @@ export default function OrderComplete({
           {/* Header */}
           <div className="text-center border-b pb-4 mb-4">
             {template.logoUrl && (
-              <img 
-                src={template.logoUrl} 
-                alt="Company Logo" 
-                className="mx-auto mb-2 max-h-20 object-contain" 
+              <Image
+                src={template.logoUrl}
+                alt="Company Logo"
+                width={128}
+                height={128}
+                className="mx-auto mb-2 max-h-20 object-contain"
               />
             )}
             <h1 className="text-2xl font-bold text-gray-900">{template.companyName || 'ZORS POS'}</h1>
