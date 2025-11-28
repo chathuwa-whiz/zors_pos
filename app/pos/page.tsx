@@ -676,22 +676,6 @@ export default function POSSystem() {
     fetchProducts();
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">Please login to access POS system</p>
-          <button
-            onClick={() => router.push('/login')}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   if (orderComplete && completedOrderData) {
     console.log('completed order data', completedOrderData);
     return (
@@ -717,12 +701,15 @@ export default function POSSystem() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <ProductsPanel
-        user={user}
-        products={products}
-        categories={categories}
-        onAddToCart={addToCart}
-      />
+      
+      {user && (
+        <ProductsPanel
+          user={user}
+          products={products}
+          categories={categories}
+          onAddToCart={addToCart}
+        />
+      )}
 
       <OrdersPanel
         orders={orders}
