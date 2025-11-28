@@ -1,6 +1,6 @@
 "use client";
 import { Customer, CartItem, OrderTotals, PaymentDetails } from '../types/pos';
-import { Check, Printer, MapPin, Home, Car, User, Phone, Mail, Calendar } from 'lucide-react';
+import { Check, Printer, MapPin, Home, Car, User, Phone, Mail } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 

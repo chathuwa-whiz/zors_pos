@@ -548,7 +548,7 @@ export default function ProductList({
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {products.map((product) => {
-                const stockStatus = getStockStatus(product.stock);
+                // const stockStatus = getStockStatus(product.stock);
                 const isLowStock = product.stock > 0 && product.stock < 10;
 
                 return (
