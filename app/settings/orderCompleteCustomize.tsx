@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ReceiptTemplate } from "../types/pos";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
 
 export default function OrderCompleteCustomize() {
   const defaultTemplate: ReceiptTemplate = {
@@ -94,9 +95,11 @@ export default function OrderCompleteCustomize() {
         
         {logoPreview ? (
           <div className="relative inline-block">
-            <img 
-              src={logoPreview} 
-              alt="Logo Preview" 
+            <Image
+              src={logoPreview}
+              alt="Logo Preview"
+              width={128}
+              height={128}
               className="max-h-32 max-w-full object-contain border rounded p-2"
             />
             <button

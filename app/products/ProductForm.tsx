@@ -23,7 +23,7 @@ interface FormData {
     stock: string;
     description: string;
     barcode: string;
-    supplier: string; // Add supplier field
+    supplier: string;
 }
 
 interface Supplier {
@@ -43,8 +43,8 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
         dryfood: false,
         stock: '',
         description: '',
-        barcode: '', // Add barcode field
-        supplier: '' // Initialize supplier field
+        barcode: '',
+        supplier: ''
     });
 
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -82,7 +82,7 @@ export default function ProductForm({ product, onSave, onClose }: ProductFormPro
                 stock: product.stock?.toString() || '',
                 description: product.description || '',
                 barcode: product.barcode || '',
-                supplier: product.supplier || '' // Initialize supplier from product
+                supplier: product.supplier || ''
             });
 
             if (product.image) {

@@ -5,7 +5,7 @@ import { Product } from '@/app/types/pos';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useBarcode } from 'next-barcode';
-import { printBarcode } from '@/app/utils/barcodePrintTemplates';
+import { printBarcode } from '@/app/lib/barcodePrintTemplates';
 
 interface ProductListProps {
   products: Product[];
@@ -548,7 +548,7 @@ export default function ProductList({
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {products.map((product) => {
-                const stockStatus = getStockStatus(product.stock);
+                // const stockStatus = getStockStatus(product.stock);
                 const isLowStock = product.stock > 0 && product.stock < 10;
 
                 return (

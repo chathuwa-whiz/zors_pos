@@ -1,4 +1,3 @@
-import { uploadImageToCloudinary } from "@/app/lib/cloudinary";
 import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
 import StockTransition from "@/app/models/StockTransition";
@@ -11,6 +10,14 @@ const generateBarcode = (): string => {
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
   const barcode = (timestamp.slice(-7) + random + '000').slice(0, 13);
   return barcode;
+};
+
+// Helper function to convert File to base64
+const fileToBase64 = async (file: File): Promise<string> => {
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const base64String = buffer.toString('base64');
+  return `data:${file.type};base64,${base64String}`;
 };
 
 // Define interface for MongoDB query
@@ -26,6 +33,7 @@ interface ProductQuery {
 
 export async function GET(request: Request) {
   try {
+    await connectDB();
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
@@ -39,7 +47,7 @@ export async function GET(request: Request) {
         { name: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
         { category: { $regex: search, $options: 'i' } },
-        { barcode: { $regex: search, $options: 'i' } }, // Add barcode search
+        { barcode: { $regex: search, $options: 'i' } },
       ];
     }
 
@@ -65,14 +73,19 @@ export async function POST(req: NextRequest) {
     const file = formData.get("image") as File;
 
     // Validate file type
-    if (file && !file.type.startsWith('image/')) {
+    if (file && file.size > 0 && !file.type.startsWith('image/')) {
       return NextResponse.json({ error: 'File must be an image' }, { status: 400 });
     }
 
-    // Validate file size (5MB limit)
-    if (file && file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 });
+    // Validate file size (2MB limit for base64 storage)
+    if (file && file.size > 2 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File size must be less than 2MB' }, { status: 400 });
     }
+
+    // Parse values from FormData
+    const discountValue = formData.get("discount");
+    const sizeValue = formData.get("size") as string;
+    const dryfoodValue = formData.get("dryfood");
 
     // Extract product data from FormData
     const productData: {
@@ -86,22 +99,25 @@ export async function POST(req: NextRequest) {
       stock: number;
       description?: string;
       image?: string;
-      imagePublicId?: string;
-      supplier?: string; // Add supplier field
-      barcode?: string; // Add barcode field
+      supplier?: string;
+      barcode?: string;
     } = {
       name: formData.get("name") as string,
       costPrice: Number(formData.get("costPrice")),
       sellingPrice: Number(formData.get("sellingPrice")),
-      discount: formData.get("discount") ? Number(formData.get("discount")) : 0,
+      discount: discountValue ? Number(discountValue) : 0,
       category: formData.get("category") as string,
-      size: formData.get("size") as string || undefined,
-      dryfood: formData.get("dryfood") === 'true',
+      dryfood: dryfoodValue === 'true',
       stock: Number(formData.get("stock")),
-      description: formData.get("description") as string || undefined,
-      supplier: formData.get("supplier") as string || undefined, // Handle supplier
-      barcode: formData.get("barcode") as string || undefined, // Handle barcode
+      description: (formData.get("description") as string) || undefined,
+      supplier: (formData.get("supplier") as string) || undefined,
+      barcode: (formData.get("barcode") as string) || undefined,
     };
+
+    // Only add size if it's a non-empty string
+    if (sizeValue && sizeValue.trim() !== '') {
+      productData.size = sizeValue.trim();
+    }
 
     // Only add barcode to productData if it's provided and not empty
     if (productData.barcode && productData.barcode.trim() !== '') {
@@ -111,14 +127,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Barcode already exists' }, { status: 400 });
       }
     } else {
-      delete productData.barcode; // Remove barcode from productData if not provided
+      delete productData.barcode;
     }
 
-    // Upload image to Cloudinary if file is provided
+    // Convert image to base64 if file is provided
     if (file && file.size > 0) {
-      const uploadResult = await uploadImageToCloudinary(file, "products");
-      productData.image = uploadResult.secure_url;
-      productData.imagePublicId = uploadResult.public_id;
+      productData.image = await fileToBase64(file);
     }
 
     // Validate required fields
@@ -133,7 +147,6 @@ export async function POST(req: NextRequest) {
       let generatedBarcode;
       let isUnique = false;
 
-      // Keep generating until we get a unique barcode
       do {
         generatedBarcode = generateBarcode();
         const existingProduct = await Product.findOne({ barcode: generatedBarcode });
@@ -142,29 +155,46 @@ export async function POST(req: NextRequest) {
 
       productData.barcode = generatedBarcode;
     } else {
-      // Check if manually entered barcode already exists
       const existingProduct = await Product.findOne({ barcode: productData.barcode });
       if (existingProduct) {
         return NextResponse.json({ error: 'Barcode already exists' }, { status: 400 });
       }
     }
 
-    const newProduct = new Product(productData);
-    await newProduct.save();
+    console.log('Product data to save:', { ...productData, image: productData.image ? '[BASE64_IMAGE]' : undefined });
+
+    // Create product with explicit field assignment to ensure all fields are included
+    const newProduct = new Product({
+      name: productData.name,
+      description: productData.description,
+      category: productData.category,
+      costPrice: productData.costPrice,
+      sellingPrice: productData.sellingPrice,
+      stock: productData.stock,
+      barcode: productData.barcode,
+      image: productData.image,
+      supplier: productData.supplier,
+      discount: productData.discount,
+      size: productData.size,
+      dryfood: productData.dryfood,
+    });
+    
+    const savedProduct = await newProduct.save();
+    console.log('Saved product:', { ...savedProduct.toObject(), image: savedProduct.image ? '[BASE64_IMAGE]' : undefined });
 
     // Create stock transition for initial stock if stock > 0
-    if (newProduct.stock > 0) {
+    if (savedProduct.stock > 0) {
       try {
         const stockTransition = new StockTransition({
-          productId: newProduct._id,
-          productName: newProduct.name,
-          transactionType: 'purchase', // Initial stock is treated as a purchase
-          quantity: newProduct.stock,
+          productId: savedProduct._id,
+          productName: savedProduct.name,
+          transactionType: 'purchase',
+          quantity: savedProduct.stock,
           previousStock: 0,
-          newStock: newProduct.stock,
-          unitPrice: newProduct.costPrice || 0,
-          totalValue: newProduct.stock * (newProduct.costPrice || 0),
-          reference: `PRODUCT_CREATED_${newProduct._id}`,
+          newStock: savedProduct.stock,
+          unitPrice: savedProduct.costPrice || 0,
+          totalValue: savedProduct.stock * (savedProduct.costPrice || 0),
+          reference: `PRODUCT_CREATED_${savedProduct._id}`,
           party: {
             name: 'System',
             type: 'system',
@@ -172,7 +202,7 @@ export async function POST(req: NextRequest) {
           },
           user: formData.get('userId') || 'system',
           userName: formData.get('userName') as string || 'System',
-          notes: `Initial stock added for new product: ${newProduct.name}`
+          notes: `Initial stock added for new product: ${savedProduct.name}`
         });
         await stockTransition.save();
       } catch (transitionError) {
@@ -180,7 +210,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json(newProduct, { status: 201 });
+    return NextResponse.json(savedProduct, { status: 201 });
 
   } catch (error: unknown) {
     console.error("Error creating product:", error);

@@ -1,4 +1,3 @@
-import { deleteImageFromCloudinary, uploadImageToCloudinary } from "@/app/lib/cloudinary";
 import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
 import StockTransition from "@/app/models/StockTransition";
@@ -11,6 +10,14 @@ const generateBarcode = (): string => {
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
   const barcode = (timestamp.slice(-7) + random + '000').slice(0, 13);
   return barcode;
+};
+
+// Helper function to convert File to base64
+const fileToBase64 = async (file: File): Promise<string> => {
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const base64String = buffer.toString('base64');
+  return `data:${file.type};base64,${base64String}`;
 };
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -63,10 +70,9 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
             description?: string;
             dryfood?: boolean;
             image?: string;
-            imagePublicId?: string;
-            barcode?: string; // Add barcode field
-            supplier?: string; // Add supplier field
-            minStock?: number; // Add minStock field
+            barcode?: string;
+            supplier?: string;
+            minStock?: number;
         } = {};
         
         // Only update fields that are present in formData
@@ -110,7 +116,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         const supplier = formData.get('supplier');
         if (supplier !== null) updateData.supplier = supplier as string;
 
-        // Handle image upload
+        // Handle image upload - convert to base64
         const file = formData.get("image") as File;
         if (file && file.size > 0) {
             // Validate file type
@@ -118,20 +124,13 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
                 return NextResponse.json({ error: 'File must be an image' }, { status: 400 });
             }
 
-            // Validate file size (5MB limit)
-            if (file.size > 5 * 1024 * 1024) {
-                return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 });
+            // Validate file size (2MB limit for base64 storage)
+            if (file.size > 2 * 1024 * 1024) {
+                return NextResponse.json({ error: 'File size must be less than 2MB' }, { status: 400 });
             }
 
-            // Delete old image if exists
-            if (currentProduct.imagePublicId) {
-                await deleteImageFromCloudinary(currentProduct.imagePublicId);
-            }
-
-            // Upload new image
-            const uploadResult = await uploadImageToCloudinary(file, "products");
-            updateData.image = uploadResult.secure_url;
-            updateData.imagePublicId = uploadResult.public_id;
+            // Convert to base64
+            updateData.image = await fileToBase64(file);
         }
 
         // Handle barcode uniqueness check
@@ -150,7 +149,6 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         // Handle barcode for updates
         if (!updateData.barcode || updateData.barcode.trim() === '') {
           // Only auto-generate if the product doesn't already have a barcode
-          const currentProduct = await Product.findById(id);
           if (!currentProduct?.barcode) {
             let generatedBarcode;
             let isUnique = false;
@@ -302,11 +300,6 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
             } catch (transitionError) {
                 console.error('Error creating stock transition for deleted product:', transitionError);
             }
-        }
-
-        // Delete image from Cloudinary if it exists
-        if (product.imagePublicId) {
-            await deleteImageFromCloudinary(product.imagePublicId);
         }
 
         await Product.findByIdAndDelete(id);
