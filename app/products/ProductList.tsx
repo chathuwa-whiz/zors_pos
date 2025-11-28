@@ -5,7 +5,7 @@ import { Product } from '@/app/types/pos';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useBarcode } from 'next-barcode';
-import { printBarcode } from '@/app/utils/barcodePrintTemplates';
+import { printBarcode } from '@/app/lib/barcodePrintTemplates';
 
 interface ProductListProps {
   products: Product[];

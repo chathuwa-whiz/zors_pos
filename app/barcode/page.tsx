@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, Printer, Package, Plus, Minus } from 'lucide-react';
 import { Product } from '@/app/types/pos';
 import { useBarcode } from 'next-barcode';
-import { printMultipleBarcodes } from '@/app/utils/barcodePrintTemplates';
+import { printMultipleBarcodes } from '@/app/lib/barcodePrintTemplates';
 
 export default function BarcodePage() {
   const [products, setProducts] = useState<Product[]>([]);
