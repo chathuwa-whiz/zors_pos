@@ -154,7 +154,7 @@ export default function CartSummary({
         {discountPercentage > 0 && (
           <div className="flex justify-between text-lime-600 text-lg">
             <span className="font-medium">Discount ({activeOrder.discountPercentage}%)</span>
-            <span className="font-semibold">-Rs.{subtotal * (activeOrder.discountPercentage / 100)}</span>
+            <span className="font-semibold">-Rs.{(subtotal * (activeOrder.discountPercentage / 100)).toFixed(2)}</span>
           </div>
         )}
 
