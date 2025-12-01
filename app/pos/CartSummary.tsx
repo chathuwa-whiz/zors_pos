@@ -30,14 +30,14 @@ const bankServiceCharges = [
 export default function CartSummary({
   activeOrder,
   totals,
-  couponCode,
-  setCouponCode,
+  couponCode,        // will clean up later
+  setCouponCode,     // will clean up later
   showCheckout,
   setShowCheckout,
   paymentMethod,
   setPaymentMethod,
   onUpdateActiveOrder,
-  onApplyCoupon,
+  onApplyCoupon,     // will clean up later
   onCompleteOrder
 }: CartSummaryProps) {
   const { subtotal, couponDiscount, discountPercentage, tableCharge, deliveryCharge, total } = totals;
@@ -66,7 +66,6 @@ export default function CartSummary({
       })
     };
 
-    console.log('Payment Details being set:', paymentDetails);
     onUpdateActiveOrder({ paymentDetails });
 
     setTimeout(() => {
@@ -103,41 +102,7 @@ export default function CartSummary({
 
   return (
     <div className="border-t-2 border-green-200 p-6 flex-shrink-0 bg-gradient-to-b from-green-50 to-white">
-      {/* Coupon and Discount Section */}
-      <div className="space-y-4 mb-6">
-        <div className="flex space-x-3">
-          <input
-            type="text"
-            placeholder="Enter coupon code"
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-            className="flex-1 px-4 py-3 border-2 border-green-300 rounded-xl text-lg focus:ring-4 focus:ring-lime-400 focus:border-lime-400 shadow-md"
-          />
-          <button
-            onClick={onApplyCoupon}
-            className="px-6 py-3 bg-lime-400 text-green-900 rounded-xl text-lg font-bold hover:bg-lime-500 transition-all duration-200 active:scale-95 shadow-md"
-          >
-            Apply
-          </button>
-        </div>
-
-        {activeOrder.appliedCoupon && (
-          <div className="bg-lime-100 border-2 border-lime-400 rounded-xl p-4">
-            <div className="flex justify-between items-center">
-              <span className="text-green-900 text-lg font-semibold">
-                {activeOrder.appliedCoupon.description}
-              </span>
-              <button
-                onClick={() => onUpdateActiveOrder({ appliedCoupon: undefined })}
-                className="text-red-600 hover:text-red-800 text-lg font-semibold hover:bg-red-50 px-3 py-1 rounded-lg transition-colors"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
+      {/* Totals Section (no coupon input) */}
       <div className="space-y-3 mb-6">
         <div className="flex justify-between text-green-700 text-lg">
           <span className="font-medium">Subtotal</span>
@@ -185,6 +150,7 @@ export default function CartSummary({
         </div>
       </div>
 
+      {/* Checkout / payment section (unchanged) */}
       {!showCheckout ? (
         <button
           onClick={() => setShowCheckout(true)}
