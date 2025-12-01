@@ -73,7 +73,7 @@ export default function OrderTabs({
           className="flex items-center space-x-2 bg-lime-400 hover:bg-lime-500 text-green-900 px-4 py-2 rounded-lg font-semibold transition-all duration-200 active:scale-95 shadow-md"
         >
           <Plus className="w-4 h-4" />
-          <span className="text-sm">New Order</span>
+          <span className="text-sm">Add Table</span>
         </button>
         <button
           onClick={resetPOSData}
