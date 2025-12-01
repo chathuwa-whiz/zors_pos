@@ -311,14 +311,18 @@ export default function POSSystem() {
       )
     );
 
+    // Calculate the effective price after product discount
+    const productDiscount = product.discount || 0;
+    const effectivePrice = Math.max(0, product.sellingPrice - productDiscount);
+
     if (existingItem) {
       const updatedCart = activeOrder.cart.map(item =>
         item.product._id === product._id
           ? { 
               ...item, 
               quantity: item.quantity + 1, 
-              subtotal: (item.quantity + 1) * product.sellingPrice,
-              product: { ...item.product, stock: item.product.stock - 1 } // Update product stock in cart
+              subtotal: (item.quantity + 1) * effectivePrice,
+              product: { ...item.product, stock: item.product.stock - 1 }
             }
           : item
       );
@@ -327,7 +331,7 @@ export default function POSSystem() {
       const updatedCart = [...activeOrder.cart, { 
         product: { ...product, stock: product.stock - 1 }, 
         quantity: 1, 
-        subtotal: product.sellingPrice 
+        subtotal: effectivePrice 
       }];
       updateActiveOrder({ cart: updatedCart });
     }
@@ -394,10 +398,14 @@ export default function POSSystem() {
         if (newQuantity === 0) {
           return null;
         }
+        // Calculate the effective price after product discount
+        const productDiscount = item.product.discount || 0;
+        const effectivePrice = Math.max(0, item.product.sellingPrice - productDiscount);
+        
         return { 
           ...item, 
           quantity: newQuantity, 
-          subtotal: newQuantity * item.product.sellingPrice,
+          subtotal: newQuantity * effectivePrice,
           product: { 
             ...item.product, 
             stock: item.product.stock + (change < 0 ? Math.abs(change) : -change) 
@@ -441,8 +449,20 @@ export default function POSSystem() {
 
   // Calculate totals
   const calculateTotals = (): OrderTotals => {
-    if (!activeOrder) return { subtotal: 0, couponDiscount: 0, discountAmount: 0, discountPercentage: 0, tableCharge: 0, deliveryCharge: 0, total: 0 };
+    if (!activeOrder) return { subtotal: 0, couponDiscount: 0, discountAmount: 0, discountPercentage: 0, tableCharge: 0, deliveryCharge: 0, total: 0, productDiscountTotal: 0 };
 
+    // Calculate original subtotal (before product discounts)
+    const originalSubtotal = activeOrder.cart.reduce((sum, item) => {
+      return sum + (item.quantity * item.product.sellingPrice);
+    }, 0);
+
+    // Calculate total product discounts
+    const productDiscountTotal = activeOrder.cart.reduce((sum, item) => {
+      const productDiscount = item.product.discount || 0;
+      return sum + (item.quantity * productDiscount);
+    }, 0);
+
+    // Subtotal after product discounts (this is what's already in cart subtotals)
     const subtotal = activeOrder.cart.reduce((sum, item) => sum + item.subtotal, 0);
 
     let couponDiscount = 0;
@@ -462,7 +482,7 @@ export default function POSSystem() {
       }
     }
 
-    // Calculate discount percentage amount
+    // Calculate discount percentage amount (order-level discount)
     const discountPercentage = activeOrder.discountPercentage || 0;
     const discountAmount = subtotal * (discountPercentage / 100);
 
@@ -479,7 +499,9 @@ export default function POSSystem() {
       discountPercentage,
       tableCharge,
       deliveryCharge,
-      total
+      total,
+      productDiscountTotal,
+      originalSubtotal
     };
   };
 

@@ -82,6 +82,8 @@ export interface OrderTotals {
   total: number;
   tableCharge: number;
   deliveryCharge?: number;
+  productDiscountTotal?: number;
+  originalSubtotal?: number;
 }
 
 export interface User {
