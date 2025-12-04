@@ -163,6 +163,17 @@ export default function HomePage() {
       priority: 'high'
     },
     {
+      id: 'orders',
+      title: 'Order Management',
+      description: 'Track and manage customer orders from placement to fulfillment seamlessly.',
+      icon: <ShoppingCart className="w-8 h-8" />,
+      color: 'bg-gradient-to-br from-cyan-600 via-cyan-500 to-cyan-600',
+      textColor: 'text-white',
+      href: '/orders',
+      adminOnly: true,
+      priority: 'medium'
+    },
+    {
       id: 'discounts',
       title: 'Promotions Hub',
       description: 'Create compelling offers and manage promotional campaigns effectively.',
