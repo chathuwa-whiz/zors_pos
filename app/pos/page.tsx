@@ -3,14 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Product, Order, Coupon, OrderTotals, CartItem } from '@/app/types/pos';
 import { User } from '@/app/types/user';
-import { useRouter } from 'next/navigation';
 import ProductsPanel from './ProductsPanel';
 import OrdersPanel from './OrdersPanel';
 import CustomerModal from './CustomerModal';
 import OrderComplete from './OrderComplete';
 
 export default function POSSystem() {
-  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);

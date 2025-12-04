@@ -22,6 +22,21 @@ interface ImportResult {
   errors: ImportError[];
 }
 
+interface ExcelRow {
+  'Product Name*': string | number;
+  'Category*': string | number;
+  'Cost Price*': string | number;
+  'Selling Price*': string | number;
+  'Stock Quantity*': string | number;
+  'Discount (%)'?: string | number;
+  'Size'?: string | number;
+  'Description'?: string | number;
+  'Barcode'?: string | number;
+  'Supplier ID'?: string | number;
+  'Is Dry Food (TRUE/FALSE)'?: string | number | boolean;
+  'Min Stock Level'?: string | number;
+}
+
 export default function ProductImport({ onImportComplete, onClose }: ProductImportProps) {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
@@ -148,7 +163,7 @@ export default function ProductImport({ onImportComplete, onClose }: ProductImpo
     }
   };
 
-  const validateRow = (row: any, rowNumber: number): ImportError[] => {
+  const validateRow = (row: ExcelRow, rowNumber: number): ImportError[] => {
     const errors: ImportError[] = [];
 
     // Required fields validation
@@ -160,24 +175,24 @@ export default function ProductImport({ onImportComplete, onClose }: ProductImpo
       errors.push({ row: rowNumber, field: 'Category', message: 'Category is required' });
     }
 
-    if (!row['Cost Price*'] || isNaN(parseFloat(row['Cost Price*'])) || parseFloat(row['Cost Price*']) < 0) {
+    if (!row['Cost Price*'] || isNaN(parseFloat(row['Cost Price*'].toString())) || parseFloat(row['Cost Price*'].toString()) < 0) {
       errors.push({ row: rowNumber, field: 'Cost Price', message: 'Valid cost price is required' });
     }
 
-    if (!row['Selling Price*'] || isNaN(parseFloat(row['Selling Price*'])) || parseFloat(row['Selling Price*']) < 0) {
+    if (!row['Selling Price*'] || isNaN(parseFloat(row['Selling Price*'].toString())) || parseFloat(row['Selling Price*'].toString()) < 0) {
       errors.push({ row: rowNumber, field: 'Selling Price', message: 'Valid selling price is required' });
     }
 
-    if (row['Stock Quantity*'] === undefined || isNaN(parseInt(row['Stock Quantity*'])) || parseInt(row['Stock Quantity*']) < 0) {
+    if (row['Stock Quantity*'] === undefined || isNaN(parseInt(row['Stock Quantity*'].toString())) || parseInt(row['Stock Quantity*'].toString()) < 0) {
       errors.push({ row: rowNumber, field: 'Stock Quantity', message: 'Valid stock quantity is required' });
     }
 
     // Optional fields validation
-    if (row['Discount (%)'] && (isNaN(parseFloat(row['Discount (%)'])) || parseFloat(row['Discount (%)']) < 0 || parseFloat(row['Discount (%)']) > 100)) {
+    if (row['Discount (%)'] && (isNaN(parseFloat(row['Discount (%)'].toString())) || parseFloat(row['Discount (%)'].toString()) < 0 || parseFloat(row['Discount (%)'].toString()) > 100)) {
       errors.push({ row: rowNumber, field: 'Discount', message: 'Discount must be between 0 and 100' });
     }
 
-    if (row['Min Stock Level'] && (isNaN(parseInt(row['Min Stock Level'])) || parseInt(row['Min Stock Level']) < 0)) {
+    if (row['Min Stock Level'] && (isNaN(parseInt(row['Min Stock Level'].toString())) || parseInt(row['Min Stock Level'].toString()) < 0)) {
       errors.push({ row: rowNumber, field: 'Min Stock Level', message: 'Min stock level must be a positive number' });
     }
 
@@ -200,7 +215,7 @@ export default function ProductImport({ onImportComplete, onClose }: ProductImpo
       const workbook = XLSX.read(data, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      const jsonData = XLSX.utils.sheet_to_json<ExcelRow>(worksheet);
 
       if (jsonData.length === 0) {
         throw new Error('The Excel file is empty');
@@ -237,7 +252,7 @@ export default function ProductImport({ onImportComplete, onClose }: ProductImpo
       const errors: ImportError[] = [];
 
       for (let i = 0; i < jsonData.length; i++) {
-        const row: any = jsonData[i];
+        const row: ExcelRow = jsonData[i];
         const rowNumber = i + 2;
 
         try {
@@ -246,13 +261,13 @@ export default function ProductImport({ onImportComplete, onClose }: ProductImpo
           
           productData.append('name', row['Product Name*'].toString().trim());
           productData.append('category', row['Category*'].toString().trim());
-          productData.append('costPrice', parseFloat(row['Cost Price*']).toString());
-          productData.append('sellingPrice', parseFloat(row['Selling Price*']).toString());
-          productData.append('stock', parseInt(row['Stock Quantity*']).toString());
+          productData.append('costPrice', parseFloat(row['Cost Price*'].toString()).toString());
+          productData.append('sellingPrice', parseFloat(row['Selling Price*'].toString()).toString());
+          productData.append('stock', parseInt(row['Stock Quantity*'].toString()).toString());
           
           // Optional fields
           if (row['Discount (%)']) {
-            productData.append('discount', parseFloat(row['Discount (%)']).toString());
+            productData.append('discount', parseFloat(row['Discount (%)'].toString()).toString());
           } else {
             productData.append('discount', '0');
           }
@@ -277,7 +292,7 @@ export default function ProductImport({ onImportComplete, onClose }: ProductImpo
           productData.append('dryfood', isDryFood.toString());
 
           if (row['Min Stock Level']) {
-            productData.append('minStock', parseInt(row['Min Stock Level']).toString());
+            productData.append('minStock', parseInt(row['Min Stock Level'].toString()).toString());
           }
 
           // Add user information for stock transition tracking

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Search, Filter, Calendar, User, Package, DollarSign, ChevronRight, Eye, Download, RefreshCw, TrendingUp, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { ShoppingCart, Search, Filter, Calendar, User, Package, DollarSign, Eye, Download, RefreshCw, TrendingUp, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface OrderItem {
