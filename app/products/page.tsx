@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { Package, Plus, Filter, Grid, List } from 'lucide-react';
+import { Package, Plus, Filter, Grid, List, Upload } from 'lucide-react';
 import { Product } from '@/app/types/pos';
 import ProductList from './ProductList';
 import ProductForm from './ProductForm';
 import ProductFilters from './ProductFilters';
 import ProductStats from './ProductStats';
 import LowStockWarning from '../components/LowStockWarning';
+import ProductImport from './ProductImport';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -17,6 +18,7 @@ export default function ProductsPage() {
 
   // UI States
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,37 +63,47 @@ export default function ProductsPage() {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) || // Add barcode search
+        product.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.supplier?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
 
-      const matchesStock = stockFilter === 'all' ||
-        (stockFilter === 'low' && product.stock < 10) ||
-        (stockFilter === 'out' && product.stock === 0) ||
-        (stockFilter === 'available' && product.stock > 0);
+      const matchesStock = 
+        stockFilter === 'all' ||
+        (stockFilter === 'in-stock' && product.stock > 0) ||
+        (stockFilter === 'low-stock' && product.stock > 0 && product.stock < 10) ||
+        (stockFilter === 'out-of-stock' && product.stock === 0);
 
-      const matchesPrice = product.sellingPrice >= priceRange.min;
+      const matchesPrice = 
+        product.sellingPrice >= priceRange.min &&
+        product.sellingPrice <= priceRange.max;
 
-      const matchesSupplier = selectedSupplier === 'all' || 
-        (selectedSupplier === 'none' && !product.supplier) ||
+      const matchesSupplier = 
+        selectedSupplier === 'all' ||
         product.supplier === selectedSupplier;
 
       return matchesSearch && matchesCategory && matchesStock && matchesPrice && matchesSupplier;
     });
-
     setFilteredProducts(filtered);
   }, [products, searchQuery, selectedCategory, stockFilter, priceRange, selectedSupplier]);
 
-  // Get unique categories
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
 
-  // Handle product operations
   const handleProductSaved = async () => {
     try {
       await fetchProducts();
       setShowForm(false);
       setEditingProduct(null);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setError('Failed to refresh product list');
+    }
+  };
+
+  const handleImportComplete = async () => {
+    try {
+      await fetchProducts();
+      setShowImport(false);
     } catch (error) {
       console.error('Error fetching products:', error);
       setError('Failed to refresh product list');
@@ -126,64 +138,64 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="bg-red-100 p-2 rounded-lg">
-                <Package className="w-6 h-6 text-red-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Product Management</h1>
-                <p className="text-gray-600">Manage your product inventory and details</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowForm(true)}
-              className="mt-4 sm:mt-0 flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Product</span>
-            </button>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Stats */}
-        <ProductStats products={products} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        {/* Header */}
+        <div className="bg-white/80 backdrop-blur-lg shadow-lg rounded-2xl border border-blue-100 p-6 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center space-x-4">
+              <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-3 rounded-2xl shadow-lg">
+                <Package className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Products
+                </h1>
+                <p className="text-gray-600 mt-1">Manage your product inventory</p>
+              </div>
+            </div>
 
-        {/* Low Stock Warning */}
-        <LowStockWarning products={products} />
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => setShowImport(true)}
+                className="flex items-center space-x-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2 rounded-xl hover:from-cyan-700 hover:to-blue-700 transition-all duration-200 active:scale-95 shadow-lg"
+              >
+                <Upload className="w-4 h-4" />
+                <span>Import Excel</span>
+              </button>
 
-        {/* Search and Controls */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Controls */}
-            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowForm(true)}
+                className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 active:scale-95 shadow-lg"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Product</span>
+              </button>
+
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center space-x-2 px-4 py-2 border rounded-lg transition-colors ${showFilters
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
+                className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition-all duration-200 active:scale-95"
               >
                 <Filter className="w-4 h-4" />
                 <span>Filters</span>
               </button>
 
-              <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+              <div className="flex bg-gray-100 rounded-xl p-1">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  className={`p-2 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'} rounded-lg transition-colors`}
                 >
                   <Grid className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                  className={`p-2 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'} rounded-lg transition-colors`}
                 >
                   <List className="w-4 h-4" />
                 </button>
@@ -216,6 +228,12 @@ export default function ProductsPage() {
           </div>
         )}
 
+        {/* Low Stock Warning */}
+        <LowStockWarning products={products} threshold={10} />
+
+        {/* Stats */}
+        <ProductStats products={filteredProducts} />
+
         {/* Products List */}
         <ProductList
           products={filteredProducts}
@@ -234,6 +252,14 @@ export default function ProductsPage() {
           product={editingProduct}
           onSave={handleProductSaved}
           onClose={handleCloseForm}
+        />
+      )}
+
+      {/* Import Modal */}
+      {showImport && (
+        <ProductImport
+          onImportComplete={handleImportComplete}
+          onClose={() => setShowImport(false)}
         />
       )}
     </div>
